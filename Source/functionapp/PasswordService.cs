@@ -26,7 +26,7 @@ namespace PasswordService
         private static string partitionKey = "Passwords";
 
         private static Encryptor e = new Encryptor(
-            Environment.GetEnvironmentVariable("AesKey", EnvironmentVariableTarget.Process), 
+            Environment.GetEnvironmentVariable("AesKey", EnvironmentVariableTarget.Process),
             Environment.GetEnvironmentVariable("AesIV", EnvironmentVariableTarget.Process)
         );
 
@@ -43,7 +43,7 @@ namespace PasswordService
             ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a GET ALL request.");
-            return (ActionResult) new OkObjectResult(accountPasswords);
+            return (ActionResult)new OkObjectResult(accountPasswords);
         }
 
         [FunctionName("GetPasswordById")]
@@ -55,12 +55,13 @@ namespace PasswordService
                 ConnectionStringSetting = "cosmosdb",
                 PartitionKey = "Passwords",
                 Id = "{id}")] AccountPasswords accountPassword,
-            ILogger log) 
+            ILogger log)
         {
             log.LogInformation($"C# HTTP trigger function processed a GET request.");
             e.Decrypt(accountPassword.CurrentPassword, out string decryptedPassword);
 
-            return (ActionResult)new OkObjectResult(new AccountPasswords(){
+            return (ActionResult)new OkObjectResult(new AccountPasswords()
+            {
                 id = accountPassword.id,
                 PartitionKey = accountPassword.PartitionKey,
                 SiteName = accountPassword.SiteName,
@@ -85,10 +86,10 @@ namespace PasswordService
             ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a POST request.");
-        
+
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             AccountPasswords data = JsonConvert.DeserializeObject<AccountPasswords>(requestBody);
-            
+
             e.Encrypt(data.CurrentPassword, out string encryptedPassword);
             data.PartitionKey = partitionKey;
             data.CurrentPassword = encryptedPassword;
@@ -97,7 +98,7 @@ namespace PasswordService
             data.LastModifiedDate = data.CreatedDate = DateTime.Now;
 
             await accountPasswords.AddAsync(data);
-            return (ActionResult)new OkObjectResult(data); 
+            return (ActionResult)new OkObjectResult(data);
         }
 
         [FunctionName("UpdatePassword")]
@@ -108,32 +109,36 @@ namespace PasswordService
                 databaseName: "AccountPasswords",
                 collectionName: "Passwords",
                 ConnectionStringSetting = "cosmosdb")] DocumentClient client,
-            ILogger log) 
+            ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a PUT request.");
-            
-            var opts =  new RequestOptions{
+
+            var opts = new RequestOptions
+            {
                 PartitionKey = new PartitionKey(partitionKey)
             };
 
             Document document = await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, id), opts);
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
 
-			AccountPasswords data = JsonConvert.DeserializeObject<AccountPasswords>(requestBody);
+            AccountPasswords data = JsonConvert.DeserializeObject<AccountPasswords>(requestBody);
             data.OldPasswords = document.GetPropertyValue<List<Password>>("OldPasswords");
 
             var originalEncryptedPassword = document.GetPropertyValue<string>("CurrentPassword");
             e.Decrypt(originalEncryptedPassword, out string originalPassword);
 
-            if( String.Compare(data.CurrentPassword, originalPassword, false) != 0 ) {
-                if(data.OldPasswords == null) {
+            if (String.Compare(data.CurrentPassword, originalPassword, false) != 0)
+            {
+                if (data.OldPasswords == null)
+                {
                     data.OldPasswords = new List<Password>();
                 }
-                data.OldPasswords.Add(new Password(){
+                data.OldPasswords.Add(new Password()
+                {
                     PreviousPassword = originalEncryptedPassword,
                     CreatedDate = DateTime.Now
                 });
-            } 
+            }
 
             e.Encrypt(data.CurrentPassword, out string newPassword);
             data.CurrentPassword = newPassword;
@@ -143,7 +148,7 @@ namespace PasswordService
             data.LastModifiedDate = DateTime.Now;
 
             await client.ReplaceDocumentAsync(document.SelfLink, data);
-            return (ActionResult)new OkObjectResult(data); 
+            return (ActionResult)new OkObjectResult(data);
         }
 
         [FunctionName("DeletePassword")]
@@ -154,20 +159,21 @@ namespace PasswordService
                 databaseName: "AccountPasswords",
                 collectionName: "Passwords",
                 ConnectionStringSetting = "cosmosdb")] DocumentClient client,
-           ILogger log) 
+           ILogger log)
 
         {
             log.LogInformation("C# HTTP trigger function processed a DELETE request.");
 
-            var opts =  new RequestOptions{
+            var opts = new RequestOptions
+            {
                 PartitionKey = new PartitionKey(partitionKey)
             };
 
             Document document = await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, id), opts);
-			AccountPasswords data = (AccountPasswords)(dynamic)document;
+            AccountPasswords data = (AccountPasswords)(dynamic)document;
             data.isDeleted = true;
             await client.ReplaceDocumentAsync(document.SelfLink, data);
-            return (ActionResult)new OkObjectResult(data); 
+            return (ActionResult)new OkObjectResult(data);
         }
     }
 }

@@ -6,24 +6,24 @@ using System.Linq;
 
 namespace PasswordService.Common
 {
-    public class Encryptor 
+    public class Encryptor
     {
         private static byte[] _key;
         private static byte[] _iv;
         private static int size = 16;
 
-        public Encryptor(string key, string iv) 
+        public Encryptor(string key, string iv)
         {
             _key = Convert.FromBase64String(key);
             _iv = Convert.FromBase64String(iv);
         }
 
-        public bool Encrypt(string plainText, out string cipherText) 
+        public bool Encrypt(string plainText, out string cipherText)
         {
-            if (plainText == null || plainText.Length <= 0) 
+            if (plainText == null || plainText.Length <= 0)
             {
                 cipherText = default(string);
-                return false; 
+                return false;
             }
 
             byte[] cipherArray;
@@ -55,17 +55,17 @@ namespace PasswordService.Common
             return true;
         }
 
-        public bool Decrypt(string cipherText, out string plainText) 
+        public bool Decrypt(string cipherText, out string plainText)
         {
             if (cipherText == null || cipherText.Length <= 0)
             {
                 plainText = default(string);
-                return false; 
+                return false;
             }
 
             using (HMACSHA512 hmac = new HMACSHA512(_key))
-            {             
-                using (Aes aes = Aes.Create()) 
+            {
+                using (Aes aes = Aes.Create())
                 {
                     aes.Key = _key;
                     aes.IV = _iv;
@@ -74,22 +74,24 @@ namespace PasswordService.Common
 
                     var hmacArray = Convert.FromBase64String(c[0]);
                     var cipherArray = Convert.FromBase64String(c[1]);
-                    
+
                     ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
                     using (MemoryStream memoryStream = new MemoryStream(cipherArray))
                     {
-                        using (CryptoStream cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read)) 
+                        using (CryptoStream cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read))
                         {
-                            using (BinaryReader streamReader = new BinaryReader(cryptoStream)) 
+                            using (BinaryReader streamReader = new BinaryReader(cryptoStream))
                             {
                                 streamReader.ReadBytes(size); //Read and dump salt value 
                                 var plainTextArray = streamReader.ReadBytes(cipherArray.Length - size);
                                 var computedHashArray = hmac.ComputeHash(plainTextArray);
 
-                                if(hmacArray.SequenceEqual(computedHashArray)) {
+                                if (hmacArray.SequenceEqual(computedHashArray))
+                                {
                                     plainText = Encoding.UTF8.GetString(plainTextArray);
                                 }
-                                else {
+                                else
+                                {
                                     plainText = default(string);
                                     return false;
                                 }
@@ -101,7 +103,7 @@ namespace PasswordService.Common
             return true;
         }
 
-        private static byte[] GenerateSalt() 
+        private static byte[] GenerateSalt()
         {
             byte[] salt = new byte[size];
             using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
