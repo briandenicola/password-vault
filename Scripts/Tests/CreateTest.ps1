@@ -7,8 +7,8 @@ $questions += (New-Object PSobject -Property @{
 })
 
 $accountPassword = New-Object psobject -Property @{
-    SiteName = "Microsoft"
-    AccountName = "brdenico@microsoft.com"
+    SiteName = "Example"
+    AccountName = "brian@example.com"
     CurrentPassword = "this is a test password!!!!"
 
     SecurityQuestions = $questions
