@@ -1,0 +1,38 @@
+queue:
+  name: Hosted VS2017
+  demands: npm
+
+steps:
+- task: qetza.replacetokens.replacetokens-task.replacetokens@3
+  displayName: 'Replace tokens in **/*.env.production'
+  inputs:
+    rootDirectory: Source/passwordapp.ui
+    targetFiles: '**/*.env.production'
+    encoding: ascii
+
+
+- task: qetza.replacetokens.replacetokens-task.replacetokens@3
+  displayName: 'Replace tokens in **/*.env'
+  inputs:
+    rootDirectory: Source/passwordapp.ui
+    targetFiles: '**/*.env'
+    encoding: ascii
+
+- task: Npm@1
+  displayName: 'npm restore'
+  inputs:
+    command: custom
+    workingDir: Source/passwordapp.ui
+    verbose: false
+    customCommand: restore
+
+- task: Npm@1
+  displayName: 'npm build'
+  inputs:
+    command: custom
+    workingDir: Source/passwordapp.ui
+    verbose: false
+    customCommand: 'run build'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
