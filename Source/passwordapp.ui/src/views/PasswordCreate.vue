@@ -210,8 +210,8 @@ export default {
       formData: {
         accountName: '',
         siteName: '',
-        createdBy: Authentication.getUserProfile().email,
-        lastModifiedBy:  Authentication.getUserProfile().email,
+        createdBy: Authentication.getUserProfile().upn,
+        lastModifiedBy:  Authentication.getUserProfile().upn,
         currentPassword: '',
         notes: '',
         securityQuestions: [

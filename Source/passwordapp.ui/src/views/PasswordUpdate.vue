@@ -218,7 +218,7 @@ export default {
       this.formData.currentPassword = Math.random().toString(36).substr(2,8) + Array(pwdLen).fill(pwdChars).map(function(x) { return x[Math.floor(Math.random() * x.length)] }).join('');
     },
     updatePassword() {
-      this.formData.lastModifiedBy = Authentication.getUserProfile().email;
+      this.formData.lastModifiedBy = Authentication.getUserProfile().upn;
       PasswordService.update(this.$router.currentRoute.params.id, this.formData).then(() => {
         this.isSuccessfully = true;
         this.alertModalTitle = 'Successfully';
