@@ -1,15 +1,15 @@
 <template>
  <div>
     <h1 class="homeText">Password Vault</h1>
+    <br/>
     <b-row class="navbar navbar-default">
       <b-col class="col-sm-3 col-md-3 pull-left">
         <div class="table-responsive">
-          <router-link :to="{ name: 'Home' }">Home</router-link> | 
           <router-link :to="{ name: 'Create' }">Create</router-link> |
-          <a href="#" v-on:click.stop="logOut()">Log out</a>
+          <a href="#" v-on:click.stop="logOut()">Log Out</a>
         </div>
       </b-col>
-      <b-col class="col-sm-3 col-md-3 pull-right">
+      <b-col class="col-sm-4 col-md-4 pull-right">
         <b-form-group horizontal class="mb-0">
           <b-input-group>
             <b-form-input v-model="filter" placeholder="Type to Search" />
@@ -43,19 +43,19 @@
           <template slot="edit" slot-scope="data">
               <b-button size="sm" 
                 variant="secondary"
-                @click.stop="copyPassword(data.item.id)">Get Password</b-button> |
+                @click.stop="copyPassword(data.item.id)"><font-awesome-icon icon="key" ></font-awesome-icon></b-button> |
             <b-button 
               size="sm"
               variant="primary"
-              @click.stop="data.toggleDetails">{{ data.detailsShowing ? 'Hide' : 'Show'}} Details</b-button> |
+              @click.stop="data.toggleDetails"><font-awesome-icon icon="info" ></font-awesome-icon></b-button> |
             <b-button
               size="sm"
               variant="success"
-              @click.stop="updatePassword(data.item.id)">Update</b-button> |
+              @click.stop="updatePassword(data.item.id)"><font-awesome-icon icon="user-edit" ></font-awesome-icon></b-button> |
             <b-button
               size="sm"
               variant="danger"
-              @click.stop="deletePassword(data.item.id)">Delete</b-button>
+              @click.stop="deletePassword(data.item.id)"><font-awesome-icon icon="trash-alt" ></font-awesome-icon></b-button>
           </template>
           <template slot="row-details" slot-scope="row">
             <b-card>
@@ -138,9 +138,9 @@ export default {
       sortBy: "siteName",
       sortDesc: false,
       fields: [ 
-        { key: 'accountName', sortable: true},
-        { key: 'siteName', sortable: true}, 
-        { key: 'lastModifiedDate', sortable: false},
+        { key: 'accountName', label: 'Account', sortable: true},
+        { key: 'siteName', label: 'Site', sortable: true}, 
+        { key: 'lastModifiedDate', label: 'Last Modified', sortable: false},
         { key: 'edit', label: 'Edit/Remove' }
       ],
       selectedPasswordId: null,
