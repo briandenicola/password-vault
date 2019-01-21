@@ -17,6 +17,7 @@
     "moment": "^2.23.0",
     "vue": "^2.5.21",
     "vue-fontawesome": "0.0.2",
+    "vue-loader": "^15.5.1",
     "vue-router": "^3.0.1"
   },
   "devDependencies": {

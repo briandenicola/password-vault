@@ -1,0 +1,14 @@
+.homeText{
+    font-size: 35px;
+    color: black;
+    text-align: center;
+    position: relative;
+    top:30px;
+    text-shadow: 2px 2px 2px gray;
+}
+
+.my-4 {
+    font-size: 12px;
+    color: black;
+    text-align: center; 
+}

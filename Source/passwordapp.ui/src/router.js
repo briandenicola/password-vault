@@ -1,10 +1,10 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Home from './views/Home.vue'
-import Create from './views/PasswordCreate.vue'
-import Update from './views/PasswordUpdate.vue'
-import NotFound from './views/PageNotFound.vue'
-import Authentication from './components/AzureAD.Authentication.js'
+import NotFound from '@/components/notfound/pagenotfound.vue'
+import Home from '@/components/home/home.vue'
+import Create from '@/components/create/create.vue'
+import Update from '@/components/update/update.vue'
+import Authentication from './components/azuread/AzureAD.Authentication.js'
 
 Vue.use(Router)
 

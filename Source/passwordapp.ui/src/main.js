@@ -10,7 +10,7 @@ import { faUserEdit } from '@fortawesome/free-solid-svg-icons'
 import { faInfo } from '@fortawesome/free-solid-svg-icons'
 import { faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import Authentication from './components/AzureAD.Authentication.js'
+import Authentication from './components/azuread/AzureAD.Authentication.js'
 import Axios from 'axios';
 
 library.add(faKey)
