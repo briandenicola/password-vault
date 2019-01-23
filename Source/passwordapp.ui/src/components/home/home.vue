@@ -10,9 +10,9 @@
         </div>
       </b-col>
       <b-col class="col-sm-4 col-md-4 pull-right">
-        <b-form-group horizontal class="mb-0">
+        <b-form-group horizontal>
           <b-input-group>
-            <b-form-input v-model="filter" placeholder="Type to Search" />
+            <b-form-input v-model="filter" placeholder="Search" />
             <b-input-group-append>
               <b-btn :disabled="!filter" @click="filter = ''">Clear</b-btn>
             </b-input-group-append>
@@ -26,6 +26,7 @@
         <b-table
           :sort-by.sync="sortBy"
           :sort-desc.sync="sortDesc"
+          stacked="sm"
           centered
           striped
           hover
@@ -41,9 +42,9 @@
             {{data.item.lastModifiedDate | formatDate}}
           </template>
           <template slot="edit" slot-scope="data">
-              <b-button size="sm" 
-                variant="secondary"
-                @click.stop="copyPassword(data.item.id)"><font-awesome-icon icon="key" ></font-awesome-icon></b-button> |
+            <b-button size="sm" 
+              variant="secondary"
+              @click.stop="copyPassword(data.item.id)"><font-awesome-icon icon="key" ></font-awesome-icon></b-button> |
             <b-button 
               size="sm"
               variant="primary"
@@ -58,27 +59,29 @@
               @click.stop="deletePassword(data.item.id)"><font-awesome-icon icon="trash-alt" ></font-awesome-icon></b-button>
           </template>
           <template slot="row-details" slot-scope="row">
-            <b-card>
+            <b-card class="text-left">
               <b-row class="mb-2">
-                <b-col sm="3" class="text-sm-right"><b>Created By:</b></b-col>
+                <b-col><b>Created By:</b></b-col>
                 <b-col>{{ row.item.createdBy }}</b-col>
               </b-row>
               <b-row class="mb-2">
-                <b-col sm="3" class="text-sm-right"><b>Updated By:</b></b-col>
+                <b-col><b>Updated By:</b></b-col>
                 <b-col>{{ row.item.lastModifiedBy }}</b-col>
               </b-row>
               <b-row class="mb-2">
-                <b-col sm="3" class="text-sm-right"><b>Security Questions:</b></b-col>
+                <b-col><b>Security Questions:</b></b-col>
+                <b-col></b-col>
               </b-row>
-              <b-row v-for="securityQuestion in row.item.securityQuestions" :key="securityQuestion" >
-                <b-col sm="3" class="text-sm-right"><i>{{securityQuestion.question}}:</i></b-col>
-                <b-col>{{securityQuestion.answer}}</b-col>
-              </b-row>
+              <span class="mb-2" v-for="securityQuestion in row.item.securityQuestions" :key="securityQuestion" >
+                <b-row class="mb-2" v-if="securityQuestion.question !== '' && securityQuestion.answer !== '' " >
+                  <b-col><i>{{securityQuestion.question}}</i>: </b-col>
+                  <b-col>{{securityQuestion.answer}}</b-col>
+                </b-row>
+              </span>
               <b-row class="mb-2">
-                <b-col sm="3" class="text-sm-right"><b>Notes:</b></b-col>
+                <b-col><b>Notes:</b></b-col>
                 <b-col>{{ row.item.notes }}</b-col>
               </b-row>
-              <b-button size="sm" @click="row.toggleDetails">Hide Details</b-button>
             </b-card>
           </template>
         </b-table>

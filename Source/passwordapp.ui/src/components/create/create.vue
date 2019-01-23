@@ -141,7 +141,7 @@
             <b-form-textarea
               id="notes"
               v-model="formData.notes"
-              maxlength="100"
+              maxlength="1000"
               :rows="3"
               :max-rows="6" />
           </b-col>

@@ -20,7 +20,7 @@ export default {
     return {
       passwords: [],
       currentPage: 1,
-      perPage: 15,
+      perPage: 10,
       totalRows: 0,
       filter: null,
       sortBy: "siteName",
