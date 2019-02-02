@@ -55,7 +55,7 @@ spec:
   type: ClusterIP
   ports:
   - protocol: TCP
-    port: 500
+    port: 5000
     targetPort: 80
   selector:
     app: passwordvault-api
