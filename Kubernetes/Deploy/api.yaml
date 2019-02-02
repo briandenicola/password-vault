@@ -1,0 +1,61 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: passwordvault-api
+  labels:
+    app: passwordvault-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: passwordvault-api
+  template:
+    metadata:
+      labels:
+        app: passwordvault-api
+    spec:
+      containers:
+      - name: passwordvaultapi
+        image: bjd145.azurecr.io/passwordvault/api:1.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        env:     
+        - name: cosmosdb
+          valueFrom:
+           secretKeyRef:
+             name: secrets-passwordvault
+             key: COSMOSDB_CONSTR
+        - name: AesKey
+          valueFrom:
+           secretKeyRef:
+             name: secrets-passwordvault
+             key: AesKey
+        - name: AesIV
+          valueFrom:
+           secretKeyRef:
+             name: secrets-passwordvault
+             key: AesIV
+
+        resources:
+          limits:
+            memory: "256M"
+            cpu: "0.1"         
+      
+      imagePullSecrets:
+        - name: registrykey
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: passwordvault-api-svc
+spec:
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 500
+    targetPort: 80
+  selector:
+    app: passwordvault-api

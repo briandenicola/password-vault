@@ -1,0 +1,71 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: passwordvault-ui
+  labels:
+    app: passwordvault-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: passwordvault-ui
+  template:
+    metadata:
+      labels:
+        app: passwordvault-ui
+    spec:
+      containers:
+      - name: passwordvaultui
+        image: bjd145.azurecr.io/passwordvault/frontend:1.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:       
+        - name: VUE_APP_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: secrets-passwordvault
+              key: VUE_APP_API_KEY
+        - name: VUE_APP_API_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: config-passwordvault
+              key: VUE_APP_API_ENDPOINT
+        - name: VUE_APP_AAD_REDIRECT_URL
+          valueFrom:
+            configMapKeyRef:
+              name: config-passwordvault
+              key: VUE_APP_AAD_REDIRECT_URL       
+        - name: VUE_APP_AAD_CLIENT_ID
+          valueFrom:
+            configMapKeyRef:
+              name: config-passwordvault
+              key: VUE_APP_AAD_CLIENT_ID  
+        - name: VUE_APP_AAD_TENANT_ID
+          valueFrom:
+            configMapKeyRef:
+              name: config-passwordvault
+              key: VUE_APP_AAD_TENANT_ID 
+
+        resources:
+          limits:
+            memory: "64M"
+            cpu: "0.1"
+      
+      imagePullSecrets:
+        - name: registrykey 
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: passwordvault-ui-svc
+spec:
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  selector:
+    app: passwordvault-ui

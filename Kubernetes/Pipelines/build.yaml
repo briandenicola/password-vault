@@ -1,0 +1,34 @@
+pool:
+    vmImage: 'Ubuntu 16.04'
+
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    exclude:
+    - Kuberentes/*
+    - Infrastructure/*
+    - Scripts/*
+
+variables:
+    dockerrepo: 'bjd145.azurecr.io'
+    dockerid: 'bjd145'
+    uiImageName:  'passwordvault/frontend:$(Build.BuildId)'
+    apiImageName: 'passwordvault/api:$(Build.BuildId)'
+
+steps:
+- bash: |
+    docker build -t $(dockerrepo)/$(uiImageName) -f Kubernetes/Build/Dockerfile.ui  .
+    docker build -t $(dockerrepo)/$(apiImageName) -f Kubernetes/Build/Dockerfile.api .
+
+    echo $pswd | docker login $(dockerrepo) -u $(dockerId) --password-stdin
+    docker push $(dockerrepo)/$(apiImageName)
+    docker push $(dockerrepo)/$(uiImageName)
+  env:
+    pswd: $(dockerPassword)
+  displayName: 'Build and Push image(s) to ACR'
+
+- task: PublishPipelineArtifact@0
+  inputs:
+    targetPath: deploy
