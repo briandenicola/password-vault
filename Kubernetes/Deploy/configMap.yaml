@@ -5,8 +5,8 @@ metadata:
 data:
   VUE_APP_API_ENDPOINT:     http://passwordvault-api-svc:5000
   VUE_APP_AAD_REDIRECT_URL: http://localhost:8080/
-  VUE_APP_AAD_CLIENT_ID:    ''
-  VUE_APP_AAD_TENANT_ID:    ''
+  VUE_APP_AAD_CLIENT_ID:    h
+  VUE_APP_AAD_TENANT_ID:    
 ---
 apiVersion: v1
 kind: Secret
@@ -14,7 +14,7 @@ metadata:
   name:  secrets-passwordvault
 type: Opaque
 data:
-  VUE_APP_API_KEY: ''
+  VUE_APP_API_KEY: 
   COSMOSDB_CONSTR: 
   AesKey:   
   AesIV:    
