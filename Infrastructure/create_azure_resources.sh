@@ -8,7 +8,7 @@ export storageName=$5
 export aesKey=$6
 export aesIV=$7
 
-az login 
+#az login 
 az extension add --name webapp
 az extension add --name storage-preview
 az group create -n $RG -l $location
@@ -50,7 +50,7 @@ az functionapp config appsettings set -g $RG -n $functionAppName --settings AesI
 
 #Host Key for Functions
 userName=$(az functionapp deployment list-publishing-profiles -n $functionAppName -g $RG --query '[0].userName' --output tsv)
-userPassword=$(az functionapp deployment list-publishing-profiles -n $functionAppName -g $RG --query '.[0].userPWD' --output tsv)
+userPassword=$(az functionapp deployment list-publishing-profiles -n $functionAppName -g $RG --query '[0].userPWD' --output tsv)
 kuduUrl=$(az functionapp deployment list-publishing-profiles -n $functionAppName -g $RG --query '[0].publishUrl' --output tsv)
 adminUrl="https://$kuduUrl/api/functions/admin/token"
 keyUrl="https://$functionAppName.azurewebsites.net/admin/host/keys/main"
