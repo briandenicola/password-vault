@@ -13,7 +13,7 @@
     "@fortawesome/vue-fontawesome": "^0.1.5",
     "adal-angular": "^1.0.15",
     "axios": "^0.18.0",
-    "bootstrap-vue": "^2.0.0-rc.11",
+    "bootstrap-vue": "^2.0.0-rc.13",
     "moment": "^2.23.0",
     "vue": "^2.5.21",
     "vue-fontawesome": "0.0.2",
