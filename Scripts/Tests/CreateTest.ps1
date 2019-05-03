@@ -16,4 +16,6 @@ $accountPassword = New-Object psobject -Property @{
     Notes = [string]::Empty
 }
 
-Invoke-RestMethod -UseBasicParsing -Uri ("{0}/api/passwords/" -f $url)  -Method POST -ContentType "application/json" -Body (ConvertTo-Json $accountPassword)
+$headers = @{}
+$headers.Add('x-functions-key', 'xyz')
+Invoke-RestMethod -UseBasicParsing -Uri ("{0}/api/passwords/" -f $url)  -Method POST -ContentType "application/json" -Body (ConvertTo-Json $accountPassword) -Headers $headers

@@ -1,12 +1,28 @@
 apiVersion: v1
-kind: ConfigMap
+kind: Secret
 metadata:
-  name:  config-passwordvault
-data:
-  VUE_APP_API_ENDPOINT:     http://passwordvault-api-svc:5000
-  VUE_APP_AAD_REDIRECT_URL: http://localhost:8080/
-  VUE_APP_AAD_CLIENT_ID:    h
-  VUE_APP_AAD_TENANT_ID:    
+  name: azure-functions-secrets
+type: Opaque
+stringData:
+  host.json: |-
+    {
+      "masterKey": {
+        "name": "master",
+        "value": "[MASTER_KEY]",
+        "encrypted": false
+      },
+      "functionKeys": [ ]
+    }
+  httpTrigger.json: |-
+    {
+      "keys": [
+        {
+          "name": "default",
+          "value": "[HOST_KEY]",
+          "encrypted": false
+        }
+      ]
+    }
 ---
 apiVersion: v1
 kind: Secret
@@ -14,7 +30,7 @@ metadata:
   name:  secrets-passwordvault
 type: Opaque
 data:
-  VUE_APP_API_KEY: 
+  AzureWebJobsStorage: 
   COSMOSDB_CONSTR: 
-  AesKey:   
-  AesIV:    
+  AesKey: 
+  AesIV: 

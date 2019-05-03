@@ -20,7 +20,12 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 80
+        volumeMounts:
+        - name: secrets
+          mountPath: "/azure-functions-host/Secrets"
         env:     
+        - name: AzureWebJobsSecretStorageType
+          value: files
         - name: cosmosdb
           valueFrom:
            secretKeyRef:
@@ -36,12 +41,19 @@ spec:
            secretKeyRef:
              name: secrets-passwordvault
              key: AesIV
-
+        - name: AzureWebJobsStorage
+          valueFrom:
+           secretKeyRef:
+             name: secrets-passwordvault
+             key: AzureWebJobsStorage
         resources:
           limits:
             memory: "256M"
             cpu: "0.1"         
-      
+      volumes:
+       - name: secrets
+         secret:
+           secretName: azure-functions-secrets 
       imagePullSecrets:
         - name: registrykey
 
