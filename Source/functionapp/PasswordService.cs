@@ -93,8 +93,6 @@ namespace PasswordService
             e.Encrypt(data.CurrentPassword, out string encryptedPassword);
             data.PartitionKey = partitionKey;
             data.CurrentPassword = encryptedPassword;
-            //data.CreatedBy = data.LastModifiedBy = System.Threading.Thread.CurrentPrincipal.Identity.Name.ToString();
-            //data.CreatedBy = data.LastModifiedBy = "Brian";
             data.LastModifiedDate = data.CreatedDate = DateTime.Now;
 
             await accountPasswords.AddAsync(data);
@@ -143,8 +141,6 @@ namespace PasswordService
             e.Encrypt(data.CurrentPassword, out string newPassword);
             data.CurrentPassword = newPassword;
             data.PartitionKey = partitionKey;
-            //data.LastModifiedBy = System.Threading.Thread.CurrentPrincipal.Identity.Name.ToString();
-            //data.LastModifiedBy = "Brian";
             data.LastModifiedDate = DateTime.Now;
 
             await client.ReplaceDocumentAsync(document.SelfLink, data);
