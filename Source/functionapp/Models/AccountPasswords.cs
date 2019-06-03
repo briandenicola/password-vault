@@ -11,7 +11,7 @@ namespace PasswordService.Models
         public string SiteName { get; set; }
         public string AccountName { get; set; }
         public string CurrentPassword { get; set; }
-        public List<Password> OldPasswords { get; set; }
+        public List<PasswordHistory> OldPasswords { get; set; }
         public string Notes { get; set; }
         public List<Questions> SecurityQuestions { get; set; }
         public bool isDeleted { get; set; }
@@ -21,16 +21,4 @@ namespace PasswordService.Models
         public string LastModifiedBy { get; set; }
     }
 
-    public class Password
-    {
-        public string PreviousPassword { get; set; }
-        public DateTime CreatedDate { get; set; }
-    }
-
-    public class Questions
-    {
-        public string Question { get; set; }
-        public string Answer { get; set; }
-    }
 }
-

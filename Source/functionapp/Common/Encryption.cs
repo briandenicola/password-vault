@@ -18,12 +18,12 @@ namespace PasswordService.Common
             _iv = Convert.FromBase64String(iv);
         }
 
-        public bool Encrypt(string plainText, out string cipherText)
+        public string Encrypt(string plainText, out string cipherText)
         {
             if (plainText == null || plainText.Length <= 0)
             {
                 cipherText = default(string);
-                return false;
+                return string.Empty;
             }
 
             byte[] cipherArray;
@@ -50,17 +50,16 @@ namespace PasswordService.Common
                         cipherArray = memoryStream.ToArray();
                     }
                 }
-                cipherText = $"{ Convert.ToBase64String(hash) }:{ Convert.ToBase64String(cipherArray) }";
+                cipherText = Convert.ToBase64String(cipherArray);
+                return Convert.ToBase64String(hash);
             }
-            return true;
         }
 
-        public bool Decrypt(string cipherText, out string plainText)
+        public void Decrypt(string cipherText, string hmacText, out string plainText)
         {
             if (cipherText == null || cipherText.Length <= 0)
             {
                 plainText = default(string);
-                return false;
             }
 
             using (HMACSHA512 hmac = new HMACSHA512(_key))
@@ -70,10 +69,8 @@ namespace PasswordService.Common
                     aes.Key = _key;
                     aes.IV = _iv;
 
-                    var c = cipherText.Split(':');
-
-                    var hmacArray = Convert.FromBase64String(c[0]);
-                    var cipherArray = Convert.FromBase64String(c[1]);
+                    var hmacArray = Convert.FromBase64String(hmacText);
+                    var cipherArray = Convert.FromBase64String(cipherText);
 
                     ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
                     using (MemoryStream memoryStream = new MemoryStream(cipherArray))
@@ -93,14 +90,12 @@ namespace PasswordService.Common
                                 else
                                 {
                                     plainText = default(string);
-                                    return false;
                                 }
                             }
                         }
                     }
                 }
             }
-            return true;
         }
 
         private static byte[] GenerateSalt()

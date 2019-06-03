@@ -22,7 +22,6 @@ namespace PasswordService
     {
         private static string databaseName = "AccountPasswords";
         private static string collectionName = "Passwords";
-
         private static string partitionKey = "Passwords";
 
         private static Encryptor e = new Encryptor(
@@ -57,8 +56,10 @@ namespace PasswordService
                 Id = "{id}")] AccountPasswords accountPassword,
             ILogger log)
         {
-            log.LogInformation($"C# HTTP trigger function processed a GET request.");
-            e.Decrypt(accountPassword.CurrentPassword, out string decryptedPassword);
+            log.LogInformation($"C# HTTP trigger function processed a GET request");
+        
+            var p = new PasswordEntity(accountPassword.CurrentPassword);
+            e.Decrypt(p.EncryptedPassword, p.HmacHash, out string decryptedPassword);
 
             return (ActionResult)new OkObjectResult(new AccountPasswords()
             {
@@ -90,9 +91,9 @@ namespace PasswordService
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             AccountPasswords data = JsonConvert.DeserializeObject<AccountPasswords>(requestBody);
 
-            e.Encrypt(data.CurrentPassword, out string encryptedPassword);
+            var hash = e.Encrypt(data.CurrentPassword, out string encryptedPassword);
             data.PartitionKey = partitionKey;
-            data.CurrentPassword = encryptedPassword;
+            data.CurrentPassword = new PasswordEntity(hash,encryptedPassword).ToString();
             data.LastModifiedDate = data.CreatedDate = DateTime.Now;
 
             await accountPasswords.AddAsync(data);
@@ -120,26 +121,26 @@ namespace PasswordService
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
 
             AccountPasswords data = JsonConvert.DeserializeObject<AccountPasswords>(requestBody);
-            data.OldPasswords = document.GetPropertyValue<List<Password>>("OldPasswords");
+            data.OldPasswords = document.GetPropertyValue<List<PasswordHistory>>("OldPasswords");
 
-            var originalEncryptedPassword = document.GetPropertyValue<string>("CurrentPassword");
-            e.Decrypt(originalEncryptedPassword, out string originalPassword);
+            var originalEncryptedPassword = new PasswordEntity( document.GetPropertyValue<string>("CurrentPassword") );
+            e.Decrypt(originalEncryptedPassword.EncryptedPassword, originalEncryptedPassword.HmacHash, out string originalPassword);
 
             if (String.Compare(data.CurrentPassword, originalPassword, false) != 0)
             {
                 if (data.OldPasswords == null)
                 {
-                    data.OldPasswords = new List<Password>();
+                    data.OldPasswords = new List<PasswordHistory>();
                 }
-                data.OldPasswords.Add(new Password()
+                data.OldPasswords.Add(new PasswordHistory()
                 {
-                    PreviousPassword = originalEncryptedPassword,
+                    Password = originalEncryptedPassword,
                     CreatedDate = DateTime.Now
                 });
             }
 
-            e.Encrypt(data.CurrentPassword, out string newPassword);
-            data.CurrentPassword = newPassword;
+            var hash = e.Encrypt(data.CurrentPassword, out string newPassword);
+            data.CurrentPassword = new PasswordEntity(hash, newPassword).ToString();
             data.PartitionKey = partitionKey;
             data.LastModifiedDate = DateTime.Now;
 
