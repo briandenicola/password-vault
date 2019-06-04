@@ -9,6 +9,11 @@ namespace PasswordService.Models
         public string EncryptedPassword { get; set;}
         public string HmacHash { get; set; }
 
+        public PasswordEntity()
+        {
+            this.EncryptedPassword = this.HmacHash = string.Empty;
+        }
+
         public PasswordEntity( string encryptedPassword ) 
         {
             var cipherText = encryptedPassword.Split(':');
