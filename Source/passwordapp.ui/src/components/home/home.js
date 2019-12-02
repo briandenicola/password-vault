@@ -38,8 +38,7 @@ export default {
   },
 
   created() {
-    this.fetchPasswords();
-    this.totalRows = this.passwords.length;
+    this.fetchPasswords(Authentication.getBearerToken());
   },
 
   methods: {
@@ -47,8 +46,8 @@ export default {
       Authentication.signOut();
     },
     onFiltered (filteredItems) {
-      this.totalRows = filteredItems.length
-      this.currentPage = 1
+      this.totalRows = filteredItems.length;
+      this.currentPage = 1;
     },
     showPassword(passwordId) {
       this.$router.push({ name: 'Details', params: { id: passwordId } });
@@ -63,6 +62,7 @@ export default {
     fetchPasswords() {
       PasswordService.getAll().then((response) => {
         this.passwords = response.data;
+        this.totalRows = response.data.length;
       });
     },
     copyPassword(passwordId) {

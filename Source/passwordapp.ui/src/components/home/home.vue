@@ -38,10 +38,10 @@
           @filtered="onFiltered"
           :items="passwords"
           :fields="fields">
-          <template slot="lastModifiedDate" slot-scope="data">
+          <template v-slot:cell(lastModifiedDate)="data">
             {{data.item.lastModifiedDate | formatDate}}
           </template>
-          <template slot="edit" slot-scope="data">
+          <template v-slot:cell(edit)="data">
             <b-button size="sm" 
               variant="secondary"
               @click.stop="copyPassword(data.item.id)"><font-awesome-icon icon="key" ></font-awesome-icon></b-button> |

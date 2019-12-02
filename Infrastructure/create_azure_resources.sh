@@ -10,6 +10,7 @@ export aesIV=$7
 export searchServiceRG=$8
 export searchServiceName=$9
 export searchIndexName=${10}
+export clientID=${11}
 
 #az login 
 az extension add --name webapp
@@ -67,9 +68,12 @@ JWT=$(curl -s -X GET -u $userName:$userPassword $adminUrl | tr -d '"')
 functionHostKey=$(curl -s -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" -d "Content-Length: 0" $keyUrl | jq -r '.value')
 az keyvault secret set --vault-name $keyVaultName --name functionSecret --value $functionHostKey
 
-# Update Functions with Azure Search Configuration"
+# Update Functions with Azure Search Configuration
 searchAdminKey=`az search admin-key show --resource-group ${searchServiceRG} --service-name ${searchServiceName} -o tsv --query "primaryKey"`
 searchAdminKeyId="$(az keyvault secret set --vault-name $keyVaultName --name searchAdminKey --value $searchAdminKey --query 'id' --output tsv)"
 az functionapp config appsettings set -g $RG -n $functionAppName --settings SEARCH_SERVICENAME=${searchServiceName}
 az functionapp config appsettings set -g $RG -n $functionAppName --settings SEARCH_ADMINKEY="@Microsoft.KeyVault(SecretUri=$searchAdminKeyId)"
 az functionapp config appsettings set -g $RG -n $functionAppName --settings SEARCH_INDEXNAME=${searchIndexName}
+
+# Update Function App for Azure AD Authentication 
+az webapp auth update -g $RG -n $functionAppName --enabled true --action LoginWithAzureActiveDirectory --aad-client-id ${clientID}

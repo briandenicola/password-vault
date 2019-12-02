@@ -26,6 +26,9 @@ Axios.defaults.baseURL = process.env.VUE_APP_API_ENDPOINT;
 Axios.defaults.headers.common['x-functions-key'] = process.env.VUE_APP_API_KEY;
 
 Authentication.initialize().then(() => {
+  let token = Authentication.getBearerToken();
+  Axios.defaults.headers.common['Authorization'] = "Bearer ".concat(token);
+
   new Vue({
     router,
     render: function (h) { return h(App) }

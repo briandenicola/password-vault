@@ -1,36 +1,12 @@
 import PasswordService from '@/components/api/Password.Service.js';
 import Authentication from '@/components/azuread/AzureAD.Authentication.js';
+import PasswordUtils from '@/components/utils/utils.js';
 
 export default {
   name: 'Update',
   data() {
     return {
-      formData: {
-        id: '',
-        partitionKey: '',
-        oldPasswords: [],
-        accountName: '',
-        lastModifiedBy: '',
-        siteName: '',
-        currentPassword: '',
-        notes: '',
-        createdBy: '',
-        createdDate: '',
-        securityQuestions: [
-          {
-            question: '',
-            answer: '',
-          },
-          {
-            question: '',
-            answer: '',
-          },
-          {
-            question: '',
-            answer: '',
-          },
-        ],
-      },
+      formData: PasswordService.newPassword(),
       alertModalTitle: '',
       alertModalContent: '',
       isSuccessfully: false,
@@ -42,10 +18,8 @@ export default {
     });
   },
   methods: {
-    generatePassword() {
-      var pwdChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%^&(){}[]<>,./!";
-      var pwdLen = 4;
-      this.formData.currentPassword = Math.random().toString(36).substr(2,8) + Array(pwdLen).fill(pwdChars).map(function(x) { return x[Math.floor(Math.random() * x.length)] }).join('');
+    genPass() {
+      this.formData.currentPassword = PasswordUtils.generatePassword();
     },
     updatePassword() {
       this.formData.lastModifiedBy = Authentication.getUserProfile().upn;

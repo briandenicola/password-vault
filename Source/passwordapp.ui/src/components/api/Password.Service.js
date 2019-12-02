@@ -18,4 +18,29 @@ export default {
     delete(id) {
         return Axios.delete(`${RESOURCE_NAME}/${id}`);
     },
+    newPassword() {
+        return {
+            accountName: '',
+            siteName: '',
+            currentPassword: '',
+            notes: '',
+            createdBy: '',
+            lastModifiedBy: '',
+            isDeleted: false,
+            securityQuestions: [
+                {
+                    question: '',
+                    answer: '',
+                },
+                {
+                    question: '',
+                    answer: '',
+                },
+                {
+                    question: '',
+                    answer: '',
+                },
+            ],
+        }
+    }
 };

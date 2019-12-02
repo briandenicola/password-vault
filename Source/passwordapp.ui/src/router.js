@@ -21,14 +21,6 @@ var router = new Router({
       },
     },
     {
-      path: '/password/list',
-      name: 'Home',
-      component: Home,
-      meta: {
-        requiresAuthentication: true
-      },
-    },
-    {
       path: '/password/update/:id',
       name: 'Update',
       component: Update,
