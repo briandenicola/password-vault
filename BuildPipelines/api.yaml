@@ -1,7 +1,5 @@
-resources:
-- repo: self
-queue:
-  name: Hosted VS2017
+pool:
+  name: Azure Pipelines
 
 steps:
 - task: NuGetToolInstaller@0
@@ -20,7 +18,6 @@ steps:
   inputs:
     projects: 'Source/functionapp/*.csproj'
     arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
-
 
 - task: DotNetCoreCLI@2
   displayName: 'dotnet publish'
