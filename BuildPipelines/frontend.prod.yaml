@@ -1,6 +1,12 @@
-queue:
-  name: Hosted VS2017
+pool:
+  name: Azure Pipelines
   demands: npm
+
+variables:
+  AAD_TENANT_ID:
+  AAD_CLIENT_ID:
+  AAD_REDIRECT_URL:
+  functionUrl:
 
 steps:
 - task: qetza.replacetokens.replacetokens-task.replacetokens@3
@@ -9,7 +15,7 @@ steps:
     rootDirectory: Source/passwordapp.ui
     targetFiles: '**/*.env.production'
     encoding: ascii
-
+    escapeType: none
 
 - task: qetza.replacetokens.replacetokens-task.replacetokens@3
   displayName: 'Replace tokens in **/*.env'
@@ -17,14 +23,13 @@ steps:
     rootDirectory: Source/passwordapp.ui
     targetFiles: '**/*.env'
     encoding: ascii
+    escapeType: none
 
 - task: Npm@1
-  displayName: 'npm restore'
+  displayName: 'npm install'
   inputs:
-    command: custom
     workingDir: Source/passwordapp.ui
     verbose: false
-    customCommand: restore
 
 - task: Npm@1
   displayName: 'npm build'
@@ -35,4 +40,7 @@ steps:
     customCommand: 'run build'
 
 - task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact: drop'
+  displayName: 'Publish Artifact: drop-production'
+  inputs:
+    PathtoPublish: Source/passwordapp.ui/dist
+    ArtifactName: 'drop-production'
