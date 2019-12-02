@@ -59,11 +59,6 @@ _Can only be completed after documents have been created in Cosmos_
    * Track Deletions. Soft Delete Column - isDeleted. Marker Value - true
 12. Submit
 
-# Azure Function Setup (Optional but recommended)
-1. Azure Function > Platform Settings
-2. Authentication / Authorization
-3.  
-
 # To Do
 - [X] Refactor UpdatePassword and DeletePassword to eliminate duplicate code
 - [ ] Remove manual step for functionSecretDev Secret creation
