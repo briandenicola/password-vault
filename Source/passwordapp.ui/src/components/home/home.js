@@ -38,7 +38,7 @@ export default {
   },
 
   created() {
-    this.fetchPasswords();
+    this.fetchPasswords(Authentication.getBearerToken());
   },
 
   methods: {

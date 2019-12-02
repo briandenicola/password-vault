@@ -69,5 +69,10 @@ export default {
   },
   signOut() {
     this.authenticationContext.logOut();
+  },
+  getBearerToken() {
+    if(this.isAuthenticated()) {
+      return this.authenticationContext.getCachedToken(config.clientId);
+    }
   }
 }
