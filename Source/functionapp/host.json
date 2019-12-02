@@ -1,11 +1,3 @@
 {
-	"version": "2.0",
-	"logging": {
-		"logLevel": {
-			"default": "Information"
-		},
-		"console": {
-			"isEnabled": "true"
-		} 
-	}
+    "version": "2.0"
 }

@@ -7,11 +7,15 @@ export cosmosdb=$4
 export storageName=$5
 export aesKey=$6
 export aesIV=$7
+export searchServiceRG=$8
+export searchServiceName=$9
+export searchIndexName=${10}
 
 #az login 
 az extension add --name webapp
 az extension add --name storage-preview
-az group create -n $RG -l $location
+
+if ! `az group exists -g $RG`; then az group create -n $RG -l $location; fi
 
 funcStorageName=${functionAppName}sa001
 keyVaultName=${functionAppName}keyvault001
@@ -47,6 +51,10 @@ primaryConnectionStringSecretId="$(az keyvault secret set --vault-name $keyVault
 az functionapp config appsettings set -g $RG -n $functionAppName --settings cosmosdb="@Microsoft.KeyVault(SecretUri=$primaryConnectionStringSecretId)"
 az functionapp config appsettings set -g $RG -n $functionAppName --settings AesKey="@Microsoft.KeyVault(SecretUri=$aesKeySecretId)"
 az functionapp config appsettings set -g $RG -n $functionAppName --settings AesIV=$aesIV
+az functionapp config appsettings set -g $RG -n $functionAppName --settings COSMOS_DATABASENAME="AccountPasswords"
+az functionapp config appsettings set -g $RG -n $functionAppName --settings COSMOS_COLLECTIONNAME="Passwords"
+az functionapp config appsettings set -g $RG -n $functionAppName --settings COSMOS_LEASENAME="leases"
+az functionapp config appsettings set -g $RG -n $functionAppName --settings COSMOS_PARTITIONKEY="Passwords"
 
 #Host Key for Functions
 userName=$(az functionapp deployment list-publishing-profiles -n $functionAppName -g $RG --query '[0].userName' --output tsv)
@@ -58,3 +66,10 @@ keyUrl="https://$functionAppName.azurewebsites.net/admin/host/keys/main"
 JWT=$(curl -s -X GET -u $userName:$userPassword $adminUrl | tr -d '"')
 functionHostKey=$(curl -s -X POST -H "Authorization: Bearer $JWT" -H "Content-Type: application/json" -d "Content-Length: 0" $keyUrl | jq -r '.value')
 az keyvault secret set --vault-name $keyVaultName --name functionSecret --value $functionHostKey
+
+# Update Functions with Azure Search Configuration"
+searchAdminKey=`az search admin-key show --resource-group ${searchServiceRG} --service-name ${searchServiceName} -o tsv --query "primaryKey"`
+searchAdminKeyId="$(az keyvault secret set --vault-name $keyVaultName --name searchAdminKey --value $searchAdminKey --query 'id' --output tsv)"
+az functionapp config appsettings set -g $RG -n $functionAppName --settings SEARCH_SERVICENAME=${searchServiceName}
+az functionapp config appsettings set -g $RG -n $functionAppName --settings SEARCH_ADMINKEY="@Microsoft.KeyVault(SecretUri=$searchAdminKeyId)"
+az functionapp config appsettings set -g $RG -n $functionAppName --settings SEARCH_INDEXNAME=${searchIndexName}

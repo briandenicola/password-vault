@@ -1,8 +1,13 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Search;
+using Microsoft.Azure.Search.Models;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
@@ -11,166 +16,27 @@ using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System.Collections.Generic;
 using PasswordService.Common;
 using PasswordService.Models;
 
 namespace PasswordService
 {
-    public static class PasswordService
+    public static partial class PasswordService
     {
-        private static string databaseName = "AccountPasswords";
-        private static string collectionName = "Passwords";
-        private static string partitionKey = "Passwords";
+        private static string partitionKey      = Environment.GetEnvironmentVariable("COSMOS_PARTITIONKEY", EnvironmentVariableTarget.Process);
+
+        private static string searchServiceName = Environment.GetEnvironmentVariable("SEARCH_SERVICENAME", EnvironmentVariableTarget.Process);
+        private static string searchAdminKey    = Environment.GetEnvironmentVariable("SEARCH_ADMINKEY", EnvironmentVariableTarget.Process);
+        private static string searchIndexName   = Environment.GetEnvironmentVariable("SEARCH_INDEXNAME", EnvironmentVariableTarget.Process);
 
         private static Encryptor e = new Encryptor(
             Environment.GetEnvironmentVariable("AesKey", EnvironmentVariableTarget.Process),
             Environment.GetEnvironmentVariable("AesIV", EnvironmentVariableTarget.Process)
         );
 
-        [FunctionName("GetAllPasswords")]
-        public static IActionResult GetAllPasswords(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "passwords")] HttpRequest req,
-            [CosmosDB(
-                databaseName: "AccountPasswords",
-                collectionName: "Passwords",
-                ConnectionStringSetting = "cosmosdb",
-                PartitionKey = "Passwords",
-                SqlQuery = "SELECT * FROM c where c.isDeleted = false")]
-                IEnumerable<AccountPasswords> accountPasswords,
-            ILogger log)
-        {
-            log.LogInformation("C# HTTP trigger function processed a GET ALL request.");
-            return (ActionResult)new OkObjectResult(accountPasswords);
-        }
-
-        [FunctionName("GetPasswordById")]
-        public static IActionResult GetPasswordById(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "passwords/{id}")] HttpRequest req,
-            [CosmosDB(
-                databaseName: "AccountPasswords",
-                collectionName: "Passwords",
-                ConnectionStringSetting = "cosmosdb",
-                PartitionKey = "Passwords",
-                Id = "{id}")] AccountPasswords accountPassword,
-            ILogger log)
-        {
-            log.LogInformation($"C# HTTP trigger function processed a GET request");
-        
-            var p = new PasswordEntity(accountPassword.CurrentPassword);
-            e.Decrypt(p.EncryptedPassword, p.HmacHash, out string decryptedPassword);
-
-            return (ActionResult)new OkObjectResult(new AccountPasswords()
-            {
-                id = accountPassword.id,
-                PartitionKey = accountPassword.PartitionKey,
-                SiteName = accountPassword.SiteName,
-                AccountName = accountPassword.AccountName,
-                Notes = accountPassword.Notes,
-                SecurityQuestions = accountPassword.SecurityQuestions,
-                CreatedDate = accountPassword.CreatedDate,
-                CreatedBy = accountPassword.CreatedBy,
-                LastModifiedDate = accountPassword.LastModifiedDate,
-                LastModifiedBy = accountPassword.LastModifiedBy,
-                CurrentPassword = decryptedPassword
-            });
-        }
-
-        [FunctionName("PostPassword")]
-        public static async Task<IActionResult> PostPasswords(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "passwords")] HttpRequest req,
-            [CosmosDB(
-                databaseName: "AccountPasswords",
-                collectionName: "Passwords",
-                ConnectionStringSetting = "cosmosdb")] IAsyncCollector<AccountPasswords> accountPasswords,
-            ILogger log)
-        {
-            log.LogInformation("C# HTTP trigger function processed a POST request.");
-
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            AccountPasswords data = JsonConvert.DeserializeObject<AccountPasswords>(requestBody);
-
-            var hash = e.Encrypt(data.CurrentPassword, out string encryptedPassword);
-            data.PartitionKey = partitionKey;
-            data.CurrentPassword = new PasswordEntity(hash,encryptedPassword).ToString();
-            data.LastModifiedDate = data.CreatedDate = DateTime.Now;
-
-            await accountPasswords.AddAsync(data);
-            return (ActionResult)new OkObjectResult(data);
-        }
-
-        [FunctionName("UpdatePassword")]
-        public static async Task<IActionResult> Post(
-            [HttpTrigger(AuthorizationLevel.Function, "put", Route = "passwords/{id}")] HttpRequest req,
-            string id,
-            [CosmosDB(
-                databaseName: "AccountPasswords",
-                collectionName: "Passwords",
-                ConnectionStringSetting = "cosmosdb")] DocumentClient client,
-            ILogger log)
-        {
-            log.LogInformation("C# HTTP trigger function processed a PUT request.");
-
-            var opts = new RequestOptions
-            {
-                PartitionKey = new PartitionKey(partitionKey)
-            };
-
-            Document document = await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, id), opts);
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-
-            AccountPasswords data = JsonConvert.DeserializeObject<AccountPasswords>(requestBody);
-            data.OldPasswords = document.GetPropertyValue<List<PasswordHistory>>("OldPasswords");
-
-            var originalEncryptedPassword = new PasswordEntity( document.GetPropertyValue<string>("CurrentPassword") );
-            e.Decrypt(originalEncryptedPassword.EncryptedPassword, originalEncryptedPassword.HmacHash, out string originalPassword);
-
-            if (String.Compare(data.CurrentPassword, originalPassword, false) != 0)
-            {
-                if (data.OldPasswords == null)
-                {
-                    data.OldPasswords = new List<PasswordHistory>();
-                }
-                data.OldPasswords.Add(new PasswordHistory()
-                {
-                    Password = originalEncryptedPassword,
-                    CreatedDate = DateTime.Now
-                });
-            }
-
-            var hash = e.Encrypt(data.CurrentPassword, out string newPassword);
-            data.CurrentPassword = new PasswordEntity(hash, newPassword).ToString();
-            data.PartitionKey = partitionKey;
-            data.LastModifiedDate = DateTime.Now;
-
-            await client.ReplaceDocumentAsync(document.SelfLink, data);
-            return (ActionResult)new OkObjectResult(data);
-        }
-
-        [FunctionName("DeletePassword")]
-        public static async Task<IActionResult> DeletePassword(
-            [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "passwords/{id}")] HttpRequest req,
-            string id,
-            [CosmosDB(
-                databaseName: "AccountPasswords",
-                collectionName: "Passwords",
-                ConnectionStringSetting = "cosmosdb")] DocumentClient client,
-           ILogger log)
-
-        {
-            log.LogInformation("C# HTTP trigger function processed a DELETE request.");
-
-            var opts = new RequestOptions
-            {
-                PartitionKey = new PartitionKey(partitionKey)
-            };
-
-            Document document = await client.ReadDocumentAsync(UriFactory.CreateDocumentUri(databaseName, collectionName, id), opts);
-            AccountPasswords data = (AccountPasswords)(dynamic)document;
-            data.isDeleted = true;
-            await client.ReplaceDocumentAsync(document.SelfLink, data);
-            return (ActionResult)new OkObjectResult(data);
-        }
+        private static SearchServiceClient serviceClient = new SearchServiceClient(
+            searchServiceName, 
+            new SearchCredentials(searchAdminKey)
+        );
     }
 }

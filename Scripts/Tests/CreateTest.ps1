@@ -1,21 +1,38 @@
-$url = "http://localhost:7071"
+param(
+    $url = "http://localhost:7071",
+    $key,
+    $siteName
+)
 
 $questions = @()
 $questions += (New-Object PSobject -Property @{
     Question = "What is my madien name?"
-    Answer = "Are you kidding me"
+    Answer = (New-Guid).ToString('N').Substring(10)   
 })
 
+$pass = (New-Guid).ToString('N').Substring(20)
 $accountPassword = New-Object psobject -Property @{
-    SiteName = "Example"
-    AccountName = "brian@example.com"
-    CurrentPassword = "this is a test password!!!!"
+    SiteName = $siteName
+    AccountName = "sample@example.com"
+    CurrentPassword = $pass
 
     SecurityQuestions = $questions
     isDeleted = $false 
     Notes = [string]::Empty
 }
 
-$headers = @{}
-$headers.Add('x-functions-key', 'xyz')
-Invoke-RestMethod -UseBasicParsing -Uri ("{0}/api/passwords/" -f $url)  -Method POST -ContentType "application/json" -Body (ConvertTo-Json $accountPassword) -Headers $headers
+$opts = @{
+    Method = "POST"
+    ContentType = "application/json"
+    Body = (ConvertTo-Json $accountPassword)
+}
+
+if( $url -imatch "localhost" ) {
+    $opts.Add("Uri",("{0}/api/passwords/" -f $url))
+}
+else {
+    $opts.Add("Uri",("{0}/api/passwords?code={1}" -f $url,$key))
+}
+
+Invoke-RestMethod -UseBasicParsing @opts
+Write-Host "Password is set to $pass"
