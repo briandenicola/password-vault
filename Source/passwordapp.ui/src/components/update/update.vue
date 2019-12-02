@@ -149,7 +149,7 @@
             
         <b-row>
           <b-col sm="auto" align-h="end">
-            <b-button size="sm" variant="success" @click.stop="generatePassword()">Generate Password</b-button> |
+            <b-button size="sm" variant="success" @click.stop="genPass()">Generate Password</b-button> |
             <b-button size="sm" type="submit" variant="info">Save</b-button> |
             <b-button size="sm" :to="{ name: 'Home' }" variant="danger">Cancel</b-button>
           </b-col>
@@ -166,5 +166,6 @@
     </b-modal> 
   </b-container>
 </template>
+
 <style src="./update.css" />
 <script src="./update.js"></script>
