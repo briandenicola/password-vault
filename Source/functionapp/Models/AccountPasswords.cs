@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 using PasswordService.Common;
 
 namespace PasswordService.Models
@@ -39,12 +38,12 @@ namespace PasswordService.Models
             };
         }
 
-        public void UpdatePassword(Encryptor e, string newPassword )
+        public void UpdatePassword(Encryptor e, string newPassword, DateTime lastModifiedDate )
         {
             string originalEncryptedPassword = this.CurrentPassword;
-            
-            this.DecryptPassword(e);
-            if (String.Compare(newPassword, this.CurrentPassword, false) != 0)
+            string currentPassword = this.DecryptPassword(e);
+
+            if (String.Compare(newPassword, currentPassword, false) != 0)
             {
                 if (this.OldPasswords == null) {
                     this.OldPasswords = new List<PasswordHistory>();
@@ -52,30 +51,30 @@ namespace PasswordService.Models
                 this.OldPasswords.Add(new PasswordHistory()
                 {
                     Password = new PasswordEntity(originalEncryptedPassword),
-                    CreatedDate = DateTime.Now
+                    CreatedDate = lastModifiedDate
                 });
             }
 
-            this.EncryptPassword(e, newPassword);
+            this.CurrentPassword = this.EncryptPassword(e, newPassword);
         }
 
-        public void DecryptPassword( Encryptor e ) 
+        public string DecryptPassword( Encryptor e ) 
         {
             var p = new PasswordEntity(this.CurrentPassword);
             e.Decrypt(p.EncryptedPassword, p.HmacHash, out string decryptedPassword);
-            this.CurrentPassword = decryptedPassword;
+            return decryptedPassword;
         }   
 
-        public void EncryptPassword( Encryptor e ) 
+        public string EncryptPassword( Encryptor e ) 
         {
             var hash = e.Encrypt(this.CurrentPassword, out string encryptedPassword);
-            this.CurrentPassword = new PasswordEntity(hash,encryptedPassword).ToString();
+            return new PasswordEntity(hash,encryptedPassword).ToString();
         } 
 
-        public void EncryptPassword( Encryptor e, string newPassword ) 
+        public string EncryptPassword( Encryptor e, string newPassword ) 
         {
             var hash = e.Encrypt(newPassword, out string encryptedPassword);
-            this.CurrentPassword = new PasswordEntity(hash,encryptedPassword).ToString();
+            return new PasswordEntity(hash,encryptedPassword).ToString();
         }   
 
     }

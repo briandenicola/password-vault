@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
 using PasswordService.Common;
 
 namespace PasswordService.Models

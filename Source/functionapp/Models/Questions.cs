@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-
-namespace PasswordService.Models
+﻿namespace PasswordService.Models
 {
     public class Questions
     {

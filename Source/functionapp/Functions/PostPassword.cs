@@ -1,22 +1,13 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Search;
-using Microsoft.Azure.Search.Models;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
-using Microsoft.Azure.Documents.Linq;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using PasswordService.Common;
 using PasswordService.Models;
 
 namespace PasswordService
@@ -39,7 +30,7 @@ namespace PasswordService
             AccountPassword accountPassword = JsonConvert.DeserializeObject<AccountPassword>(requestBody);
             accountPassword.PartitionKey = partitionKey;
             accountPassword.LastModifiedDate = accountPassword.CreatedDate = DateTime.Now;
-            accountPassword.EncryptPassword(e);
+            accountPassword.CurrentPassword = accountPassword.EncryptPassword(e);
 
             await passwordCollection.AddAsync(accountPassword);
             return (ActionResult)new OkObjectResult(accountPassword);
