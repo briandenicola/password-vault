@@ -36,8 +36,8 @@ az storage container create --name 'backups' --account-key $key --account-name $
 az keyvault create --name $keyVaultName --resource-group $RG --location $location 
 az keyvault set-policy --name $keyVaultName --object-id $functionAppId --secret-permissions get
 
-clientSecretId="$(az keyvault secret set --vault-name $keyVaultName --name AesKey --value $aesKey --query 'id' --output tsv)"
-aesKeySecretId="$(az keyvault secret set --vault-name $keyVaultName --name clientSecret --value $clientSecret --query 'id' --output tsv)"
+clientSecretId="$(az keyvault secret set --vault-name $keyVaultName --name clientSecret --value $clientSecret --query 'id' --output tsv)"
+aesKeySecretId="$(az keyvault secret set --vault-name $keyVaultName --name AesKey  --value $aesKey --query 'id' --output tsv)"
 funcCodeId="$(az keyvault secret set --vault-name $keyVaultName --name passwordVaultCode --value $passwordVaultCode --query 'id' --output tsv)"
 
 tenant=`az account  show --query tenantId -o tsv`
