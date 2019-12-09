@@ -33,20 +33,24 @@ def getLoginToken():
         "client_secret": secret
     }
     r = requests.post(login_url, data=body)
-
     token = json.loads(r.text)
     return "{} {}".format(token['token_type'], token['access_token'])
 
 def getPasswords(token):
     header = {'Authorization': token}
+    logging.info("Getting Password Url - %s ", "{}?code={}".format(app_url,code))
     r = requests.get("{}?code={}".format(app_url,code), headers=header)
     return json.loads(r.text)
 
 def getPassword(password, token):
     header = {'Authorization': token}
     password_history_url = "{}/{}/history?code={}".format(app_url,password['id'], code)
+    
+    logging.info("Getting Password Url - %s ", password_history_url)
     r = requests.get(password_history_url, headers=header)
-    return json.loads(r.text)
+
+    if (r.status_code == 200):
+        return json.loads(r.text)
 
 def encrytPasswordFile(backups):
     aesgcm = AESGCM(key)
@@ -67,7 +71,7 @@ def main(mytimer: func.TimerRequest,
 
     logging.info('Authenticating against Azure AD')
     bearer_token = getLoginToken()
-
+    
     logging.info('Getting all Passwords')
     passwords = getPasswords(bearer_token)
 
