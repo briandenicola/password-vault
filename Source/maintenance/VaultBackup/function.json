@@ -1,0 +1,20 @@
+{
+  "disabled": false,
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "mytimer",
+      "type": "timerTrigger",
+      "direction": "in",
+      "schedule": "0 0 0 1 * *",
+      "runOnStartup": true
+    },
+    {
+      "name": "outputblob",
+      "type": "blob",
+      "path": "backups/passwords.enc",
+      "connection": "PasswordStorage",
+      "direction": "out"
+    }
+  ]
+}
