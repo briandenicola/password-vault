@@ -3,6 +3,7 @@
 
 # Azure Functions localsettings file
 local.settings.json
+package-lock.json
 
 # User-specific files
 *.suo
