@@ -27,14 +27,14 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 # Code Deploy
 ## Function App
 * cd ./Source/functionapp/
-* func azure functionapp publish <FUNC_Name>
+* func azure functionapp publish <FUNC_Name> --csharp
 
 ## Front End
 * cd ./Source/passwordapp.ui
 * Update .env.production 
 * npm install
 * npm build
-* Copy dist folder to <Storage_Name> $web container
+* copy dist to $web container in <Storage_Name> 
 
 # Search Index Setup
 _Can only be completed after documents have been created in Cosmos_
