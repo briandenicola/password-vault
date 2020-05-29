@@ -47,7 +47,7 @@ az functionapp cors add -g $RG -n $functionAppName --allowed-origins $webUrl
 az keyvault create --name $keyVaultName --resource-group $RG --location $location 
 az keyvault set-policy --name $keyVaultName --object-id $functionAppId --secret-permissions get
 
-primaryMasterKey=`az cosmosdb list-keys -g $RG -n $cosmosdb --query 'primaryMasterKey' --output tsv`
+primaryMasterKey=`az cosmosdb keys list -g $RG -n $cosmosdb --query 'primaryMasterKey' --output tsv`
 primaryConnectionString="AccountEndpoint=https://${cosmosdb}.documents.azure.com:443/;AccountKey=${primaryMasterKey};"
 aesKeySecretId=`az keyvault secret set --vault-name $keyVaultName --name AesKey --value $aesKey --query 'id' --output tsv`
 primaryConnectionStringSecretId=`az keyvault secret set --vault-name $keyVaultName --name cosmosdb --value $primaryConnectionString --query 'id' --output tsv`
