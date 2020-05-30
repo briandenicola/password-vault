@@ -25,7 +25,7 @@ keyVaultName=${functionAppName}keyvault001
 if ! `az functionapp show --name $functionAppName --resource-group $RG -o none`
 then
     az storage account create --name $funcStorageName --location $location --resource-group $RG --sku Standard_LRS
-    az functionapp create --name $functionAppName --storage-account $funcStorageName --consumption-plan-location $location --resource-group $RG
+    az functionapp create --name $functionAppName --storage-account $funcStorageName --consumption-plan-location $location --resource-group $RG  --functions-version 3  --runtime dotnet --runtime-version 3
     az functionapp identity assign --name $functionAppName --resource-group $RG
 fi
 functionAppId=`az functionapp identity show --name $functionAppName --resource-group $RG --query 'principalId' --output tsv`
@@ -47,7 +47,7 @@ az functionapp cors add -g $RG -n $functionAppName --allowed-origins $webUrl
 az keyvault create --name $keyVaultName --resource-group $RG --location $location 
 az keyvault set-policy --name $keyVaultName --object-id $functionAppId --secret-permissions get
 
-primaryMasterKey=`az cosmosdb list-keys -g $RG -n $cosmosdb --query 'primaryMasterKey' --output tsv`
+primaryMasterKey=`az cosmosdb keys list -g $RG -n $cosmosdb --query 'primaryMasterKey' --output tsv`
 primaryConnectionString="AccountEndpoint=https://${cosmosdb}.documents.azure.com:443/;AccountKey=${primaryMasterKey};"
 aesKeySecretId=`az keyvault secret set --vault-name $keyVaultName --name AesKey --value $aesKey --query 'id' --output tsv`
 primaryConnectionStringSecretId=`az keyvault secret set --vault-name $keyVaultName --name cosmosdb --value $primaryConnectionString --query 'id' --output tsv`

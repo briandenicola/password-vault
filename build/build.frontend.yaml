@@ -1,19 +1,27 @@
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - src/*
+
 pool:
-  name: Azure Pipelines
-  demands: npm
+  vmImage: 'ubuntu-latest'
 
 variables:
   AAD_TENANT_ID:
   AAD_CLIENT_ID:
   AAD_REDIRECT_URL:
   functionUrl:
+  environment:
 
 steps:
 - task: qetza.replacetokens.replacetokens-task.replacetokens@3
-  displayName: 'Replace tokens in **/*.env.production'
+  displayName: 'Replace tokens in **/*.env.$(environment)'
   inputs:
     rootDirectory: Source/passwordapp.ui
-    targetFiles: '**/*.env.production'
+    targetFiles: '**/*.env.$(environment)'
     encoding: ascii
     escapeType: none
 

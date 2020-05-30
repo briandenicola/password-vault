@@ -5,12 +5,12 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 
 
 # Folders
-* BuildPipelines - YAML files for Azure Dev Ops Build pipelines (exports from Azure DevOps only)
-* Infrastructure - Script using Azure CLI to create resources in Azure - Azure Functions, Key Vault, Cosmos DB.  
-* Scripts - Various PowerShell scripts to start up the local environment and to test the Functions API
-* Kubernetes - Deployment Yaml to deploy to a Kuberentes cluster (alpha quality)
-* Source\functionapp - C# Code for Azure Functions
-* Source\passwordapp.ui - VUE Code for UI
+* deploy - YAML files for Azure Dev Ops Build pipelines (exports from Azure DevOps only)
+* infrastructure - Script using Azure CLI to create resources in Azure - Azure Functions, Key Vault, Cosmos DB.  
+* tes - Various PowerShell scripts to start up the local environment and to test the Functions API
+* source\functionapp - C# Code for Azure Functions
+* source\passwordapp.ui - VUE Code for UI
+* source\maintenance - Python Code for Keep Alives and Backups
 
 # Prerequistes 
 * An Azure AD Application
@@ -27,14 +27,14 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 # Code Deploy
 ## Function App
 * cd ./Source/functionapp/
-* func azure functionapp publish <FUNC_Name>
+* func azure functionapp publish <FUNC_Name> --csharp
 
 ## Front End
 * cd ./Source/passwordapp.ui
 * Update .env.production 
 * npm install
 * npm build
-* Copy dist folder to <Storage_Name> $web container
+* copy dist to $web container in <Storage_Name> 
 
 # Search Index Setup
 _Can only be completed after documents have been created in Cosmos_
@@ -61,8 +61,6 @@ _Can only be completed after documents have been created in Cosmos_
 
 # To Do
 - [X] Refactor UpdatePassword and DeletePassword to eliminate duplicate code
-- [ ] Remove manual step for functionSecretDev Secret creation
-- [ ] Vue.js Dependency injection
-- [ ] Script creation of Azure AD application
-- [ ] Script to create/rotate Azure Function Host Key
-- [ ] Automate Backups
+- [ ] Upgrade API to .net core 3.1
+- [ ] Upgrade UI to Vue 3
+- [ ] Fix text wrapping on mobile
