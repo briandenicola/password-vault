@@ -73,8 +73,7 @@ export default {
             this.alertModalContent = 'Password Copied to Clipboard';
             this.$refs.alertModal.show();
           })
-          .catch(err => {
-            console.error('Could not copy text: ', err);
+          .catch(() => {
             this.alertModalTitle = 'Success. . .';
             this.alertModalContent = response.data.currentPassword;
             this.$refs.alertModal.show();
