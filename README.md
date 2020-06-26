@@ -7,7 +7,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 # Folders
 * deploy - YAML files for Azure Dev Ops Build pipelines (exports from Azure DevOps only)
 * infrastructure - Script using Azure CLI to create resources in Azure - Azure Functions, Key Vault, Cosmos DB.  
-* tes - Various PowerShell scripts to start up the local environment and to test the Functions API
+* test - Various PowerShell scripts to start up the local environment and to test the Functions API
 * source\functionapp - C# Code for Azure Functions
 * source\passwordapp.ui - VUE Code for UI
 * source\maintenance - Python Code for Keep Alives and Backups
