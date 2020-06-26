@@ -61,6 +61,6 @@ _Can only be completed after documents have been created in Cosmos_
 
 # To Do
 - [X] Refactor UpdatePassword and DeletePassword to eliminate duplicate code
-- [ ] Upgrade API to .net core 3.1
+- [X] Upgrade API to .net core 3.1
 - [ ] Upgrade UI to Vue 3
 - [ ] Fix text wrapping on mobile
