@@ -77,6 +77,6 @@ def main(mytimer: func.TimerRequest,
     backups = [getPassword(p, bearer_token) for p in passwords]
 
     logging.info('Encrypting output')
-    with open("encrypted_file.enc", 'wb') as encrypted_file:
-        outputblob.set(encrytPasswordFile(backups))
+    #with open("encrypted_file.enc", 'wb') as encrypted_file:
+    outputblob.set(encrytPasswordFile(backups))
    
