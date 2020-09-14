@@ -18,7 +18,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 * An Azure AD Application
    * Be sure to copy it client id down
 * A Azure AD Application for Backup/Maintenance
-   * Need 
+   * Needed to access the vault as a client
 * An Azure Functions Host Key  in Azure Key Vault
    * The create_azure_resource.sh script will create a secret in KeyVault under the name functionSecret
    * Due to a quirk in automation at this time, this key will have to be copied to a secret named functionSecretDev
@@ -43,7 +43,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 
 ## Backup App
 * cd ./Source/maintenance/
-* func azure functionapp publish <FUNC_Name>
+* func azure functionapp publish <FUNC_Name> --python
 
 # Search Index Setup
 _Can only be completed after documents have been created in Cosmos_
