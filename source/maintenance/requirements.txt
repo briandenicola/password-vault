@@ -1,3 +1,7 @@
 azure-functions
 requests
 cryptography
+azure-mgmt-cosmosdb
+azure-keyvault
+azure-identity
+azure-mgmt-web

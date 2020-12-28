@@ -90,7 +90,7 @@ _Can only be completed after documents have been created in Cosmos_
 - [X] Refactor UpdatePassword and DeletePassword to eliminate duplicate code
 - [X] Upgrade API to .net core 3.1
 - [X] Create cli to pull Password History
+- [X] Function to Rotate Cosmos Account Keys 
 - [ ] Fix functionSecretDev requirement
 - [ ] Migrate to MSAL.js/ Auth Code from ADAL.js / Implicit Code Flow 
 - [ ] Upgrade UI to Vue 3
-- [ ] Fix text wrapping on mobile
