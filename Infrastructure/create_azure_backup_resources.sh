@@ -61,3 +61,4 @@ az functionapp config appsettings set -g $RG -n $functionAppName --settings SUBS
 az functionapp config appsettings set -g $RG -n $functionAppName --settings RESOURCE_GROUP_NAME=${RESOURCE_GROUP_NAME}
 az functionapp config appsettings set -g $RG -n $functionAppName --settings COSMOS_DB_ACCOUNT=${COSMOS_DB_ACCOUNT}
 az functionapp config appsettings set -g $RG -n $functionAppName --settings FUNCTION_ACCOUNT=${FUNCTION_ACCOUNT}
+az functionapp config appsettings set -g $RG -n $functionAppName --settings KEY_VAULT_URL=${KEY_VAULT_URL}
