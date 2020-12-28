@@ -1,33 +1,51 @@
 # Introduction 
-This project is a demo on how to use Azure Functions with HTTP Triggers, Cosmosdb, and a VUE SPA application protected by Azure AD
+This project is a demo on how to use Azure Functions with HTTP Triggers, Cosmosdb, and a VUE SPA application all protected by Azure AD
 It can be deployed using Azure Dev Ops.
-It was built locally using Azure Functions Core Tools and Azure Cosmosdb Development Containter
-
+It was built locally using Azure Functions Core Tools and Azure Cosmosdb Development Container
 
 # Folders
-* BuildPipelines - YAML files for Azure Dev Ops Build pipelines (exports from Azure DevOps only)
+* Pipelines - YAML files for Azure Dev Ops Build pipelines (exports from Azure DevOps only)
 * Infrastructure - Script using Azure CLI to create resources in Azure - Azure Functions, Key Vault, Cosmos DB.  
-* Scripts - Various PowerShell scripts to start up the local environment and to test the Functions API
-* Kubernetes - Deployment Yaml to deploy to a Kuberentes cluster (alpha quality)
+* Scripts - A place for various automations
+* Tests - Various PowerShell scripts to start up the local environment and to test the Functions API
+* Source\cli - A C# command line interface for the Vault
+* Source\maintenance - Python Functions to backup Cosmos and keep alive the Azure Function
 * Source\functionapp - C# Code for Azure Functions
 * Source\passwordapp.ui - VUE Code for UI
 
 # Prerequistes 
-* Azure Function commandline tool 
-* Azure Cli
-* An Azure AD Application
-   * Be sure to copy it client id down
-* A Azure AD Application for Backup/Maintenance
-   * Needed to access the vault as a client
-* An Azure Functions Host Key  in Azure Key Vault
-   * The create_azure_resource.sh script will create a secret in KeyVault under the name functionSecret
-   * Due to a quirk in automation at this time, this key will have to be copied to a secret named functionSecretDev
-   * This is on the backlog to be addressed. 
+* [The Azure Function commandline tool](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=linux%2Ccsharp%2Cbash#v2)
+* [The Azure cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-linux?pivots=apt)
+
+# Azure AD Configurations
+* Password Vault API
+   * Name - Password Vault
+   * Redirect Urls - _URL of the UI Storage Account such as https://bjd002.z21.web.core.windows.net_
+   * No Client Secrets
+   * Enable Access and ID Tokens
+   * Add Scopes
+      * PasswordHistory.Read
+      * Password.All
+   * Create Appp Role - Default Access
+   * Update Manifest to include "Application" to the allowedMemberTypes of the 'Default Access' app role
+* Password Vault Cli SPN
+   * Name - passwordvault-cli
+   * Add Mobile and Desktop Application Platform under Authentication 
+   * Select _https://login.microsoftonline.com/common/oauth2/nativeclient_ for Redirect URL
+   * Enable Public Client Flow
+   * No Client Secrets
+   * Grant 'PasswordHistory.Read' Scope as a delegated role under API Permissions
+* Password Vault Maintenance SPN
+   * Name - passwordvault-backup
+   * Create Client Secret. Save off.
+   * Add 'Default Access' permission as an application role under API Permissions
 
 # Infrastucture Setup
 * ./Infrastructure/create_azure_search.sh <RG_Name> <RG_Location> <Search_Name>
-* ./Infrastructure/create_azure_resource.sh <RG_Name> <Location> <Func_Name> <DB_Name> <Storage_Name> <AES_KEY> <AES_IV> <Search_Name> <Search_RG_Name> <Search_RG_Index>
-* ./Infrastructure/create_azure_backup_reseoures.sh <RG_Name> <Location> <Backup_Func_Name> <Backup_Storage_Name> <AES_KEY> <AES_IV> <Password_Vault_Client_ID> <Password_Vault_Uri> <Password_Vault_Function_key> <Backup_Client_ID> <Backup_Client_Secret>
+* ./Infrastructure/create_azure_resources.sh <RG_Name> <Location> <Func_Name> <DB_Name> <Storage_Name> <AES_KEY> <AES_IV> <Search_Name> <Search_RG_Name> <Search_RG_Index>
+   * The create_azure_resource.sh script will create a secret in KeyVault under the name functionSecret
+   * Due to a quirk in automation at this time, this key will have also have to be copied to a secret named functionSecretDev
+* ./Infrastructure/create_azure_backup_resoures.sh <RG_Name> <Location> <Backup_Func_Name> <Backup_Storage_Name> <AES_KEY> <AES_IV> <Password_Vault_Client_ID> <Password_Vault_Uri> <Password_Vault_Function_key> <Backup_Client_ID> <Backup_Client_Secret>
 
 # Code Deploy
 ## Function App
@@ -71,5 +89,8 @@ _Can only be completed after documents have been created in Cosmos_
 # To Do
 - [X] Refactor UpdatePassword and DeletePassword to eliminate duplicate code
 - [X] Upgrade API to .net core 3.1
+- [X] Create cli to pull Password History
+- [ ] Fix functionSecretDev requirement
+- [ ] Migrate to MSAL.js/ Auth Code from ADAL.js / Implicit Code Flow 
 - [ ] Upgrade UI to Vue 3
 - [ ] Fix text wrapping on mobile
