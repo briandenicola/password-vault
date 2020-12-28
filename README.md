@@ -45,7 +45,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 * ./Infrastructure/create_azure_resources.sh <RG_Name> <Location> <Func_Name> <DB_Name> <Storage_Name> <AES_KEY> <AES_IV> <Search_Name> <Search_RG_Name> <Search_RG_Index>
    * The create_azure_resource.sh script will create a secret in KeyVault under the name functionSecret
    * Due to a quirk in automation at this time, this key will have also have to be copied to a secret named functionSecretDev
-* ./Infrastructure/create_azure_backup_resoures.sh <RG_Name> <Location> <Backup_Func_Name> <Backup_Storage_Name> <AES_KEY> <AES_IV> <Password_Vault_Client_ID> <Password_Vault_Uri> <Password_Vault_Function_key> <Backup_Client_ID> <Backup_Client_Secret>
+* ./Infrastructure/create_azure_backup_resoures.sh <RG_Name> <Location> <Backup_Func_Name> <Backup_Storage_Name> <AES_KEY> <AES_IV> <Password_Vault_Client_ID> <Password_Vault_Uri> <Password_Vault_Function_key> <Backup_Client_ID> <Backup_Client_Secret> <APP_RESOURCE_GROUP_NAME> <DB_Name> <FUNC_NAME>
 
 # Code Deploy
 ## Function App
@@ -62,6 +62,10 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 ## Backup App
 * cd ./Source/maintenance/
 * func azure functionapp publish <FUNC_Name> --python
+* Grant the Function App Managed Identity the following Roles on the Function App Resource Group
+   * DocumentDB Account Contributor 
+   * Website Contributor
+   * Key Vault Access Policy - get/list/set for Secrets 
 
 # Search Index Setup
 _Can only be completed after documents have been created in Cosmos_

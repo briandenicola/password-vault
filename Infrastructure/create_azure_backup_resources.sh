@@ -11,6 +11,9 @@ export passwordVaultUrl=$8
 export passwordVaultCode=$9
 export clientID=${10}
 export clientSecret=${11}
+export RESOURCE_GROUP_NAME=${12}
+export COSMOS_DB_ACCOUNT=${13}
+export FUNCTION_ACCOUNT=${14}
 
 #az login 
 az extension add --name webapp
@@ -41,6 +44,7 @@ aesKeySecretId="$(az keyvault secret set --vault-name $keyVaultName --name AesKe
 funcCodeId="$(az keyvault secret set --vault-name $keyVaultName --name passwordVaultCode --value $passwordVaultCode --query 'id' --output tsv)"
 
 tenant=`az account  show --query tenantId -o tsv`
+subId=`az account  show --query id -o tsv`
 loginUrl="https://login.microsoftonline.com/${tenant}/oauth2/token"
 passwordStorageConString="DefaultEndpointsProtocol=https;AccountName=${storageName};AccountKey=${key};EndpointSuffix=core.windows.net"
 
@@ -53,3 +57,7 @@ az functionapp config appsettings set -g $RG -n $functionAppName --settings Clie
 az functionapp config appsettings set -g $RG -n $functionAppName --settings VaultSpnId=$passwordVaultID
 az functionapp config appsettings set -g $RG -n $functionAppName --settings AppUrl=$passwordVaultUrl
 az functionapp config appsettings set -g $RG -n $functionAppName --settings LoginUrl=$loginUrl
+az functionapp config appsettings set -g $RG -n $functionAppName --settings SUBSCRIPTION_ID=$subId
+az functionapp config appsettings set -g $RG -n $functionAppName --settings RESOURCE_GROUP_NAME=${RESOURCE_GROUP_NAME}
+az functionapp config appsettings set -g $RG -n $functionAppName --settings COSMOS_DB_ACCOUNT=${COSMOS_DB_ACCOUNT}
+az functionapp config appsettings set -g $RG -n $functionAppName --settings FUNCTION_ACCOUNT=${FUNCTION_ACCOUNT}
