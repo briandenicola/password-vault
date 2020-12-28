@@ -12,7 +12,7 @@ from azure.keyvault.secrets import SecretClient
 from azure.mgmt.web.models import NameValuePair 
 from azure.mgmt.web import WebSiteManagementClient 
 
-SUBSCRIPTION_ID     = os.eniron["SUBSCRIPTION_ID"]
+SUBSCRIPTION_ID     = os.environ["SUBSCRIPTION_ID"]
 RESOURCE_GROUP_NAME = os.environ["RESOURCE_GROUP_NAME"]
 KEY_VAULT_URL       = os.environ["KEY_VAULT_URL"]
 COSMOS_DB_ACCOUNT   = os.environ["COSMOS_DB_ACCOUNT"]
