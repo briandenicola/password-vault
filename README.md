@@ -48,18 +48,18 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 * ./Infrastructure/create_azure_backup_resoures.sh <RG_Name> <Location> <Backup_Func_Name> <Backup_Storage_Name> <AES_KEY> <AES_IV> <Password_Vault_Client_ID> <Password_Vault_Uri> <Password_Vault_Function_key> <Backup_Client_ID> <Backup_Client_Secret> <APP_RESOURCE_GROUP_NAME> <DB_Name> <FUNC_NAME>
 
 # Code Deploy
-## Function App
+## API Function App
 * cd ./Source/functionapp/
 * func azure functionapp publish <FUNC_Name> --python
 
-## Front End
+## Front End UI
 * cd ./Source/passwordapp.ui
 * Update .env.production 
 * npm install
 * npm build
 * Copy dist folder to <Storage_Name> $web container
 
-## Backup App
+## Maintenance Function App
 * cd ./Source/maintenance/
 * func azure functionapp publish <FUNC_Name> --python
 * Grant the Function App Managed Identity the following Roles on the Function App Resource Group
@@ -67,7 +67,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
    * Website Contributor
    * Key Vault Access Policy - get/list/set for Secrets 
 
-# Search Index Setup
+## Search Index Configuration 
 _Can only be completed after documents have been created in Cosmos_
 1. Click `Import Data`
 2. Data Source - 'Cosmos DB'
@@ -95,6 +95,7 @@ _Can only be completed after documents have been created in Cosmos_
 - [X] Upgrade API to .net core 3.1
 - [X] Create cli to pull Password History
 - [X] Function to Rotate Cosmos Account Keys 
-- [ ] Fix functionSecretDev requirement
-- [ ] Migrate to MSAL.js/ Auth Code from ADAL.js / Implicit Code Flow 
+- [ ] Remove Function Secrets
+- [ ] Migrate to MSAL.js/ Auth Code Flow from ADAL.js / Implicit Flow 
 - [ ] Upgrade UI to Vue 3
+- [ ] Migrate environmental setup to Azure Bicep
