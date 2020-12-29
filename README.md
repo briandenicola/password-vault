@@ -90,7 +90,7 @@ _Can only be completed after documents have been created in Cosmos_
    * Track Deletions. Soft Delete Column - isDeleted. Marker Value - true
 12. Submit
 
-# To Do
+# Roadmap
 - [X] Refactor UpdatePassword and DeletePassword to eliminate duplicate code
 - [X] Upgrade API to .net core 3.1
 - [X] Create cli to pull Password History
