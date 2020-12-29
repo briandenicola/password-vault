@@ -25,9 +25,12 @@ funcStorageName=${functionAppName}sa001
 keyVaultName=${functionAppName}keyvault001
 
 # Create an Azure Function with storage accouunt in the resource group.
-az storage account create --name $funcStorageName --location $location --resource-group $RG --sku Standard_LRS
-az functionapp create --name $functionAppName --storage-account $funcStorageName --consumption-plan-location $location --resource-group $RG --os-type Linux --runtime python
-az functionapp identity assign --name $functionAppName --resource-group $RG
+if ! `az functionapp show --name $functionAppName --resource-group $RG -o none`
+then
+    az storage account create --name $funcStorageName --location $location --resource-group $RG --sku Standard_LRS
+    az functionapp create --name $functionAppName --storage-account $funcStorageName --consumption-plan-location $location --resource-group $RG --os-type Linux --functions-version 3 --runtime python
+    az functionapp identity assign --name $functionAppName --resource-group $RG
+fi
 functionAppId="$(az functionapp identity show --name $functionAppName --resource-group $RG --query 'principalId' --output tsv)"
 
 # Create an storage accouunt in the resource group the backups
