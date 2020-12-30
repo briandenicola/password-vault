@@ -22,7 +22,7 @@ export default {
       this.formData.currentPassword = PasswordUtils.generatePassword();
     },
     updatePassword() {
-      this.formData.lastModifiedBy = Authentication.getUserProfile().upn;
+      this.formData.lastModifiedBy = Authentication.getUserProfile();
       PasswordService.update(this.$router.currentRoute.params.id, this.formData).then(() => {
         this.isSuccessfully = true;
         this.alertModalTitle = 'Successfully';

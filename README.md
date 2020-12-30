@@ -19,15 +19,29 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 
 # Azure AD Configurations
 * Password Vault API
-   * Name - Password Vault
-   * Redirect Urls - _URL of the UI Storage Account such as https://bjd002.z21.web.core.windows.net_
+   * Name - passwordvault-api
+   * Redirect Urls - _URL of the UI Storage Account such as https://{{function app name}}.azurewebsites.net/.auth/login/aad/callback_
    * No Client Secrets
-   * Enable Access and ID Tokens
+   * Create Appp Role
+      * Name - Default Access 
+      * Allow Member Types - Both (Users + applications) 
+      * Value - Default Access
    * Add Scopes
       * PasswordHistory.Read
       * Password.All
-   * Create Appp Role - Default Access
-   * Update Manifest to include "Application" to the allowedMemberTypes of the 'Default Access' app role
+   * Enterprise Application Settings 
+      * Visible To Users: false
+* Password Vault UI
+   * Name - Password Vault
+   * Branding - Set Home page URL to domain name hosting UI and upload cool logo
+   * Authentication 
+      * Add Single-page Application.
+      * Redirect URIs will be the URI of the domain name hosting UI and any testing URIs like http://localhost:8080
+   * No Client Secrets
+   * Grant 'Password.All' Scope as a delegated role under API Permissions
+   * Enterprise Application Settings
+      * Require User Assignment 
+      * Visible To Users: true
 * Password Vault Cli SPN
    * Name - passwordvault-cli
    * Add Mobile and Desktop Application Platform under Authentication 
@@ -35,10 +49,14 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
    * Enable Public Client Flow
    * No Client Secrets
    * Grant 'PasswordHistory.Read' Scope as a delegated role under API Permissions
+   * Enterprise Application Settings 
+      * Visible To Users: false
 * Password Vault Maintenance SPN
    * Name - passwordvault-backup
    * Create Client Secret. Save off.
    * Add 'Default Access' permission as an application role under API Permissions
+   * Enterprise Application Settings 
+      * Visible To Users: false
 
 # Infrastucture Setup
 * ./Infrastructure/create_azure_search.sh <RG_Name> <RG_Location> <Search_Name>
@@ -96,6 +114,6 @@ _Can only be completed after documents have been created in Cosmos_
 - [X] Create cli to pull Password History
 - [X] Function to Rotate Cosmos Account Keys 
 - [ ] Remove Function Secrets
-- [ ] Migrate to MSAL.js/ Auth Code Flow from ADAL.js / Implicit Flow 
+- [X] Migrate to MSAL.js/ Auth Code Flow from ADAL.js / Implicit Flow 
 - [ ] Upgrade UI to Vue 3
 - [ ] Migrate environmental setup to Azure Bicep

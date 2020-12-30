@@ -22,7 +22,7 @@ export default {
       }
     },
     createPassword() {
-      this.formData.createdBy = this.formData.lastModifiedBy = Authentication.getUserProfile().upn; 
+      this.formData.createdBy = this.formData.lastModifiedBy = Authentication.getUserProfile(); 
       PasswordService.create(this.formData).then(() => {
         this.isSuccessfully = true;
         this.alertModalTitle = 'Successfully';

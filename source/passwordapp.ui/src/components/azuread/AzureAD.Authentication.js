@@ -1,78 +1,93 @@
-import AuthenticationContext from 'adal-angular';
+import * as msal from "@azure/msal-browser";
 
-const config = {
-  tenant: process.env.VUE_APP_AAD_TENANT_ID,
-  clientId: process.env.VUE_APP_AAD_CLIENT_ID,
-  redirectUri: process.env.VUE_APP_AAD_REDIRECT_URL,
-  cacheLocation: 'localStorage'
+const msalConfig = {
+  auth: {
+    clientId: process.env.VUE_APP_AAD_CLIENT_ID,
+    authority: `https://login.microsoftonline.com/${process.env.VUE_APP_AAD_TENANTID}`,
+    redirectUri: process.env.VUE_APP_AAD_REDIRECT_URL,
+  },
+  cache: {
+    cacheLocation: "localStorage", 
+    storeAuthStateInCookie: false, 
+  }
 };
 
+const loginRequest = {
+  scopes: ["User.Read"]
+};
+
+const tokenRequest = {
+  scopes: [process.env.VUE_APP_AAD_SCOPE]
+};
+
+const myMSALObj = new msal.PublicClientApplication(msalConfig)
+let username = "";
+
 export default {
-  authenticationContext: null,
-  /**
-   * @return {Promise}
-   */
   initialize() {
-    this.authenticationContext = new AuthenticationContext(config);
-
     return new Promise((resolve) => {
-      if (this.authenticationContext.isCallback(window.location.hash) || window.self !== window.top) {
-        this.authenticationContext.handleWindowCallback();
+      const currentAccounts = myMSALObj.getAllAccounts();
+      if (currentAccounts === null || currentAccounts.length == 0) {
+        this.signIn();
       } else {
-        let user = this.authenticationContext.getCachedUser();
-
-        if (user) {
-          resolve();
-        } else {
-          this.signIn();
-        }
+        username = currentAccounts[0].username;
+        resolve();
       }
     });
   },
-
-  /**
-   * @return {Promise.<String>} A promise that resolves to an ADAL token for resource access
-   */
-  acquireToken() {
-    return new Promise((resolve, reject) => {
-      this.authenticationContext.acquireToken('<azure active directory resource id>', (error, token) => {
-        if (error || !token) {
-          return reject(error);
-        } else {
-          return resolve(token);
-        }
-      });
-    });
-  },
-  /**
-   * Issue an interactive authentication request for the current user and the api resource.
-   */
-  acquireTokenRedirect() {
-    this.authenticationContext.acquireTokenRedirect('<azure active directory resource id>');
-  },
-  /**
-   * @return {Boolean} Indicates if there is a valid, non-expired access token present in localStorage.
-   */
   isAuthenticated() {
-    // getCachedToken will only return a valid, non-expired token.
-    if (this.authenticationContext.getCachedToken(config.clientId)) { return true; }
-    return false;
+      if(username == "" ) {
+          return false;
+      }
+  
+      let user = myMSALObj.getAccountByUsername(username);
+      if (!user || user.length < 1) {
+          return false;
+      }
+
+      return true; 
   },
-  /**
-   * @return An ADAL user profile object.
-   */
+  handleResponse(resp) {
+      if (resp !== null) {
+        username = resp.account.username;
+      } else {
+        this.initialize();
+      }
+  },
   getUserProfile() {
-    return this.authenticationContext.getCachedUser().profile;
+    return username;
   },
   signIn() {
-    this.authenticationContext.login();
+    myMSALObj.loginPopup(loginRequest).then(this.handleResponse).catch(error => {
+        console.error(error);
+    });
   },
   signOut() {
-    this.authenticationContext.logOut();
+    const logoutRequest = {
+      account: myMSALObj.getAccountByUsername(username)
+    };
+
+    myMSALObj.logout(logoutRequest);
+  },
+  getTokenRedirect(request) {
+    request.account = myMSALObj.getAccountByUsername(username);
+    return myMSALObj.acquireTokenSilent(request).catch(error => {
+        if (error instanceof msal.InteractionRequiredAuthError) {
+            return myMSALObj.acquireTokenPopup(request).then(tokenResponse => {
+                return tokenResponse;
+            }).catch(error => {
+                console.error(error);
+            });
+        } else {
+            console.warn(error);
+        }
+    });
   },
   getBearerToken() {
-    if(this.isAuthenticated()) {
-      return this.authenticationContext.getCachedToken(config.clientId);
-    }
+    return this.getTokenRedirect(tokenRequest).then(response => {
+      return response.accessToken;
+    }).catch(error => {
+      console.error(error);
+    });
   }
-}
+};

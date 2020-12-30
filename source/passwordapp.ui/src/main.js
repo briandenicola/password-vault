@@ -11,7 +11,7 @@ import { faInfo } from '@fortawesome/free-solid-svg-icons'
 import { faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import Authentication from './components/azuread/AzureAD.Authentication.js'
-import Axios from 'axios';
+import Axios from 'axios'
 
 library.add(faKey)
 library.add(faUserEdit)
@@ -25,12 +25,13 @@ Vue.use(BootstrapVue);
 Axios.defaults.baseURL = process.env.VUE_APP_API_ENDPOINT;
 Axios.defaults.headers.common['x-functions-key'] = process.env.VUE_APP_API_KEY;
 
-Authentication.initialize().then(() => {
-  let token = Authentication.getBearerToken();
-  Axios.defaults.headers.common['Authorization'] = "Bearer ".concat(token);
+Authentication.initialize().then( () => {
+  Authentication.getBearerToken().then( token => {
+      Axios.defaults.headers.common['Authorization'] = "Bearer ".concat(token);
 
-  new Vue({
-    router,
-    render: function (h) { return h(App) }
-  }).$mount('#app');
+      new Vue({
+        router,
+        render: function (h) { return h(App) }
+      }).$mount('#app');
+  }); 
 });
