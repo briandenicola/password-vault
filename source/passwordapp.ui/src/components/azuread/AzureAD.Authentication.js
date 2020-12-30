@@ -3,7 +3,7 @@ import * as msal from "@azure/msal-browser";
 const msalConfig = {
   auth: {
     clientId: process.env.VUE_APP_AAD_CLIENT_ID,
-    authority: `https://login.microsoftonline.com/${process.env.VUE_APP_AAD_TENANTID}`,
+    authority: `https://login.microsoftonline.com/${process.env.VUE_APP_AAD_TENANT_ID}`,
     redirectUri: process.env.VUE_APP_AAD_REDIRECT_URL,
   },
   cache: {
