@@ -58,8 +58,9 @@ export default {
     return username;
   },
   signIn() {
-    myMSALObj.loginPopup(loginRequest).then(this.handleResponse).catch(error => {
-        console.error(error);
+    myMSALObj.loginRedirect(loginRequest);
+    myMSALObj.handleRedirectPromise().then(this.handleResponse).catch(err => {
+      console.error(err);
     });
   },
   signOut() {
@@ -73,21 +74,18 @@ export default {
     request.account = myMSALObj.getAccountByUsername(username);
     return myMSALObj.acquireTokenSilent(request).catch(error => {
         if (error instanceof msal.InteractionRequiredAuthError) {
-            return myMSALObj.acquireTokenPopup(request).then(tokenResponse => {
+            return myMSALObj.acquireTokenRedirect(request).then(tokenResponse => {
                 return tokenResponse;
-            }).catch(error => {
-                console.error(error);
+            }).catch(() => {
             });
         } else {
-            console.warn(error);
         }
     });
   },
   getBearerToken() {
     return this.getTokenRedirect(tokenRequest).then(response => {
       return response.accessToken;
-    }).catch(error => {
-      console.error(error);
+    }).catch(() => {
     });
   }
 };
