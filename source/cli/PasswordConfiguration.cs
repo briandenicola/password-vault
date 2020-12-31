@@ -1,7 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Identity.Client;
-using System.IO;
-using System.Reflection;
 
 namespace password.vault.cli
 {
@@ -18,7 +17,7 @@ namespace password.vault.cli
             IConfigurationRoot Configuration;
 
             var builder = new ConfigurationBuilder()
-                .SetBasePath(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location))
+                .SetBasePath(AppContext.BaseDirectory)
                 .AddJsonFile(path);
 
             Configuration = builder.Build();
