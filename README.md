@@ -29,6 +29,8 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
    * Add Scopes
       * PasswordHistory.Read
       * Password.All
+   * Edit Manifest
+      * Update accessTokenAcceptedVersion from null to 2
    * Enterprise Application Settings 
       * Visible To Users: false
 * Password Vault UI
@@ -113,7 +115,8 @@ _Can only be completed after documents have been created in Cosmos_
 - [X] Upgrade API to .net core 3.1
 - [X] Create cli to pull Password History
 - [X] Function to Rotate Cosmos Account Keys 
-- [ ] Remove Function Secrets
+- [ ] ~~Remove Function Secrets~~
 - [X] Migrate to MSAL.js/ Auth Code Flow from ADAL.js / Implicit Flow 
-- [ ] Upgrade UI to Vue 3
-- [ ] Migrate environmental setup to Azure Bicep
+- [X] Migrate to Azure AD v2 JWT token format
+- [ ] ~~Upgrade UI to Vue 3~~
+- [ ] Migrate environmental setup to Terraform or Azure Bicep

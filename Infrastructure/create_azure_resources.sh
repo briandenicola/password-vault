@@ -79,4 +79,6 @@ az functionapp config appsettings set -g $RG -n $functionAppName --settings SEAR
 az functionapp config appsettings set -g $RG -n $functionAppName --settings SEARCH_INDEXNAME=$searchIndexName
 
 # Update Function App for Azure AD Authentication 
-az webapp auth update -g $RG -n $functionAppName --enabled true --action LoginWithAzureActiveDirectory --aad-client-id $clientID
+tenantid=`az account show -o tsv --query tenantId`
+issuerUrl="https://login.microsoftonline.com/${tenantid}/v2.0"
+az webapp auth update -g $RG -n $functionAppName --enabled true --action LoginWithAzureActiveDirectory --aad-client-id $clientID --aad-token-issuer-url $issuerUrl
