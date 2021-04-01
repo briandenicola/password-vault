@@ -26,7 +26,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
       * Name - Default Access 
       * Allow Member Types - Both (Users + applications) 
       * Value - Default Access
-   * Add Scopes
+   * Set App Id and Add Scopes
       * PasswordHistory.Read
       * Password.All
    * Edit Manifest
@@ -40,7 +40,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
       * Add Single-page Application.
       * Redirect URIs will be the URI of the domain name hosting UI and any testing URIs like http://localhost:8080
    * No Client Secrets
-   * Grant 'Password.All' Scope as a delegated role under API Permissions
+   * Grant passwordvault-api's 'Password.All' Scope as a delegated role under API Permissions
    * Enterprise Application Settings
       * Require User Assignment 
       * Visible To Users: true
@@ -50,13 +50,13 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
    * Select _https://login.microsoftonline.com/common/oauth2/nativeclient_ for Redirect URL
    * Enable Public Client Flow
    * No Client Secrets
-   * Grant 'PasswordHistory.Read' Scope as a delegated role under API Permissions
+   * Grant passwordvault-api's 'PasswordHistory.Read' Scope as a delegated role under API Permissions
    * Enterprise Application Settings 
       * Visible To Users: false
 * Password Vault Maintenance SPN
    * Name - passwordvault-backup
-   * Create Client Secret. Save off.
-   * Add 'Default Access' permission as an application role under API Permissions
+   * Create Client Secret. Copy secret.
+   * Add passwordvault-api's 'Default Access' permission as an application role under API Permissions
    * Enterprise Application Settings 
       * Visible To Users: false
 
@@ -115,8 +115,8 @@ _Can only be completed after documents have been created in Cosmos_
 - [X] Upgrade API to .net core 3.1
 - [X] Create cli to pull Password History
 - [X] Function to Rotate Cosmos Account Keys 
-- [ ] ~~Remove Function Secrets~~
 - [X] Migrate to MSAL.js/ Auth Code Flow from ADAL.js / Implicit Flow 
 - [X] Migrate to Azure AD v2 JWT token format
 - [ ] ~~Upgrade UI to Vue 3~~
-- [ ] Migrate environmental setup to Terraform or Azure Bicep
+- [ ] Migrate UI to React once [Azure AD MSAL React](https://github.com/AzureAD/microsoft-authentication-library-for-js/tree/dev/lib/msal-react) GAs
+- [ ] Migrate infrastructure setup to Azure Bicep
