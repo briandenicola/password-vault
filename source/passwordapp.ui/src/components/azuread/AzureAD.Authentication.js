@@ -1,5 +1,7 @@
 import * as msal from "@azure/msal-browser";
 
+let username = "";
+
 const msalConfig = {
   auth: {
     clientId: process.env.VUE_APP_AAD_CLIENT_ID,
@@ -7,85 +9,102 @@ const msalConfig = {
     redirectUri: process.env.VUE_APP_AAD_REDIRECT_URL,
   },
   cache: {
-    cacheLocation: "localStorage", 
-    storeAuthStateInCookie: false, 
+    cacheLocation: "localStorage",
+    storeAuthStateInCookie: false,
   }
 };
 
-const loginRequest = {
-  scopes: ["User.Read"]
-};
+function handleRedirectResponse(resp) {
+  if (resp !== null) {
+    username = resp.account.username;
+  } else {
+    const currentAccounts = authService.getAllAccounts();
+    if (!currentAccounts) {
+      return; 
+    } else if (currentAccounts.length >= 1) {
+      username = currentAccounts[0].username;
+    }
+  }
+}
 
-const tokenRequest = {
-  scopes: [process.env.VUE_APP_AAD_SCOPE]
-};
-
-const myMSALObj = new msal.PublicClientApplication(msalConfig)
-let username = "";
+//Still does not handle inital page load properly 
+const authService = new msal.PublicClientApplication(msalConfig);
+authService.handleRedirectPromise().then(handleRedirectResponse).catch((error) => {
+  console.log(error);
+});
 
 export default {
-  initialize() {
-    return new Promise((resolve) => {
-      const currentAccounts = myMSALObj.getAllAccounts();
-      if (currentAccounts === null || currentAccounts.length == 0) {
-        this.signIn();
-      } else {
-        username = currentAccounts[0].username;
-        resolve();
-      }
-    });
-  },
-  isAuthenticated() {
-      if(username == "" ) {
-          return false;
-      }
-  
-      let user = myMSALObj.getAccountByUsername(username);
-      if (!user || user.length < 1) {
-          return false;
-      }
 
-      return true; 
+  tokenRequest: {
+    scopes: [process.env.VUE_APP_AAD_SCOPE]
   },
-  handleResponse(resp) {
-      if (resp !== null) {
-        username = resp.account.username;
-      } else {
-        this.initialize();
-      }
+
+  loginRequest: {
+    scopes: ["User.Read"]
   },
+
+  initialize() {
+    const currentAccounts = authService.getAllAccounts();
+    if (!currentAccounts) {
+      return; 
+    } else if (currentAccounts.length >= 1) {
+      username = currentAccounts[0].username;
+    }
+  },
+
+  isAuthenticated() {
+    if (username === "") {
+      return false;
+    }
+
+    let user = authService.getAccountByUsername(username);
+    if (!user || user.length < 1) {
+      return false;
+    }
+
+    return true;
+  },
+
   getUserProfile() {
     return username;
   },
-  signIn() {
-    myMSALObj.loginRedirect(loginRequest);
-    myMSALObj.handleRedirectPromise().then(this.handleResponse).catch(err => {
-      console.error(err);
-    });
+
+  async signIn() {
+    await authService.loginRedirect(this.loginRequest);
   },
+
   signOut() {
     const logoutRequest = {
-      account: myMSALObj.getAccountByUsername(username)
+      account: authService.getAccountByUsername(username)
     };
 
-    myMSALObj.logout(logoutRequest);
+    authService.logoutRedirect(logoutRequest);
   },
-  getTokenRedirect(request) {
-    request.account = myMSALObj.getAccountByUsername(username);
-    return myMSALObj.acquireTokenSilent(request).catch(error => {
-        if (error instanceof msal.InteractionRequiredAuthError) {
-            return myMSALObj.acquireTokenRedirect(request).then(tokenResponse => {
-                return tokenResponse;
-            }).catch(() => {
-            });
-        } else {
-        }
-    });
+
+  async getTokenRedirect(request) {
+    request.account = authService.getAccountByUsername(username);
+    
+    try
+    {
+      var token = await authService.acquireTokenSilent(request); 
+      return token;
+    }
+    catch(error) 
+    {
+      if (error instanceof msal.InteractionRequiredAuthError) {
+        var tokenFromRedirection = await authService.acquireTokenRedirect(request);        
+        return tokenFromRedirection;
+      }
+    }
+    
   },
-  getBearerToken() {
-    return this.getTokenRedirect(tokenRequest).then(response => {
-      return response.accessToken;
-    }).catch(() => {
-    });
-  }
-};
+
+  async getBearerToken() {
+    var response = await this.getTokenRedirect(this.tokenRequest);
+    if(response === null || response === undefined ) {
+      return null;
+    }
+    return response.accessToken;
+  },
+
+}
