@@ -11,7 +11,7 @@ while (( "$#" )); do
       shift 2
       ;;
     -h|--help)
-      echo "Usage: ./create_infrastructure.sh -r {region}  --domain {domain name} [-n {Application Name} -r {secondary region}]
+      echo "Usage: ./create_infrastructure.sh -r {region} [-n {Application Name}]
         --name(n)    - A defined name for the Application. Will be auto-generated if not supplied (Optional)
         --region(r)  - Azure Region 
       "
@@ -139,3 +139,9 @@ az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings 
 
 # Update Function App for Azure AD Authentication 
 az webapp auth update -g ${RG} -n $functionAppName --enabled true --action LoginWithAzureActiveDirectory --aad-client-id ${apiClientID} --aad-token-issuer-url "https://login.microsoftonline.com/${tenantid}/v2.0"
+
+echo ------------------------------------
+echo "Infrastructure built successfully. Application Name: ${appName}"
+echo "API SPN Client Id: ${apiClientId}"
+echo "UI SPN Client Id: ${uiClientId}"
+echo ------------------------------------

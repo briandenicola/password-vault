@@ -17,10 +17,15 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 * [The Azure Function commandline tool](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=linux%2Ccsharp%2Cbash#v2)
 * [The Azure cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-linux?pivots=apt)
 
+# Infrastucture Setup
+* ./Infrastructure/create_infrastructure.sh --region southcentralus
+   * Script will output the generated AppName and Azur AD ClientID for the API and UI Service Principals
+* ./Infrastructure/create_backup_infrastructure.sh --region southcentralus
+
 # Azure AD Configurations
 * Password Vault API
-   * Name - passwordvault-api
-   * Redirect Urls - _URL of the UI Storage Account such as https://{{function app name}}.azurewebsites.net/.auth/login/aad/callback_
+   * Name - ${AppName}-api
+   * Redirect Urls - https://func-${appName}01.azurewebsites.net/.auth/login/aad/callback
    * No Client Secrets
    * Create Appp Role
       * Name - Default Access 
@@ -34,38 +39,32 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
    * Enterprise Application Settings 
       * Visible To Users: false
 * Password Vault UI
-   * Name - Password Vault
-   * Branding - Set Home page URL to domain name hosting UI and upload cool logo
+   * Name - ${AppName}-ui
    * Authentication 
       * Add Single-page Application.
-      * Redirect URIs will be the URI of the domain name hosting UI and any testing URIs like http://localhost:8080
+      * Redirect URIs
+         - http://localhost:8080
+         - https://ui-${appName}01.z21.web.core.windows.net/
    * No Client Secrets
-   * Grant passwordvault-api's 'Password.All' Scope as a delegated role under API Permissions
+   * Grant ${AppName}-api's 'Password.All' Scope as a delegated role under API Permissions
    * Enterprise Application Settings
       * Require User Assignment 
       * Visible To Users: true
 * Password Vault Cli SPN
    * Name - passwordvault-cli
    * Add Mobile and Desktop Application Platform under Authentication 
-   * Select _https://login.microsoftonline.com/common/oauth2/nativeclient_ for Redirect URL
+   * Select https://login.microsoftonline.com/common/oauth2/nativeclient_ for Redirect URL
    * Enable Public Client Flow
    * No Client Secrets
-   * Grant passwordvault-api's 'PasswordHistory.Read' Scope as a delegated role under API Permissions
+   * Grant ${AppName}-api's 'PasswordHistory.Read' Scope as a delegated role under API Permissions
    * Enterprise Application Settings 
       * Visible To Users: false
 * Password Vault Maintenance SPN
    * Name - passwordvault-backup
    * Create Client Secret. Copy secret.
-   * Add passwordvault-api's 'Default Access' permission as an application role under API Permissions
+   * Add ${AppName}-api's 'Default Access' permission as an application role under API Permissions
    * Enterprise Application Settings 
       * Visible To Users: false
-
-# Infrastucture Setup
-* ./Infrastructure/create_azure_search.sh <RG_Name> <RG_Location> <Search_Name>
-* ./Infrastructure/create_azure_resources.sh <RG_Name> <Location> <Func_Name> <DB_Name> <Storage_Name> <AES_KEY> <AES_IV> <Search_Name> <Search_RG_Name> <Search_RG_Index>
-   * The create_azure_resource.sh script will create a secret in KeyVault under the name functionSecret
-   * Due to a quirk in automation at this time, this key will have also have to be copied to a secret named functionSecretDev
-* ./Infrastructure/create_azure_backup_resoures.sh <RG_Name> <Location> <Backup_Func_Name> <Backup_Storage_Name> <AES_KEY> <AES_IV> <Password_Vault_Client_ID> <Password_Vault_Uri> <Password_Vault_Function_key> <Backup_Client_ID> <Backup_Client_Secret> <APP_RESOURCE_GROUP_NAME> <DB_Name> <FUNC_NAME>
 
 # Code Deploy
 ## API Function App
