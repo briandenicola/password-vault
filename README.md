@@ -19,7 +19,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 
 # Infrastucture Setup
 * ./Infrastructure/create_infrastructure.sh --region southcentralus
-   * Script will output the generated AppName and Azur AD ClientID for the API and UI Service Principals
+   * Script will output the generated AppName and Azure AD ClientID for the API and UI Service Principals
 * ./Infrastructure/create_backup_infrastructure.sh --region southcentralus --name ${AppName} _(Optional)_
 
 # Azure AD Configurations
