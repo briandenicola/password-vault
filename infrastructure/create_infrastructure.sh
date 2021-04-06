@@ -28,7 +28,7 @@ while (( "$#" )); do
   esac
 done
 
-today=`date +"%y%m%d"`
+today=`date +"%Y%m%d"`
 uuid=`uuidgen | sed 's/-//g'`
 version=`git rev-parse HEAD | fold -w 8 | head -n1`
 
@@ -42,11 +42,11 @@ if [[ -z "${region}" ]]; then
 fi 
 
 #Resource Names
-RG=${appName}_${region}_rg
+RG=${appName}_app_rg
 cosmosDBAccountName=db-${appName}01
-storageAccountName=ui-${appName}01
+storageAccountName=ui${appName}01
 functionAppName=func-${appName}01
-funcStorageName=func-${appName}sa01
+funcStorageName=${appName}sa01
 keyVaultName=kv-${appName}01
 searchServiceName=search-${appName}01
 
@@ -60,9 +60,9 @@ az extension add --name storage-preview
 if ! `az group exists -g ${RG}`; then az group create -n ${RG} -l ${region}; fi
 
 account=`az account show -o json`
-user=`echo ${account} | jq .user.name | tr -d '\"'`
-tenantid=user=`echo ${account} | jq .tenantId | tr -d '\"'`
-subscriptionId=`echo ${account} | jq .id | tr -d '\"'`
+user=`echo ${account} | jq -r .user.name`
+tenantid=`echo ${account} | jq -r .tenantId`
+subscriptionId=`echo ${account} | jq -r .id`
 resourceId=/subscriptions/${subscriptionId}/resourcegroups/${RG}
 az tag create --resource-id ${resourceId} --tags Version=${version} AppName=PasswordVault DeployDate=${today} Deployer=${user}
 
@@ -75,7 +75,6 @@ searchIndexName=cosmosdb-index
 
 az search service create -g ${RG} -n ${searchServiceName} --sku free -l ${region}
 searchAdminKey=`az search admin-key show --resource-group ${RG} --service-name ${searchServiceName} -o tsv --query "primaryKey"`
-searchAdminKeyId=`az keyvault secret set --vault-name ${keyVaultName} --name searchAdminKey --value ${searchAdminKey} --query 'id' --output tsv`
 
 #Create Service Principals
 apiClientID=`az ad app create --display-name ${appName}-api -o tsv --query appId`
@@ -84,7 +83,7 @@ uiClientID=`az ad app create --display-name ${appName}-ui -o tsv --query appId`
 # Create an Azure Function with storage accouunt in the resource group.
 if ! `az functionapp show --name ${functionAppName} --resource-group ${RG} -o none`
 then
-    az storage account create --name ${funcStorageName} --region ${region} --resource-group ${RG} --sku Standard_LRS
+    az storage account create --name ${funcStorageName} --location ${region} --resource-group ${RG} --sku Standard_LRS
     az functionapp create --name ${functionAppName} --storage-account ${funcStorageName} --consumption-plan-location ${region} --resource-group ${RG}  --functions-version 3  --runtime dotnet
     az functionapp identity assign --name ${functionAppName} --resource-group ${RG}
 fi
@@ -99,7 +98,7 @@ az cosmosdb collection create -g ${RG} -n ${cosmosDBAccountName} -d ${database} 
 primaryConnectionString=`az cosmosdb keys list --type connection-strings -n ${cosmosDBAccountName} -g ${RG} --query 'connectionStrings[0].connectionString' -o tsv`
 
 # Create an storage accouunt in the resource group for the SPA UI
-az storage account create --kind StorageV2 --name ${storageAccountName} --region ${region} --resource-group ${RG} --sku Standard_LRS
+az storage account create --kind StorageV2 --name ${storageAccountName} --location ${region} --resource-group ${RG} --sku Standard_LRS
 az storage blob service-properties update --account-name ${storageAccountName} --static-website --404-document "404.html" --index-document "index.html"
 
 # Setup CORS from Storage Account
@@ -107,8 +106,10 @@ url=`az storage account show -n ${storageAccountName} -g ${RG} --query "primaryE
 az functionapp cors add -g ${RG} -n ${functionAppName} --allowed-origins ${url}
 
 # Create Key Vault 
-az keyvault create --name ${keyVaultName} --resource-group ${RG} --region ${region} 
+az keyvault create --name ${keyVaultName} --resource-group ${RG} --location ${region} 
 az keyvault set-policy --name ${keyVaultName} --object-id ${functionAppId} --secret-permissions get
+
+searchAdminKeyId=`az keyvault secret set --vault-name ${keyVaultName} --name searchAdminKey --value ${searchAdminKey} --query 'id' --output tsv`
 
 aesKeySecretId=`az keyvault secret set --vault-name ${keyVaultName} --name AesKey --value ${aesKey} --query 'id' --output tsv`
 primaryConnectionStringSecretId=`az keyvault secret set --vault-name ${keyVaultName} --name cosmosdb --value ${primaryConnectionString} --query 'id' --output tsv`
@@ -142,6 +143,6 @@ az webapp auth update -g ${RG} -n $functionAppName --enabled true --action Login
 
 echo ------------------------------------
 echo "Infrastructure built successfully. Application Name: ${appName}"
-echo "API SPN Client Id: ${apiClientId}"
-echo "UI SPN Client Id: ${uiClientId}"
+echo "API SPN Client Id: ${apiClientID}"
+echo "UI SPN Client Id: ${uiClientID}"
 echo ------------------------------------

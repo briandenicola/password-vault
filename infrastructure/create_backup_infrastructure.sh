@@ -7,7 +7,7 @@ while (( "$#" )); do
       shift 2
       ;;
     -r|--region)
-      regions=($2)
+      region=$2
       shift 2
       ;;
     -h|--help)
@@ -28,12 +28,16 @@ while (( "$#" )); do
   esac
 done
 
-if [[ -z "${regions}" ]]; then
+today=`date +"%Y%m%d"`
+uuid=`uuidgen | sed 's/-//g'`
+version=`git rev-parse HEAD | fold -w 8 | head -n1`
+
+if [[ -z "${region}" ]]; then
   echo "This script requires a region defined"
   exit 1
 fi 
 
-if [[ -z "${name}" ]]; then
+if [[ -z "${appName}" ]]; then
   echo "This script requires the Application Name defined"
   exit 1
 fi 
@@ -41,8 +45,8 @@ fi
 #Resource Names
 RG=${appName}_maintenance_rg
 maintenanceFuncName=${appName}-maintenance
-funcStorageName=func-${appName}sa02
-storageName=${appName}-backup-sa01
+funcStorageName=${appName}sa02
+storageName=${appName}backupsa01
 keyVaultName=kv-${appName}02
 
 az account show  >> /dev/null 2>&1
@@ -54,10 +58,17 @@ az extension add --name storage-preview
 
 if ! `az group exists -g ${RG}`; then az group create -n ${RG} -l ${region}; fi
 
+account=`az account show -o json`
+user=`echo ${account} | jq -r .user.name`
+tenantid=`echo ${account} | jq -r .tenantId`
+subscriptionId=`echo ${account} | jq -r .id`
+resourceId=/subscriptions/${subscriptionId}/resourcegroups/${RG}
+az tag create --resource-id ${resourceId} --tags Version=${version} AppName=PasswordVault-Maintenance DeployDate=${today} Deployer=${user}
+
 # Create an Azure Function with storage accouunt in the resource group.
 if ! `az functionapp show --name ${maintenanceFuncName} --resource-group ${RG} -o none`
 then
-    az storage account create --name ${funcStorageName} --region ${region} --resource-group ${RG} --sku Standard_LRS
+    az storage account create --name ${funcStorageName} --location ${region} --resource-group ${RG} --sku Standard_LRS
     az functionapp create --name ${maintenanceFuncName} --storage-account ${funcStorageName} --consumption-plan-location ${region} --resource-group ${RG} --os-type Linux --functions-version 3 --runtime python
     az functionapp identity assign --name ${maintenanceFuncName} --resource-group ${RG}
 fi
@@ -73,7 +84,7 @@ clientID=`echo ${clientSPN}| jq -r .appId`
 clientSecret=`echo ${clientSPN} | jq -r .password`
 
 # Get Password Vault Details
-appRG=${appName}_${region}_rg
+appRG=${appName}_app_rg
 appCosmosAccount=db-${appName}01
 appFunctionName=func-${appName}01
 appKeyVaultName=kv-${appName}01
@@ -105,23 +116,21 @@ clientSecretId="$(az keyvault secret set --vault-name ${keyVaultName} --name cli
 aesKeySecretId="$(az keyvault secret set --vault-name ${keyVaultName} --name AesKey  --value ${aesKey} --query 'id' --output tsv)"
 funcCodeId="$(az keyvault secret set --vault-name ${keyVaultName} --name passwordVaultCode --value ${passwordVaultCode} --query 'id' --output tsv)"
 
-tenant=`az account  show --query tenantId -o tsv`
-subId=`az account  show --query id -o tsv`
-loginUrl="https://login.microsoftonline.com/${tenant}/oauth2/token"
+loginUrl="https://login.microsoftonline.com/${tenantid}/oauth2/token"
 passwordStorageConString="DefaultEndpointsProtocol=https;AccountName=${storageName};AccountKey=${key};EndpointSuffix=core.windows.net"
 
 # Set Function Confguration
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings SpnSecret="@Microsoft.KeyVault(SecretUri=${clientSecretId})"
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings AesKey="@Microsoft.KeyVault(SecretUri=${aesKeySecretId})"
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings FunctionCode="@Microsoft.KeyVault(SecretUri=${funcCodeId})"
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings AesIV=${aesIV}
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings PasswordStorage=${passwordStorageConString}
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings Clientid=${clientID}
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings VaultSpnId=${passwordVaultID}
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings AppUrl=${passwordVaultUrl}
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings LoginUrl=${loginUrl}
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings SUBSCRIPTION_ID=${subId}
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings RESOURCE_GROUP_NAME=${appRG}
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings COSMOS_DB_ACCOUNT=${appCosmosAccount}
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings FUNCTION_ACCOUNT=${appFunctionName}
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings KEY_VAULT_URL=${appKeyVaultUri}
+az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings SpnSecret="@Microsoft.KeyVault(SecretUri=${clientSecretId})"
+az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings AesKey="@Microsoft.KeyVault(SecretUri=${aesKeySecretId})"
+az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings FunctionCode="@Microsoft.KeyVault(SecretUri=${funcCodeId})"
+az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings AesIV=${aesIV}
+az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings PasswordStorage=${passwordStorageConString}
+az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings Clientid=${clientID}
+az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings VaultSpnId=${passwordVaultID}
+az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings AppUrl=${passwordVaultUrl}
+az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings LoginUrl=${loginUrl}
+az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings SUBSCRIPTION_ID=${subId}
+az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings RESOURCE_GROUP_NAME=${appRG}
+az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings COSMOS_DB_ACCOUNT=${appCosmosAccount}
+az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings FUNCTION_ACCOUNT=${appFunctionName}
+az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings KEY_VAULT_URL=${appKeyVaultUri}
