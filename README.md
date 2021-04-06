@@ -102,7 +102,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 
 ## Maintenance Function App
 * cd ./Source/maintenance/
-* func azure functionapp publish ${appName}-maintenance
+* func azure functionapp publish ${appName}-maintenance --python
 
 ## Search Index Configuration 
 _Can only be completed after documents have been created in Cosmos_
