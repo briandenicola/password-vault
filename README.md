@@ -56,7 +56,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
       * Add Single-page Application.
       * Redirect URIs
          - http://localhost:8080
-         - https://ui${appName}01.z21.web.core.windows.net/
+         - https://ui${appName}01.z21.web.core.windows.net
       * Deselect Implicit Grant
    * Certificates & Secrets
       * Ensure Client Secrets are defined
