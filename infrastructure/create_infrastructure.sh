@@ -7,7 +7,7 @@ while (( "$#" )); do
       shift 2
       ;;
     -r|--region)
-      region=($2)
+      region=$2
       shift 2
       ;;
     -h|--help)
@@ -36,7 +36,7 @@ if [[ -z "${appName}" ]]; then
   appName=`cat /dev/urandom | tr -dc 'a-z' | fold -w 8 | head -n 1`
 fi 
 
-if [[ -z "${regions}" ]]; then
+if [[ -z "${region}" ]]; then
   echo "This script requires a region defined"
   exit 1
 fi 
