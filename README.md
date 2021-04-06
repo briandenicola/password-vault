@@ -86,29 +86,23 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 # Code Deploy
 ## API Function App
 * cd ./Source/functionapp/
-* func azure functionapp publish func-${appName}01
+* func azure functionapp publish func-${appName}
 
 ## Front End UI
 * cd ./Source/passwordapp.ui
-* Update .env
-   * VUE_APP_AAD_TENANT_ID=(Tenant ID of your Azure subscription)
-* Update .env.production 
+* Copy and Paste output of create_infrastructure.sh script into .env.production 
    * VUE_APP_API_ENDPOINT=https://func-${appName}01.azurewebsites.net
    * VUE_APP_AAD_REDIRECT_URL=https://ui${appName}01.z21.web.core.windows.net/
    * VUE_APP_API_KEY=(API Key from output of create_infrastructure.sh script)
    * VUE_APP_AAD_CLIENT_ID=(API Client ID from output of create_infrastructure.sh script)
    * VUE_APP_AAD_SCOPE=https://func-${appName}01.azurewebsites.net/Password.All
 * npm install
-* npm build
-* az storage copy --source-local-path dist --destination-account-name ui${appName}01 --destination-container $web --recursive --put-md5
+* yarn build
+* az storage copy --source-local-path dist --destination-account-name ui${appName}01 --destination-container \$web --recursive --put-md5
 
 ## Maintenance Function App
 * cd ./Source/maintenance/
-* func azure functionapp publish <FUNC_Name> --python
-* Grant the Function App Managed Identity the following Roles on the Function App Resource Group
-   * DocumentDB Account Contributor 
-   * Website Contributor
-   * Key Vault Access Policy - get/list/set for Secrets 
+* func azure functionapp publish ${appName}-maintenance -python
 
 ## Search Index Configuration 
 _Can only be completed after documents have been created in Cosmos_
