@@ -4,7 +4,6 @@ It can be deployed using Azure Dev Ops.
 It was built locally using Azure Functions Core Tools and Azure Cosmosdb Development Container
 
 # Folders
-* Pipelines - YAML files for Azure Dev Ops Build pipelines (exports from Azure DevOps only)
 * Infrastructure - Script using Azure CLI to create resources in Azure - Azure Functions, Key Vault, Cosmos DB.  
 * Scripts - A place for various automations
 * Tests - Various PowerShell scripts to start up the local environment and to test the Functions API
