@@ -150,6 +150,6 @@ echo "VUE_APP_AAD_TENANT_ID=${tenantid}"
 echo "VUE_APP_API_ENDPOINT=https://${functionAppName}.azurewebsites.net"
 echo "VUE_APP_AAD_REDIRECT_URL=https://${storageAccountName}.z21.web.core.windows.net"
 echo "VUE_APP_API_KEY=${functionHostKey}"
-echo "VUE_APP_AAD_CLIENT_ID=${apiClientID}"
+echo "VUE_APP_AAD_CLIENT_ID=${uiClientID}"
 echo "VUE_APP_AAD_SCOPE=https://${functionAppName}.azurewebsites.net/Password.All"
 echo ------------------------------------
