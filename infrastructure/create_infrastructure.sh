@@ -74,12 +74,12 @@ aesIV=`openssl rand -base64 16`
 searchIndexName=cosmosdb-index
 
 az search service create -g ${RG} -n ${searchServiceName} --sku free -l ${region}
-searchAdminKey=`az search admin-key show --resource-group ${RG} --service-name $searchServiceName -o tsv --query "primaryKey"`
-searchAdminKeyId=`az keyvault secret set --vault-name $keyVaultName --name searchAdminKey --value $searchAdminKey --query 'id' --output tsv`
+searchAdminKey=`az search admin-key show --resource-group ${RG} --service-name ${searchServiceName} -o tsv --query "primaryKey"`
+searchAdminKeyId=`az keyvault secret set --vault-name ${keyVaultName} --name searchAdminKey --value ${searchAdminKey} --query 'id' --output tsv`
 
 #Create Service Principals
-apiClientID=`az ad sp create-for-rbac --name --skip-assignment true`
-uiClientID=`az ad sp create-for-rbac --name --skip-assignment true`
+apiClientID=`az ad app create --display-name ${appName}-api -o tsv --query appId`
+uiClientID=`az ad app create --display-name ${appName}-ui -o tsv --query appId`
 
 # Create an Azure Function with storage accouunt in the resource group.
 if ! `az functionapp show --name ${functionAppName} --resource-group ${RG} -o none`
