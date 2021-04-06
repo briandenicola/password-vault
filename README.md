@@ -25,33 +25,51 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 # Azure AD Configurations
 * Password Vault API
    * Name - ${AppName}-api
-   * Redirect Urls - https://func-${appName}01.azurewebsites.net/.auth/login/aad/callback
-   * No Client Secrets
-   * Create Appp Role
+   * Owners
+      * Add yourself as owner
+   * Authentication
+      * Add Web Platform
+      * Redirect Uris
+         - https://func-${appName}01.azurewebsites.net/.auth/login/aad/callback
+      * Deselect Implicit Grant
+   * Certificates & Secrets
+      * Ensure Client Secrets are defined
+   * App Roles
       * Name - Default Access 
       * Allow Member Types - Both (Users + applications) 
-      * Value - Default Access
-   * Set App Id and Add Scopes
-      * PasswordHistory.Read
-      * Password.All
+      * Value - Default.Access
+   * Expose an API
+      * Set App Id
+         - https://func-${appName}01.azurewebsites.net
+      * Add Scopes
+         - PasswordHistory.Read
+         - Password.All
    * Edit Manifest
       * Update accessTokenAcceptedVersion from null to 2
    * Enterprise Application Settings 
       * Visible To Users: false
 * Password Vault UI
    * Name - ${AppName}-ui
+   * Owners
+      * Add yourself as owner
    * Authentication 
       * Add Single-page Application.
       * Redirect URIs
          - http://localhost:8080
          - https://ui${appName}01.z21.web.core.windows.net/
-   * No Client Secrets
-   * Grant ${AppName}-api's 'Password.All' Scope as a delegated role under API Permissions
-   * Enterprise Application Settings
-      * Require User Assignment 
-      * Visible To Users: true
+      * Deselect Implicit Grant
+   * Certificates & Secrets
+      * Ensure Client Secrets are defined
+   * API Permissions
+      * Grant access ${AppName}-api's 'Password.All' Scope as a delegated role under API
+   * Edit Manifest
+      * Update accessTokenAcceptedVersion from null to 2 
+   * Enterprise Application Settings 
+      * Visible To Users: false
 * Password Vault Maintenance _(Optional)_
    * Name - ${AppName}-maintenance
+   * Owners
+      * Add yourself as owner
    * Add ${AppName}-api's 'Default Access' permission as an application role under API Permissions
    * Enterprise Application Settings 
       * Visible To Users: false
