@@ -38,25 +38,27 @@ namespace password.vault.cli
             AuthenticationResult authenticationResult = await tokenAcquisitionHelper.GetTokenForWebApiUsingDeviceCodeFlowAsync(Scopes);
             if (authenticationResult != null)
             {
-                DisplaySignedInAccount(authenticationResult.Account);
-                string accessToken = authenticationResult.AccessToken;
-                await CallWebApiAndDisplayResultAsync(PasswordHistoryUrl, accessToken);
+                DisplaySignedInAccount(authenticationResult.Account, authenticationResult.AccessToken);
+                await CallWebApiAndDisplayResultAsync(PasswordHistoryUrl, authenticationResult.AccessToken);
             }
         }
 
-        private static void DisplaySignedInAccount(IAccount account)
+        private static void DisplaySignedInAccount(IAccount account, string token)
         {
-            Console.WriteLine($"{account.Username} successfully signed-in");
+            Console.WriteLine($"Logged in User: {account.Username}");
+            Console.WriteLine($"Access Token: {token}");
         }
 
         private async Task CallWebApiAndDisplayResultAsync(string url, string accessToken)
         {
+            Console.WriteLine($"Calling Uri: {url}");
             var history = await protectedApiCallHelper.CallWebApiAndProcessResultAsync(url, accessToken);
             Display(history);
         }
 
         private static void Display(List<PasswordHistory> result)
         {
+            Console.WriteLine(Environment.NewLine);
             foreach (PasswordHistory child in result.OrderByDescending(c => c.TimeStamp))
             {
                 Console.WriteLine($"[{child.TimeStamp.ToString("MM/dd/yyyy hh:mm tt")}] {child.SiteName} - {child.Password}");
