@@ -129,7 +129,7 @@ az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --setti
 az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings VaultSpnId=${passwordVaultID}
 az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings AppUrl=${passwordVaultUrl}
 az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings LoginUrl=${loginUrl}
-az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings SUBSCRIPTION_ID=${subId}
+az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings SUBSCRIPTION_ID=${subscriptionId}
 az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings RESOURCE_GROUP_NAME=${appRG}
 az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings COSMOS_DB_ACCOUNT=${appCosmosAccount}
 az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings FUNCTION_ACCOUNT=${appFunctionName}
