@@ -134,3 +134,9 @@ az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --setti
 az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings COSMOS_DB_ACCOUNT=${appCosmosAccount}
 az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings FUNCTION_ACCOUNT=${appFunctionName}
 az functionapp config appsettings set -g ${RG} -n ${maintenanceFuncName} --settings KEY_VAULT_URL=${appKeyVaultUri}
+
+# Assign RBAC Roles ${functionAppId}
+scope=/subscriptions/${subscriptionId}/resourcegroups/${appRG}
+az role assignment create --role "DocumentDB Account Contributor" --assignee ${functionAppId} --scope ${scope}
+az role assignment create --role "Website Contributor" --assignee ${functionAppId} --scope ${scope}
+az keyvault set-policy --name ${appKeyVaultName} --object-id ${functionAppId} --secret-permissions get list set
