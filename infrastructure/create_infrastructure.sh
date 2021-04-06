@@ -46,8 +46,8 @@ RG=${appName}_${region}_rg
 cosmosDBAccountName=db-${appName}01
 storageAccountName=ui-${appName}01
 functionAppName=func-${appName}01
-funcStorageName=func-${functionAppName}sa01
-keyVaultName=kv-${functionAppName}01
+funcStorageName=func-${appName}sa01
+keyVaultName=kv-${appName}01
 searchServiceName=search-${appName}01
 
 az account show  >> /dev/null 2>&1
@@ -85,7 +85,7 @@ uiClientID=`az ad app create --display-name ${appName}-ui -o tsv --query appId`
 if ! `az functionapp show --name ${functionAppName} --resource-group ${RG} -o none`
 then
     az storage account create --name ${funcStorageName} --region ${region} --resource-group ${RG} --sku Standard_LRS
-    az functionapp create --name ${functionAppName} --storage-account ${funcStorageName} --consumption-plan-region ${region} --resource-group ${RG}  --functions-version 3  --runtime dotnet
+    az functionapp create --name ${functionAppName} --storage-account ${funcStorageName} --consumption-plan-location ${region} --resource-group ${RG}  --functions-version 3  --runtime dotnet
     az functionapp identity assign --name ${functionAppName} --resource-group ${RG}
 fi
 functionAppId=`az functionapp identity show --name ${functionAppName} --resource-group ${RG} --query 'principalId' --output tsv`
