@@ -98,7 +98,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
    * VUE_APP_AAD_SCOPE=https://func-${appName}01.azurewebsites.net/Password.All
 * npm install
 * yarn build
-* az storage copy --source-local-path dist --destination-account-name ui${appName}01 --destination-container \$web --recursive --put-md5
+* az storage copy --source-local-path "dist/*" --destination-account-name ui${appName}01 --destination-container \$web --recursive --put-md5
 
 ## Maintenance Function App
 * cd ./Source/maintenance/
