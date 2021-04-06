@@ -44,39 +44,45 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
       * Add Single-page Application.
       * Redirect URIs
          - http://localhost:8080
-         - https://ui-${appName}01.z21.web.core.windows.net/
+         - https://ui${appName}01.z21.web.core.windows.net/
    * No Client Secrets
    * Grant ${AppName}-api's 'Password.All' Scope as a delegated role under API Permissions
    * Enterprise Application Settings
       * Require User Assignment 
       * Visible To Users: true
-* Password Vault Cli SPN _(Optional)_
-   * Name - passwordvault-cli
+* Password Vault Maintenance _(Optional)_
+   * Name - ${AppName}-maintenance
+   * Add ${AppName}-api's 'Default Access' permission as an application role under API Permissions
+   * Enterprise Application Settings 
+      * Visible To Users: false
+* Password Vault Cli _(Optional)_
+   * Name - ${AppName}-cli
    * Add Mobile and Desktop Application Platform under Authentication 
-   * Select https://login.microsoftonline.com/common/oauth2/nativeclient_ for Redirect URL
+   * Select _https://login.microsoftonline.com/common/oauth2/nativeclient_ for Redirect URL
    * Enable Public Client Flow
    * No Client Secrets
    * Grant ${AppName}-api's 'PasswordHistory.Read' Scope as a delegated role under API Permissions
-   * Enterprise Application Settings 
-      * Visible To Users: false
-* Password Vault Maintenance SPN _(Optional)_
-   * Name - passwordvault-backup
-   * Create Client Secret. Copy secret.
-   * Add ${AppName}-api's 'Default Access' permission as an application role under API Permissions
    * Enterprise Application Settings 
       * Visible To Users: false
 
 # Code Deploy
 ## API Function App
 * cd ./Source/functionapp/
-* func azure functionapp publish <FUNC_Name> --python
+* func azure functionapp publish func-${appName}01
 
 ## Front End UI
 * cd ./Source/passwordapp.ui
+* Update .env
+   * VUE_APP_AAD_TENANT_ID=(Tenant ID of your Azure subscription)
 * Update .env.production 
+   * VUE_APP_API_ENDPOINT=https://func-${appName}01.azurewebsites.net
+   * VUE_APP_AAD_REDIRECT_URL=https://ui${appName}01.z21.web.core.windows.net/
+   * VUE_APP_API_KEY=(API Key from output of create_infrastructure.sh script)
+   * VUE_APP_AAD_CLIENT_ID=(API Client ID from output of create_infrastructure.sh script)
+   * VUE_APP_AAD_SCOPE=https://func-${appName}01.azurewebsites.net/Password.All
 * npm install
 * npm build
-* Copy dist folder to <Storage_Name> $web container
+* az storage copy --source-local-path dist --destination-account-name ui${appName}01 --destination-container $web --recursive --put-md5
 
 ## Maintenance Function App
 * cd ./Source/maintenance/

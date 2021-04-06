@@ -144,5 +144,5 @@ az webapp auth update -g ${RG} -n $functionAppName --enabled true --action Login
 echo ------------------------------------
 echo "Infrastructure built successfully. Application Name: ${appName}"
 echo "API SPN Client Id: ${apiClientID}"
-echo "UI SPN Client Id: ${uiClientID}"
+echo "API Key: ${functionHostKey}"
 echo ------------------------------------
