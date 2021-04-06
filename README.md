@@ -20,7 +20,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 # Infrastucture Setup
 * ./Infrastructure/create_infrastructure.sh --region southcentralus
    * Script will output the generated AppName and Azur AD ClientID for the API and UI Service Principals
-* ./Infrastructure/create_backup_infrastructure.sh --region southcentralus
+* ./Infrastructure/create_backup_infrastructure.sh --region southcentralus --name ${AppName} _(Optional)_
 
 # Azure AD Configurations
 * Password Vault API
@@ -50,7 +50,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
    * Enterprise Application Settings
       * Require User Assignment 
       * Visible To Users: true
-* Password Vault Cli SPN
+* Password Vault Cli SPN _(Optional)_
    * Name - passwordvault-cli
    * Add Mobile and Desktop Application Platform under Authentication 
    * Select https://login.microsoftonline.com/common/oauth2/nativeclient_ for Redirect URL
@@ -59,7 +59,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
    * Grant ${AppName}-api's 'PasswordHistory.Read' Scope as a delegated role under API Permissions
    * Enterprise Application Settings 
       * Visible To Users: false
-* Password Vault Maintenance SPN
+* Password Vault Maintenance SPN _(Optional)_
    * Name - passwordvault-backup
    * Create Client Secret. Copy secret.
    * Add ${AppName}-api's 'Default Access' permission as an application role under API Permissions
