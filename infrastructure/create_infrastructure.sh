@@ -78,7 +78,9 @@ searchAdminKey=`az search admin-key show --resource-group ${RG} --service-name $
 
 #Create Service Principals
 apiClientID=`az ad app create --display-name ${appName}-api -o tsv --query appId`
+az ad sp create --id ${apiClientID} 
 uiClientID=`az ad app create --display-name ${appName}-ui -o tsv --query appId`
+az ad sp create --id ${uiClientID} 
 
 # Create an Azure Function with storage accouunt in the resource group.
 if ! `az functionapp show --name ${functionAppName} --resource-group ${RG} -o none`
