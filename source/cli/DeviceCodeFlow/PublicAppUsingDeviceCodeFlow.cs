@@ -9,15 +9,17 @@ namespace password.vault.cli
 {
     public class PublicAppUsingDeviceCodeFlow
     {
+        protected IPublicClientApplication App { get; private set; }
+        private const string cacheFileName = ".msal_cache";
+        private readonly static string cacheDirectory = MsalCacheHelper.UserRootDirectory;
+        
         public PublicAppUsingDeviceCodeFlow(IPublicClientApplication app)
         {
             App = app;
             var cacheHelper = CreateCacheHelperAsync().GetAwaiter().GetResult();
             cacheHelper.RegisterCache(app.UserTokenCache);
         }
-        protected IPublicClientApplication App { get; private set; }
-        private const string cacheFileName = ".msal_cache";
-        private readonly static string cacheDirectory = MsalCacheHelper.UserRootDirectory;
+        
         public async Task<AuthenticationResult> GetTokenForWebApi(IEnumerable<String> scopes)
         {
             AuthenticationResult result = null;
@@ -43,24 +45,20 @@ namespace password.vault.cli
         private async Task<AuthenticationResult> GetTokenForWebApiUsingDeviceCodeFlowAsync(IEnumerable<string> scopes)
         {
             AuthenticationResult result = null;
-            try
-            {
 
+            try {
                 result = await App.AcquireTokenWithDeviceCode(scopes, deviceCodeCallback =>  {
                     Console.WriteLine(deviceCodeCallback.Message);
                     return Task.FromResult(0);
                 }).ExecuteAsync();
             }
-            catch (MsalServiceException)
-            {
+            catch (MsalServiceException) {
                 throw;
             }
-            catch (OperationCanceledException)
-            {
+            catch (OperationCanceledException) {
                 result = null;
             }
-            catch (MsalClientException)
-            {
+            catch (MsalClientException) {
                 result = null;
             }
             
@@ -71,16 +69,15 @@ namespace password.vault.cli
         {
             StorageCreationProperties storageProperties;
             MsalCacheHelper cacheHelper;
+
             try
             {
                 storageProperties = ConfigureSecureStorage();
                 cacheHelper = await MsalCacheHelper.CreateAsync(
-                            storageProperties,
-                            null)
-                         .ConfigureAwait(false);
+                                storageProperties,
+                                null).ConfigureAwait(false);
 
                 cacheHelper.VerifyPersistence();
-
                 return cacheHelper;
             }
             catch (MsalCachePersistenceException ex)

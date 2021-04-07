@@ -14,6 +14,15 @@ namespace password.vault.cli
 {
     public class Passwords
     {
+        protected PublicAppUsingDeviceCodeFlow tokenAcquisitionHelper;
+        protected ProtectedApiCallHelper<PasswordHistory> protectedApiCallHelper;
+        private HttpClient client = new HttpClient();
+        private string[] Scopes { get; set; }
+        private string PasswordEndPoint { get; set; }
+        private string PasswordApiCode { get; set; }
+        private string PasswordId { get; set; }
+        private string PasswordHistoryUrl { get { return $"{PasswordEndPoint}/api/passwords/{PasswordId}/history?code={PasswordApiCode}"; } }
+        
         public Passwords(IPublicClientApplication app, PasswordConfiguration config)
         {
             tokenAcquisitionHelper = new PublicAppUsingDeviceCodeFlow(app);
@@ -24,18 +33,6 @@ namespace password.vault.cli
             this.PasswordId = config.PasswordClientId;
             this.Scopes = new string[] { config.PasswordApiScope };
         }
-
-        protected PublicAppUsingDeviceCodeFlow tokenAcquisitionHelper;
-
-        protected ProtectedApiCallHelper<PasswordHistory> protectedApiCallHelper;
-
-        private string[] Scopes { get; set; }
-
-        private string PasswordEndPoint { get; set; }
-        private string PasswordApiCode { get; set; }
-        private string PasswordId { get; set; }
-        private string PasswordHistoryUrl { get { return $"{PasswordEndPoint}/api/passwords/{PasswordId}/history?code={PasswordApiCode}"; } }
-        private HttpClient client = new HttpClient();
 
         public async Task DisplayPasswordHistory()
         {

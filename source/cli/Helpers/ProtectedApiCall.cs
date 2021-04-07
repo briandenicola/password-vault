@@ -11,12 +11,13 @@ namespace password.vault.cli
 {
     public class ProtectedApiCallHelper<T>
     {
+        protected HttpClient HttpClient { get; private set; }
+
         public ProtectedApiCallHelper(HttpClient httpClient)
         {
             HttpClient = httpClient;
         }
-
-        protected HttpClient HttpClient { get; private set; }
+        
         public async Task<List<T>> CallWebApiAndProcessResultAsync(string webApiUrl, string accessToken)
         {
             var result = new List<T>();
