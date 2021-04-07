@@ -9,7 +9,7 @@ using password.vault.models;
 
 namespace password.vault.cli
 {
-    public class ProtectedApiCallHelper
+    public class ProtectedApiCallHelper<T>
     {
         public ProtectedApiCallHelper(HttpClient httpClient)
         {
@@ -17,9 +17,9 @@ namespace password.vault.cli
         }
 
         protected HttpClient HttpClient { get; private set; }
-        public async Task<List<PasswordHistory>> CallWebApiAndProcessResultAsync(string webApiUrl, string accessToken)
+        public async Task<List<T>> CallWebApiAndProcessResultAsync(string webApiUrl, string accessToken)
         {
-            var result = new List<PasswordHistory>();
+            var result = new List<T>();
             
             if (!string.IsNullOrEmpty(accessToken))
             {
@@ -39,7 +39,7 @@ namespace password.vault.cli
                     };
 
                     string json = await response.Content.ReadAsStringAsync();
-                    result = JsonSerializer.Deserialize<List<PasswordHistory>>(json, options);
+                    result = JsonSerializer.Deserialize<List<T>>(json, options);
                 }
             }
 

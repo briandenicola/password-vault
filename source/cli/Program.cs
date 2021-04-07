@@ -25,7 +25,7 @@ rootCommand.Handler = CommandHandler.Create<string>( async (passwordid) => {
     var httpClient = new HttpClient();
 
     Passwords p = new Passwords(app, httpClient, config.PasswordApiEndpoint, config.PasswordApiCode, config.PasswordAPiScope, passwordid);
-    await p.DisplayPasswwordHistory();
+    await p.DisplayPasswordHistory();
 
 });
 

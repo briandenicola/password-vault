@@ -1,10 +1,14 @@
 ﻿
-using Microsoft.Identity.Client;
+
 using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+
+using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.Extensions.Msal;
+
 using password.vault.models;
 
 namespace password.vault.cli
@@ -14,7 +18,7 @@ namespace password.vault.cli
         public Passwords(IPublicClientApplication app, HttpClient client, string passwordEndPoint, string passwordApiCode, string passwordAPiScope, string passwordId)
         {
             tokenAcquisitionHelper = new PublicAppUsingDeviceCodeFlow(app);
-            protectedApiCallHelper = new ProtectedApiCallHelper(client);
+            protectedApiCallHelper = new ProtectedApiCallHelper<PasswordHistory>(client);
 
             this.PasswordEndPoint = passwordEndPoint;
             this.PasswordApiCode = passwordApiCode;
@@ -24,7 +28,7 @@ namespace password.vault.cli
 
         protected PublicAppUsingDeviceCodeFlow tokenAcquisitionHelper;
 
-        protected ProtectedApiCallHelper protectedApiCallHelper;
+        protected ProtectedApiCallHelper<PasswordHistory> protectedApiCallHelper;
 
         private string[] Scopes { get; set; }
 
@@ -33,35 +37,39 @@ namespace password.vault.cli
         private string PasswordId { get; set; }
         private string PasswordHistoryUrl { get { return $"{PasswordEndPoint}/api/passwords/{PasswordId}/history?code={PasswordApiCode}"; } }
 
-        public async Task DisplayPasswwordHistory()
+        public async Task DisplayPasswordHistory()
         {
-            AuthenticationResult authenticationResult = await tokenAcquisitionHelper.GetTokenForWebApiUsingDeviceCodeFlowAsync(Scopes);
+            AuthenticationResult authenticationResult = await tokenAcquisitionHelper.GetTokenForWebApi(Scopes);
             if (authenticationResult != null)
             {
                 DisplaySignedInAccount(authenticationResult.Account, authenticationResult.AccessToken);
-                await CallWebApiAndDisplayResultAsync(PasswordHistoryUrl, authenticationResult.AccessToken);
+                var result = await CallWebApiAsync(PasswordHistoryUrl, authenticationResult.AccessToken);
+                Display(result);
             }
         }
 
-        private static void DisplaySignedInAccount(IAccount account, string token)
+        private void DisplaySignedInAccount(IAccount account, string token)
         {
-            Console.WriteLine($"Logged in User: {account.Username}");
-            Console.WriteLine($"Access Token: {token}");
+            Console.WriteLine("==============================================================");
+            Console.WriteLine($"|Information for Debug:");
+            Console.WriteLine($"|Password Uri: {PasswordHistoryUrl}");
+            Console.WriteLine($"|Logged in User: {account.Username}");
+            Console.WriteLine($"|Access Token: {token}");
+            Console.WriteLine("==============================================================");
         }
 
-        private async Task CallWebApiAndDisplayResultAsync(string url, string accessToken)
+        private async Task<List<PasswordHistory>> CallWebApiAsync(string url, string accessToken)
         {
-            Console.WriteLine($"Calling Uri: {url}");
             var history = await protectedApiCallHelper.CallWebApiAndProcessResultAsync(url, accessToken);
-            Display(history);
+            return history;
         }
 
         private static void Display(List<PasswordHistory> result)
         {
-            Console.WriteLine(Environment.NewLine);
+            Console.WriteLine($"Password History for Site: {result.FirstOrDefault().SiteName}");
             foreach (PasswordHistory child in result.OrderByDescending(c => c.TimeStamp))
             {
-                Console.WriteLine($"[{child.TimeStamp.ToString("MM/dd/yyyy hh:mm tt")}] {child.SiteName} - {child.Password}");
+                Console.WriteLine($"[{child.TimeStamp.ToString("MM/dd/yyyy hh:mm tt")}] - {child.Password}");
             }
         }
     }
