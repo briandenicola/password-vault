@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 
 using Microsoft.Identity.Client;
-using Microsoft.Identity.Client.Extensions.Msal;
 
 using password.vault.models;
 
@@ -15,15 +14,15 @@ namespace password.vault.cli
 {
     public class Passwords
     {
-        public Passwords(IPublicClientApplication app, HttpClient client, string passwordEndPoint, string passwordApiCode, string passwordAPiScope, string passwordId)
+        public Passwords(IPublicClientApplication app, PasswordConfiguration config)
         {
             tokenAcquisitionHelper = new PublicAppUsingDeviceCodeFlow(app);
             protectedApiCallHelper = new ProtectedApiCallHelper<PasswordHistory>(client);
 
-            this.PasswordEndPoint = passwordEndPoint;
-            this.PasswordApiCode = passwordApiCode;
-            this.PasswordId = passwordId;
-            this.Scopes = new string[] { passwordAPiScope };
+            this.PasswordEndPoint = config.PasswordApiEndpoint;
+            this.PasswordApiCode = config.PasswordApiCode;
+            this.PasswordId = config.PasswordClientId;
+            this.Scopes = new string[] { config.PasswordApiScope };
         }
 
         protected PublicAppUsingDeviceCodeFlow tokenAcquisitionHelper;
@@ -36,6 +35,7 @@ namespace password.vault.cli
         private string PasswordApiCode { get; set; }
         private string PasswordId { get; set; }
         private string PasswordHistoryUrl { get { return $"{PasswordEndPoint}/api/passwords/{PasswordId}/history?code={PasswordApiCode}"; } }
+        private HttpClient client = new HttpClient();
 
         public async Task DisplayPasswordHistory()
         {

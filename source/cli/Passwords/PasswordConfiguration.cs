@@ -10,9 +10,10 @@ namespace password.vault.cli
         public string PasswordApiEndpoint { get; set; }
         public string PasswordApiUri { get; set; }
         public string PasswordApiCode { get; set; }
-        public string PasswordAPiScope { get; set; }
+        public string PasswordApiScope { get; set; }
+        public string PasswordClientId { get; set; }
        
-        public static PasswordConfiguration ReadFromJsonFile(string path)
+        public static PasswordConfiguration ReadFromJsonFile(string path, string id)
         {
             IConfigurationRoot Configuration;
 
@@ -29,7 +30,8 @@ namespace password.vault.cli
 
             config.PasswordApiEndpoint = Configuration.GetValue<string>("PasswordApi:Endpoint");
             config.PasswordApiCode = Configuration.GetValue<string>("PasswordApi:ApiCode");
-            config.PasswordAPiScope = Configuration.GetValue<string>("PasswordApi:Scope");
+            config.PasswordApiScope = Configuration.GetValue<string>("PasswordApi:Scope");
+            config.PasswordClientId = id;
 
             return config;
         }

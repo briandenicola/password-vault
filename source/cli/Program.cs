@@ -15,18 +15,15 @@ var rootCommand = new RootCommand
 
 rootCommand.Description = "A console app display a account's password history from the vault";
 rootCommand.Handler = CommandHandler.Create<string>( async (passwordid) => {   
-    PasswordConfiguration config = PasswordConfiguration.ReadFromJsonFile("appsettings.json");
+    PasswordConfiguration config = PasswordConfiguration.ReadFromJsonFile("appsettings.json", passwordid);
 
     var appConfig = config.PublicClientApplicationOptions;
     var app = PublicClientApplicationBuilder.CreateWithApplicationOptions(appConfig)
         .WithRedirectUri("http://localhost")  
         .Build();
 
-    var httpClient = new HttpClient();
-
-    Passwords p = new Passwords(app, httpClient, config.PasswordApiEndpoint, config.PasswordApiCode, config.PasswordAPiScope, passwordid);
+    Passwords p = new Passwords(app, config);
     await p.DisplayPasswordHistory();
-
 });
 
 return  rootCommand.InvokeAsync(args).Result;
