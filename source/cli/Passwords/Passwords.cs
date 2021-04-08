@@ -5,7 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-
+using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 
 using password.vault.models;
@@ -14,6 +14,7 @@ namespace password.vault.cli
 {
     public class Passwords
     {
+        private readonly ILogger<Passwords> _logger;
         protected PublicAppUsingDeviceCodeFlow tokenAcquisitionHelper;
         protected ProtectedApiCallHelper<PasswordHistory> protectedApiCallHelper;
         private HttpClient client = new HttpClient();
@@ -21,22 +22,29 @@ namespace password.vault.cli
         private string PasswordEndPoint { get; set; }
         private string PasswordApiCode { get; set; }
         private string PasswordId { get; set; }
-        private string PasswordHistoryUrl { get { return $"{PasswordEndPoint}/api/passwords/{PasswordId}/history?code={PasswordApiCode}"; } }
+        private string PasswordHistoryUrl { 
+            get { 
+                return $"{PasswordEndPoint}/api/passwords/{PasswordId}/history?code={PasswordApiCode}"; 
+            }
+             }
         
-        public Passwords(IPublicClientApplication app, PasswordConfiguration config)
+        public Passwords(IPublicClientApplication app, PasswordConfiguration config, ILogger<Passwords> logger)
         {
             tokenAcquisitionHelper = new PublicAppUsingDeviceCodeFlow(app);
             protectedApiCallHelper = new ProtectedApiCallHelper<PasswordHistory>(client);
 
             this.PasswordEndPoint = config.PasswordApiEndpoint;
             this.PasswordApiCode = config.PasswordApiCode;
-            this.PasswordId = config.PasswordClientId;
             this.Scopes = new string[] { config.PasswordApiScope };
+
+            _logger = logger;
         }
 
-        public async Task DisplayPasswordHistory()
+        public async Task GetPasswordHistory(string id)
         {
             AuthenticationResult authenticationResult = await tokenAcquisitionHelper.GetTokenForWebApi(Scopes);
+            PasswordId = id;
+            
             if (authenticationResult != null)
             {
                 DisplaySignedInAccount(authenticationResult.Account, authenticationResult.AccessToken);
@@ -47,12 +55,9 @@ namespace password.vault.cli
 
         private void DisplaySignedInAccount(IAccount account, string token)
         {
-            Console.WriteLine("==============================================================");
-            Console.WriteLine($"|Information for Debug:");
-            Console.WriteLine($"|Password Uri: {PasswordHistoryUrl}");
-            Console.WriteLine($"|Logged in User: {account.Username}");
-            Console.WriteLine($"|Access Token: {token}");
-            Console.WriteLine("==============================================================");
+            _logger.LogDebug($"Password Uri: {PasswordHistoryUrl}");
+            _logger.LogDebug($"Logged in User: {account.Username}");
+            _logger.LogDebug($"Access Token: {token}");   
         }
 
         private async Task<List<PasswordHistory>> CallWebApiAsync(string url, string accessToken)
@@ -63,6 +68,7 @@ namespace password.vault.cli
 
         private static void Display(List<PasswordHistory> result)
         {
+            Console.WriteLine("==============================================================");
             Console.WriteLine($"Password History for Site: {result.FirstOrDefault().SiteName}");
             foreach (PasswordHistory child in result.OrderByDescending(c => c.TimeStamp))
             {
