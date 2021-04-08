@@ -8,15 +8,12 @@ namespace password.vault.cli
     {
         public static LogLevel ReadFromJsonFile(string path)
         {
-            IConfigurationRoot Configuration;
-
-            var builder = new ConfigurationBuilder()
+            IConfigurationRoot config = new ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile(path);
+                .AddJsonFile(path)
+                .Build();
 
-            Configuration = builder.Build();
-
-            var level = Configuration.GetValue<LogLevel>("Logging:LogLevel:Default");
+            var level = config.GetValue<LogLevel>("Logging:LogLevel:Default");
             return level;
         }
     }
