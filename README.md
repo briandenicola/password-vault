@@ -32,7 +32,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
          - https://func-${appName}01.azurewebsites.net/.auth/login/aad/callback
       * Deselect Implicit Grant
    * Certificates & Secrets
-      * Ensure Client Secrets are defined
+      * Ensure that no Client Secrets is defined. It is not needed. 
    * App Roles
       * Name - Default Access 
       * Allow Member Types - Both (Users + applications) 
@@ -58,7 +58,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
          - https://ui${appName}01.z21.web.core.windows.net
       * Deselect Implicit Grant
    * Certificates & Secrets
-      * Ensure Client Secrets are defined
+      * Ensure that no Client Secrets is defined. It is not needed. 
    * API Permissions
       * Grant access ${AppName}-api's 'Password.All' Scope as a delegated role under API
    * Edit Manifest
