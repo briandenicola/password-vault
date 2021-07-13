@@ -33,7 +33,7 @@ uuid=`uuidgen | sed 's/-//g'`
 version=`git rev-parse HEAD | fold -w 8 | head -n1`
 
 if [[ -z "${appName}" ]]; then
-  appName=`cat /dev/urandom | tr -dc 'a-z' | fold -w 8 | head -n 1`
+  appName=`cat /dev/urandom | base64 | tr -dc 'a-z' | fold -w 8 | head -n 1`
 fi 
 
 if [[ -z "${region}" ]]; then
@@ -86,7 +86,7 @@ az ad sp create --id ${uiClientID}
 if ! `az functionapp show --name ${functionAppName} --resource-group ${RG} -o none`
 then
     az storage account create --name ${funcStorageName} --location ${region} --resource-group ${RG} --sku Standard_LRS
-    az functionapp create --name ${functionAppName} --storage-account ${funcStorageName} --consumption-plan-location ${region} --resource-group ${RG}  --functions-version 3  --runtime dotnet
+    az functionapp create --name ${functionAppName} --storage-account ${funcStorageName} --consumption-plan-location ${region} --resource-group ${RG}  --functions-version 3  --runtime dotnet --consumption-plan-locatoin ${region}
     az functionapp identity assign --name ${functionAppName} --resource-group ${RG}
 fi
 functionAppId=`az functionapp identity show --name ${functionAppName} --resource-group ${RG} --query 'principalId' --output tsv`
