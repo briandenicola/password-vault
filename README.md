@@ -69,6 +69,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
    * Name - ${AppName}-maintenance
    * Owners
       * Add yourself as owner
+   * Create a client secret but not Authenication Plaform.
    * Add ${AppName}-api's 'Default Access' permission as an application role under API Permissions
    * Enterprise Application Settings 
       * Visible To Users: false
@@ -77,7 +78,7 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
    * Add Mobile and Desktop Application Platform under Authentication 
    * Select _https://login.microsoftonline.com/common/oauth2/nativeclient_ for Redirect URL
    * Enable Public Client Flow
-   * No Client Secrets
+   * No Client Secrets is required because we're using Public Client flow.
    * Grant ${AppName}-api's 'PasswordHistory.Read' Scope as a delegated role under API Permissions
    * Enterprise Application Settings 
       * Visible To Users: false
