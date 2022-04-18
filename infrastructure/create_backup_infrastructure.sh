@@ -69,7 +69,7 @@ az tag create --resource-id ${resourceId} --tags Version=${version} AppName=Pass
 if ! `az functionapp show --name ${maintenanceFuncName} --resource-group ${RG} -o none`
 then
     az storage account create --name ${funcStorageName} --location ${region} --resource-group ${RG} --sku Standard_LRS
-    az functionapp create --name ${maintenanceFuncName} --storage-account ${funcStorageName} --consumption-plan-location ${region} --resource-group ${RG} --os-type Linux --functions-version 3 --runtime python
+    az functionapp create --name ${maintenanceFuncName} --storage-account ${funcStorageName} --consumption-plan-location ${region} --resource-group ${RG} --os-type Linux --functions-version 3 --runtime python  --runtime-version 3.8
     az functionapp identity assign --name ${maintenanceFuncName} --resource-group ${RG}
 fi
 functionAppId="$(az functionapp identity show --name ${maintenanceFuncName} --resource-group ${RG} --query 'principalId' --output tsv)"
