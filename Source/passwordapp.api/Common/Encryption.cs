@@ -101,10 +101,16 @@ namespace PasswordService.Common
         private static byte[] GenerateSalt()
         {
             byte[] salt = new byte[size];
-            using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
+
+            /*using (RNGCryptoServiceProvider rng = new RandomNumberGenerator())
+            {
+                rng.GetBytes(salt);
+            }*/
+            using (var rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(salt);
             }
+            
             return salt;
         }
     }
