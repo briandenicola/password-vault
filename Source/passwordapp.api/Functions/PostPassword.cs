@@ -19,8 +19,8 @@ namespace PasswordService
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = "passwords")] HttpRequest req,
             [CosmosDB(
                 databaseName: "%COSMOS_DATABASENAME%",
-                collectionName: "%COSMOS_COLLECTIONNAME%",
-                ConnectionStringSetting = "cosmosdb")] IAsyncCollector<AccountPassword> passwordCollection,
+                containerName: "%COSMOS_COLLECTIONNAME%",
+                Connection = "cosmosdb")] IAsyncCollector<AccountPassword> passwordCollection,
             ILogger log)
         {
             log.LogInformation($"PostPassword request new account received");

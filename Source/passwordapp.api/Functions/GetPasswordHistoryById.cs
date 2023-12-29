@@ -18,9 +18,9 @@ namespace PasswordService
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = "passwords/{id}/history")] HttpRequest req,
             [CosmosDB(
                 databaseName: "%COSMOS_DATABASENAME%",
-                collectionName: "%COSMOS_COLLECTIONNAME%",
+                containerName: "%COSMOS_COLLECTIONNAME%",
                 PartitionKey = "%COSMOS_PARTITIONKEY%",
-                ConnectionStringSetting = "cosmosdb",
+                Connection = "cosmosdb",
                 Id = "{id}")] AccountPassword accountPassword,
             ILogger log)            
         {

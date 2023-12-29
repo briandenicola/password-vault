@@ -15,11 +15,11 @@ namespace PasswordService
         public static void CosmosChangeFeedProcessor(
             [CosmosDBTrigger(
                 databaseName: "%COSMOS_DATABASENAME%",
-                collectionName: "%COSMOS_COLLECTIONNAME%",
-                ConnectionStringSetting = "cosmosdb",
-                LeaseCollectionName= "%COSMOS_LEASENAME%",
-                LeaseCollectionPrefix="blob",
-                CreateLeaseCollectionIfNotExists=true
+                containerName: "%COSMOS_COLLECTIONNAME%",
+                Connection = "cosmosdb",
+                LeaseContainerName = "%COSMOS_LEASENAME%",
+                LeaseContainerPrefix = "blob",
+                CreateLeaseContainerIfNotExists = true
             )]IReadOnlyList<Microsoft.Azure.Documents.Document> inputStream,  
             ILogger log)
         {
