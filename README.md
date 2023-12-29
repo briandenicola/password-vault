@@ -103,37 +103,3 @@ It was built locally using Azure Functions Core Tools and Azure Cosmosdb Develop
 ## Maintenance Function App
 * cd ./Source/maintenance/
 * func azure functionapp publish ${appName}-maintenance --python
-
-## Search Index Configuration 
-_Can only be completed after documents have been created in Cosmos_
-1. Click `Import Data`
-2. Data Source - 'Cosmos DB'
-3. Name - vault
-4. Choose exsiting connection and select Cosmos DB Account
-5. Select Database and Collection. Leave Query empty
-6. Next
-7. Skip to: Customize Target Index
-8. Key: id
-9. Suggester Name: suggester
-10. Select the following:
-   * rid: Delete
-   * Retrievalble: All
-   * Filterable: SiteName, AccountName
-   * Sortable:  SiteName, AccountName
-   * Searchable: SiteName, AccountName
-   * Suggester: SiteName, AccountName
-11. Create Indexer
-   * Custom Schedule: Interval - Every 5 minutes
-   * Track Deletions. Soft Delete Column - isDeleted. Marker Value - true
-12. Submit
-
-# Roadmap
-- [X] Refactor UpdatePassword and DeletePassword to eliminate duplicate code
-- [X] Upgrade API to .net core 3.1
-- [X] Create cli to pull Password History
-- [X] Function to Rotate Cosmos Account Keys 
-- [X] Migrate to MSAL.js/ Auth Code Flow from ADAL.js / Implicit Flow 
-- [X] Migrate to Azure AD v2 JWT token format
-- [ ] ~~Upgrade UI to Vue 3~~
-- [ ] Migrate UI to React once [Azure AD MSAL React](https://github.com/AzureAD/microsoft-authentication-library-for-js/tree/dev/lib/msal-react) GAs
-- [ ] Migrate infrastructure setup to Azure Bicep

@@ -48,7 +48,6 @@ storageAccountName=ui${appName}01
 functionAppName=func-${appName}01
 funcStorageName=${appName}sa01
 keyVaultName=kv-${appName}01
-searchServiceName=search-${appName}01
 
 az account show  >> /dev/null 2>&1
 if [[ $? -ne 0 ]]; then
@@ -69,12 +68,6 @@ az tag create --resource-id ${resourceId} --tags Version=${version} AppName=Pass
 #Create AES Key and IV
 aesKey=`openssl rand -base64 32`
 aesIV=`openssl rand -base64 16`
-
-#Create Azure Search Engine
-searchIndexName=cosmosdb-index
-
-az search service create -g ${RG} -n ${searchServiceName} --sku free -l ${region}
-searchAdminKey=`az search admin-key show --resource-group ${RG} --service-name ${searchServiceName} -o tsv --query "primaryKey"`
 
 #Create Service Principals
 apiClientID=`az ad app create --display-name ${appName}-api -o tsv --query appId`
@@ -111,8 +104,6 @@ az functionapp cors add -g ${RG} -n ${functionAppName} --allowed-origins ${url}
 az keyvault create --name ${keyVaultName} --resource-group ${RG} --location ${region} 
 az keyvault set-policy --name ${keyVaultName} --object-id ${functionAppId} --secret-permissions get
 
-searchAdminKeyId=`az keyvault secret set --vault-name ${keyVaultName} --name searchAdminKey --value ${searchAdminKey} --query 'id' --output tsv`
-
 aesKeySecretId=`az keyvault secret set --vault-name ${keyVaultName} --name AesKey --value ${aesKey} --query 'id' --output tsv`
 primaryConnectionStringSecretId=`az keyvault secret set --vault-name ${keyVaultName} --name cosmosdb --value ${primaryConnectionString} --query 'id' --output tsv`
 
@@ -134,11 +125,6 @@ keyUrl="https://${functionAppName}.azurewebsites.net/admin/host/keys/main"
 JWT=`curl -s -X GET -u ${userName}:${userPassword} ${adminUrl} | tr -d '"'`
 functionHostKey=`curl -s -X POST -H "Authorization: Bearer ${JWT}" -H "Content-Type: application/json" -d "Content-Length: 0" ${keyUrl} | jq -r '.value'`
 az keyvault secret set --vault-name ${keyVaultName} --name functionSecret --value ${functionHostKey}
-
-# Update Functions with Azure Search Configuration
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings SEARCH_SERVICENAME=${searchServiceName}
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings SEARCH_ADMINKEY="@Microsoft.KeyVault(SecretUri=${searchAdminKeyId})"
-az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings SEARCH_INDEXNAME=${searchIndexName}
 
 # Update Function App for Azure AD Authentication 
 az webapp auth update -g ${RG} -n $functionAppName --enabled true --action LoginWithAzureActiveDirectory --aad-client-id ${apiClientID} --aad-token-issuer-url "https://login.microsoftonline.com/${tenantid}/v2.0"
