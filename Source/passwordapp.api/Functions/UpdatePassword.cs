@@ -41,6 +41,7 @@ namespace PasswordService
             accountPassword.SecurityQuestions = updates.SecurityQuestions;
             accountPassword.UpdatePassword(e, updates.CurrentPassword, accountPassword.LastModifiedDate);
             accountPassword.LastModifiedDate = DateTime.Now;
+            accountPassword.LastModifiedBy   = updates.LastModifiedBy;
 
             return (ActionResult)new OkObjectResult(accountPassword);
         

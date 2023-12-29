@@ -38,6 +38,15 @@ namespace PasswordService.Models
             };
         }
 
+        public void GenerateId( ) {
+            id = Guid.NewGuid().ToString();
+        }
+
+        public void SavePassword(Encryptor e, string password) 
+        {   
+            this.CurrentPassword = this.EncryptPassword(e, password);
+        }
+
         public void UpdatePassword(Encryptor e, string newPassword, DateTime lastModifiedDate )
         {
             string originalEncryptedPassword = this.CurrentPassword;
