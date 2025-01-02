@@ -5,7 +5,7 @@
 
 # ENV files
 .env
-src/passwordsapp.api/local.settings.json
+src/passwordapp.api/local.settings.json
 
 # Terraform 
 .terraform/
