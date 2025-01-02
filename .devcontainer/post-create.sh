@@ -6,7 +6,7 @@ echo "$(date)    post-create start" >> ~/status
 
 #Install jq
 sudo apt update
-sudo apt install -y jq
+sudo apt install -y jq zip
 
 #Install Azure Static WebApp cli
 sudo npm install -g @azure/static-web-apps-cli

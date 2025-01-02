@@ -12,3 +12,8 @@ output "SWA_NAME" {
     value = azurerm_static_web_app.this.name
     sensitive = false
 }
+
+output "FUNCTION_NAME" {
+    value = azurerm_linux_function_app.this.name
+    sensitive = false
+}

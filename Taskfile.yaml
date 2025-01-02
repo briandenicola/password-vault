@@ -45,30 +45,29 @@ tasks:
     vars: 
       REGION: '{{default .DEFAULT_REGION .CLI_ARGS}}'
 
-  # deploy-api:
-  #   desc: Deploy application to Azure Static Web Apps
-  #   dir: ./src/passwordapp.api
-  #   cmds:
-  #   vars:
+  deploy-api:
+    desc: Deploy application to Azure Static Web Apps
+    dir: ./src/passwordapp.api
+    cmds:
+    - dotnet publish -c Release --self-contained --nologo -o publish/linux 
+    - cd publish/linux && zip -r deploy.zip .
+    - func azure functionapp publish {{.FUNCTION_NAME}}
+    vars:
+      FUNCTION_NAME:
+        sh: terraform -chdir=../../infrastructure output -raw FUNCTION_NAME
   
-
-  # build-ui:
-  #   desc: Build the Vue Project before deploying
-  #   dir: ./src/passwordapp.ui
-  #   cmds:
-  #   - swa build
-
-  # deploy-ui:
-  #   desc: Deploy application to Azure Static Web Apps
-  #   dir: ./src/passwordapp.ui
-  #   cmds:
-  #   - cmd: swa deploy ./dist --deployment-token {{.DEPLOY_TOKEN}}
-  #     silent: true
-  #   vars:
-  #     SWA:
-  #       sh: terraform -chdir=../infrastructure output -raw SWA_NAME 
-  #     DEPLOY_TOKEN:
-  #       sh: az staticwebapp secrets list --name {{.SWA}} --query "properties.apiKey" -o tsv
+  deploy-ui:
+    desc: Deploy application to Azure Static Web Apps
+    dir: ./src/passwordapp.ui
+    cmds:
+    - swa build
+    - cmd: swa deploy ./dist --deployment-token {{.DEPLOY_TOKEN}}
+      silent: true
+    vars:
+      SWA:
+        sh: terraform -chdir=../../infrastructure output -raw SWA_NAME 
+      DEPLOY_TOKEN:
+        sh: az staticwebapp secrets list --name {{.SWA}} --query "properties.apiKey" -o tsv
 
   down:
     desc: Destroys all Azure resources and cleans up Terraform

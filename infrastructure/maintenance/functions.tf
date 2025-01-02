@@ -33,9 +33,9 @@ resource "azurerm_linux_function_app" "this" {
     # az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings cosmosdb="@Microsoft.KeyVault(SecretUri=${primaryConnectionStringSecretId})"
     # az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings AesKey="@Microsoft.KeyVault(SecretUri=${aesKeySecretId})"
     # az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings AesIV=$aesIV
-    # az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings COSMOS_DATABASENAME="AccountPasswords"
-    # az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings COSMOS_COLLECTIONNAME="Passwords"
+    # az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings COSMOS_DATABASE_NAME="AccountPasswords"
+    # az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings COSMOS_COLLECTION_NAME="Passwords"
     # az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings COSMOS_LEASENAME="leases"
-    # az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings COSMOS_PARTITIONKEY="Passwords"
+    # az functionapp config appsettings set -g ${RG} -n ${functionAppName} --settings COSMOS_PARTITION_KEY="Passwords"
   }
 }

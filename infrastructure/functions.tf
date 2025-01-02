@@ -34,6 +34,7 @@ resource "azurerm_linux_function_app" "this" {
   key_vault_reference_identity_id = azurerm_user_assigned_identity.functions_identity.id
 
   site_config {
+    use_32_bit_worker = false
     application_stack {
       use_dotnet_isolated_runtime = true
       dotnet_version              = "8.0"
@@ -41,13 +42,15 @@ resource "azurerm_linux_function_app" "this" {
   }
 
   app_settings = {
-    AesKey                 = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.aes_encryption_key.id})",
-    AesIV                  = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.aes_encryption_iv.id})",
-    COSMOS_ACCOUNT_NAME    = azurerm_cosmosdb_account.this.name
-    COSMOS_DATABASE_NAME   = "AccountPasswords"
-    COSMOS_COLLECTION_NAME = "Passwords"
-    COSMOS_LEASE_NAME      = "leases"
-    COSMOS_PARTITION_KEY   = "Passwords"
+    AesKey                                 = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.aes_encryption_key.id})",
+    AesIV                                  = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.aes_encryption_iv.id})",
+    COSMOS_ACCOUNT_NAME                    = azurerm_cosmosdb_account.this.name
+    COSMOS_DATABASE_NAME                   = "AccountPasswords"
+    COSMOS_COLLECTION_NAME                 = "Passwords"
+    COSMOS_LEASE_NAME                      = "leases"
+    COSMOS_PARTITION_KEY                   = "Passwords"
+    WEBSITE_USE_PLACEHOLDER_DOTNETISOLATED = 1
+    WEBSITE_RUN_FROM_PACKAGE               = 1
   }
 }
 
