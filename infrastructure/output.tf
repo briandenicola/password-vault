@@ -7,3 +7,8 @@ output "APP_RESOURCE_GROUP" {
     value = azurerm_resource_group.this.name
     sensitive = false
 }
+
+output "SWA_NAME" {
+    value = azurerm_static_web_app.this.name
+    sensitive = false
+}

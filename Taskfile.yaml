@@ -1,0 +1,78 @@
+version: '3'
+
+dotenv: ['.env']
+
+vars:
+  TAG: "Password Vault on Azure Functions"
+  DEFAULT_REGION: canadacentral
+  COSMOSDB_FREE_TIER: false
+  DEPLOY_MAINTENANCE: false
+
+tasks:
+  default:
+    cmds:
+    - task --list 
+    
+  up:
+    desc: Creates a complete {{.TAG}} environment
+    dir: ./infrastructure
+    cmds:
+    - terraform init
+    - terraform workspace new {{.REGION}} || true
+    - terraform workspace select {{.REGION}}
+    - task: keys
+    - task: apply
+    vars: 
+      REGION: '{{default .DEFAULT_REGION .CLI_ARGS}}'  
+  
+  keys:
+    internal: true
+    dir: ./scripts
+    cmds:
+    - bash ./gen-encryption-keys.sh
+
+  apply:
+    dir: ./infrastructure
+    cmds:
+    - silent: true
+      cmd: terraform apply -auto-approve -var "region={{.REGION}}" 
+        -var "tags={{.TAG}}"
+        -var "enable_cosmosdb_free_tier={{.COSMOSDB_FREE_TIER}}"
+        -var "deploy_maintenance_infrastructure={{.DEPLOY_MAINTENANCE}}"
+        -var "password_encryption_key={{.ENCRYPTION_KEY}}"
+        -var "password_encryption_initialization_vector={{.ENCRYPTION_IV}}"
+        -compact-warnings
+    vars: 
+      REGION: '{{default .DEFAULT_REGION .CLI_ARGS}}'
+
+  # deploy-api:
+  #   desc: Deploy application to Azure Static Web Apps
+  #   dir: ./src/passwordapp.api
+  #   cmds:
+  #   vars:
+  
+
+  # build-ui:
+  #   desc: Build the Vue Project before deploying
+  #   dir: ./src/passwordapp.ui
+  #   cmds:
+  #   - swa build
+
+  # deploy-ui:
+  #   desc: Deploy application to Azure Static Web Apps
+  #   dir: ./src/passwordapp.ui
+  #   cmds:
+  #   - cmd: swa deploy ./dist --deployment-token {{.DEPLOY_TOKEN}}
+  #     silent: true
+  #   vars:
+  #     SWA:
+  #       sh: terraform -chdir=../infrastructure output -raw SWA_NAME 
+  #     DEPLOY_TOKEN:
+  #       sh: az staticwebapp secrets list --name {{.SWA}} --query "properties.apiKey" -o tsv
+
+  down:
+    desc: Destroys all Azure resources and cleans up Terraform
+    dir: ./infrastructure
+    cmds:
+    - az group list --tag Application="{{.TAG}}" --query "[].name" -o tsv | xargs -ot -n 1 az group delete -y --verbose --no-wait -n || true
+    - rm -rf terraform.tfstate.d .terraform.lock.hcl .terraform terraform.tfstate terraform.tfstate.backup .terraform.tfstate.lock.info || true
