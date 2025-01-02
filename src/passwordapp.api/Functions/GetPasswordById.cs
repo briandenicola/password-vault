@@ -1,12 +1,4 @@
-
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using PasswordService.Models;
-
-namespace PasswordService
+namespace PasswordService.API
 {
     public static partial class PasswordService
     {
@@ -14,9 +6,9 @@ namespace PasswordService
         public static IActionResult GetPasswordById(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = "passwords/{id}")] HttpRequest req,
             [CosmosDB(
-                databaseName: "%COSMOS_DATABASENAME%",
-                containerName: "%COSMOS_COLLECTIONNAME%",
-                PartitionKey = "%COSMOS_PARTITIONKEY%",
+                databaseName: "%COSMOS_DATABASE_NAME%",
+                containerName: "%COSMOS_COLLECTION_NAME%",
+                PartitionKey = "%COSMOS_PARTITION_KEY%",
                 Connection = "cosmosdb",
                 Id = "{id}")] AccountPassword accountPassword,
             ILogger log)            
@@ -26,7 +18,7 @@ namespace PasswordService
             var clone = accountPassword.Clone();
             clone.CurrentPassword = clone.DecryptPassword(e);
 
-            return (ActionResult)new OkObjectResult(clone);
+            return new OkObjectResult(clone);
         }
     }
 }

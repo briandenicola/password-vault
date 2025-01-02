@@ -1,15 +1,4 @@
-
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using PasswordService.Models;
-
-namespace PasswordService
+namespace PasswordService.API
 {
     public static partial class PasswordService
     {
@@ -17,9 +6,9 @@ namespace PasswordService
         public static IActionResult GetPasswordHistoryById(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = "passwords/{id}/history")] HttpRequest req,
             [CosmosDB(
-                databaseName: "%COSMOS_DATABASENAME%",
-                containerName: "%COSMOS_COLLECTIONNAME%",
-                PartitionKey = "%COSMOS_PARTITIONKEY%",
+                databaseName: "%COSMOS_DATABASE_NAME%",
+                containerName: "%COSMOS_COLLECTION_NAME%",
+                PartitionKey = "%COSMOS_PARTITION_KEY%",
                 Connection = "cosmosdb",
                 Id = "{id}")] AccountPassword accountPassword,
             ILogger log)            
@@ -45,14 +34,7 @@ namespace PasswordService
                 history.AddRange(oldPasswords);
             }
 
-            return (ActionResult)new OkObjectResult(history.OrderByDescending(x => x.TimeStamp));
+            return new OkObjectResult(history.OrderByDescending(x => x.TimeStamp));
         }
-
-        public class PasswordTrail {
-            public string SiteName { get; set;}
-            public string Password { get; set;}
-            public DateTime TimeStamp { get; set;}
-        }
-
     }
 }

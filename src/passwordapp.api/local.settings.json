@@ -1,0 +1,19 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "AzureWebJobsDashboard__accountName": "thrush15239sa",
+    "AzureWebJobsStorage__accountName": "thrush15239sa",
+    "COSMOS_ACCOUNT_NAME": "thrush-15239-cosmosdb",
+    "COSMOS_COLLECTION_NAME": "Passwords",
+    "COSMOS_DATABASE_NAME": "AccountPasswords",
+    "COSMOS_LEASE_NAME": "leases",
+    "COSMOS_PARTITION_KEY": "Passwords",
+    "FUNCTIONS_EXTENSION_VERSION": "~4",
+    "WEBSITE_RUN_FROM_PACKAGE": "1",
+    "AesIV": "@Microsoft.KeyVault(SecretUri=https://thrush15239-keyvault.vault.azure.net/secrets/initialization-vector/bb15c0383e5049158a56cd7675aa6a19)",
+    "AesKey": "@Microsoft.KeyVault(SecretUri=https://thrush15239-keyvault.vault.azure.net/secrets/encryption-key/45a81125d26142d1902336d7908ed026)"
+  },
+  "ConnectionStrings": {}
+}

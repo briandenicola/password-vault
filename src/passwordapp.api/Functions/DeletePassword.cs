@@ -1,13 +1,4 @@
-
-using System;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using PasswordService.Models;
-
-namespace PasswordService
+namespace PasswordService.API
 {
     public static partial class PasswordService
     {
@@ -15,23 +6,23 @@ namespace PasswordService
         public static IActionResult DeletePassword(
             [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "passwords/{id}")] HttpRequest req,
             [CosmosDB(
-                databaseName: "%COSMOS_DATABASENAME%",
-                containerName: "%COSMOS_COLLECTIONNAME%",
-                PartitionKey = "%COSMOS_PARTITIONKEY%",
+                databaseName: "%COSMOS_DATABASE_NAME%",
+                containerName: "%COSMOS_COLLECTION_NAME%",
+                PartitionKey = "%COSMOS_PARTITION_KEY%",
                 Connection = "cosmosdb",
                 Id = "{id}")] AccountPassword accountPassword,
             ILogger log)            
         {
             if( accountPassword.isDeleted == true) {
                 log.LogInformation($"DeletePassword Request received for {accountPassword.id} but document is already marked deleted");
-                return (ActionResult)new OkObjectResult(null);
+                return new OkObjectResult(null);
             }
 
             log.LogInformation($"DeletePassword request for {accountPassword.id}");
             
             accountPassword.isDeleted = true;
             accountPassword.LastModifiedDate = DateTime.Now;
-            return (ActionResult)new OkObjectResult(accountPassword);
+            return new OkObjectResult(accountPassword);
         }
     }
 }

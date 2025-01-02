@@ -1,28 +1,25 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using System.Security.Cryptography;
-using System.IO;
-using System.Linq;
 
 namespace PasswordService.Common
 {
     public class Encryptor
     {
-        private static byte[] _key;
-        private static byte[] _iv;
+        private static byte[] _key = Array.Empty<byte>();
+        private static byte[] _iv = Array.Empty<byte>();
         private static int size = 16;
 
         public Encryptor(string key, string iv)
         {
-            _key = Convert.FromBase64String(key);
-            _iv = Convert.FromBase64String(iv);
+            _key = Convert.FromBase64String(key) ?? Array.Empty<byte>();
+            _iv = Convert.FromBase64String(iv) ?? Array.Empty<byte>();
         }
 
-        public string Encrypt(string plainText, out string cipherText)
+        public string Encrypt(string plainText, out string? cipherText)
         {
             if (plainText == null || plainText.Length <= 0)
             {
-                cipherText = default(string);
+                cipherText = default;
                 return string.Empty;
             }
 
@@ -55,11 +52,11 @@ namespace PasswordService.Common
             }
         }
 
-        public void Decrypt(string cipherText, string hmacText, out string plainText)
+        public void Decrypt(string cipherText, string hmacText, out string? plainText)
         {
             if (cipherText == null || cipherText.Length <= 0)
             {
-                plainText = default(string);
+                plainText = default;
             }
 
             using (HMACSHA512 hmac = new HMACSHA512(_key))
@@ -70,7 +67,7 @@ namespace PasswordService.Common
                     aes.IV = _iv;
 
                     var hmacArray = Convert.FromBase64String(hmacText);
-                    var cipherArray = Convert.FromBase64String(cipherText);
+                    var cipherArray = Convert.FromBase64String(cipherText ?? string.Empty);
 
                     ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
                     using (MemoryStream memoryStream = new MemoryStream(cipherArray))
@@ -101,11 +98,6 @@ namespace PasswordService.Common
         private static byte[] GenerateSalt()
         {
             byte[] salt = new byte[size];
-
-            /*using (RNGCryptoServiceProvider rng = new RandomNumberGenerator())
-            {
-                rng.GetBytes(salt);
-            }*/
             using (var rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(salt);

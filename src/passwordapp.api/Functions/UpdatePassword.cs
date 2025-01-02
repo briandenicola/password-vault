@@ -1,16 +1,6 @@
-
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using PasswordService.Models;
 
-namespace PasswordService
+namespace PasswordService.API
 {
     public static partial class PasswordService
     {
@@ -18,22 +8,30 @@ namespace PasswordService
         public static async Task<IActionResult> UpdatePassword(
             [HttpTrigger(AuthorizationLevel.Function, "put", Route = "passwords/{id}")] HttpRequest req,
             [CosmosDB(
-                databaseName: "%COSMOS_DATABASENAME%",
-                containerName: "%COSMOS_COLLECTIONNAME%",
-                PartitionKey = "%COSMOS_PARTITIONKEY%",
+                databaseName: "%COSMOS_DATABASE_NAME%",
+                containerName: "%COSMOS_COLLECTION_NAME%",
+                PartitionKey = "%COSMOS_PARTITION_KEY%",
                 Connection = "cosmosdb",
                 Id = "{id}")] AccountPassword accountPassword,
             ILogger log)            
         {
             if( accountPassword.isDeleted == true ) {
                 log.LogInformation($"UpdatePassword Request received for {accountPassword.id} but document is marked deleted");
-                return (ActionResult)new OkObjectResult(null);
+                return new OkObjectResult(null);
             }
 
             log.LogInformation($"UpdatePassword request for {accountPassword.id}");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            AccountPassword updates = JsonConvert.DeserializeObject<AccountPassword>(requestBody);
+
+            if( string.IsNullOrEmpty(requestBody) ) {
+                return new BadRequestObjectResult("Invalid request body");
+            }   
+            AccountPassword? updates = JsonConvert.DeserializeObject<AccountPassword>(requestBody);
+
+            if( updates == null || updates.CurrentPassword == null ) {
+                return new BadRequestObjectResult("Invalid request body");
+            }
 
             accountPassword.SiteName = updates.SiteName;
             accountPassword.AccountName = updates.AccountName;
@@ -43,7 +41,7 @@ namespace PasswordService
             accountPassword.LastModifiedDate = DateTime.Now;
             accountPassword.LastModifiedBy   = updates.LastModifiedBy;
 
-            return (ActionResult)new OkObjectResult(accountPassword);
+            return new OkObjectResult(accountPassword);
         
         }
             

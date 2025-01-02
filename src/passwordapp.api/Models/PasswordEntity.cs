@@ -2,30 +2,30 @@
 {
     public class PasswordEntity
     {
-        public string EncryptedPassword { get; set;}
-        public string HmacHash { get; set; }
+        public string? EncryptedPassword { get; set;}
+        public string? HmacHash { get; set; }
 
         public PasswordEntity()
         {
-            this.EncryptedPassword = this.HmacHash = string.Empty;
+            EncryptedPassword = HmacHash = string.Empty;
         }
 
         public PasswordEntity( string encryptedPassword ) 
         {
             var cipherText = encryptedPassword.Split(':');
-            this.EncryptedPassword = cipherText[1];
-            this.HmacHash = cipherText[0];
+            EncryptedPassword = cipherText[1];
+            HmacHash = cipherText[0];
         }
 
         public PasswordEntity( string hmacHash, string encryptedPassword ) 
         {
-            this.EncryptedPassword = encryptedPassword;
-            this.HmacHash = hmacHash;
+            EncryptedPassword = encryptedPassword;
+            HmacHash = hmacHash;
         }
 
         public override string ToString() 
         {
-            return $"{ this.HmacHash }:{ this.EncryptedPassword }";
+            return $"{ HmacHash }:{ EncryptedPassword }";
         }
     }
 

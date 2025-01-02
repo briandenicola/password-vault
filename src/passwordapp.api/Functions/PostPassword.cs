@@ -1,17 +1,6 @@
-
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using PasswordService.Models;
-using System.Collections.Generic;
 
-namespace PasswordService
+namespace PasswordService.API
 {
     public static partial class PasswordService
     {
@@ -19,9 +8,9 @@ namespace PasswordService
         public static async Task<IActionResult> PostPassword(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = "passwords")] HttpRequest req,
             [CosmosDB(
-                databaseName: "%COSMOS_DATABASENAME%",
-                containerName: "%COSMOS_COLLECTIONNAME%",
-                PartitionKey = "%COSMOS_PARTITIONKEY%",
+                databaseName: "%COSMOS_DATABASE_NAME%",
+                containerName: "%COSMOS_COLLECTION_NAME%",
+                PartitionKey = "%COSMOS_PARTITION_KEY%",
                 Connection = "cosmosdb")] IAsyncCollector<AccountPassword> passwordCollection,
 
             ILogger log)
@@ -34,18 +23,25 @@ namespace PasswordService
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             var postedPassword = JsonConvert.DeserializeObject<AccountPassword>(requestBody);
 
+            if( postedPassword == null) {
+                return new BadRequestObjectResult("Invalid request body");
+            }   
+
             accountPassword.PartitionKey        = partitionKey;
-            accountPassword.SiteName            = postedPassword.SiteName;
-            accountPassword.AccountName         = postedPassword.AccountName;
-            accountPassword.Notes               = postedPassword.Notes;
-            accountPassword.SecurityQuestions   = postedPassword.SecurityQuestions;
-            accountPassword.LastModifiedBy      = accountPassword.CreatedBy   = postedPassword.CreatedBy;
+            accountPassword.SiteName            = postedPassword?.SiteName;
+            accountPassword.AccountName         = postedPassword?.AccountName;
+            accountPassword.Notes               = postedPassword?.Notes;
+            accountPassword.SecurityQuestions   = postedPassword?.SecurityQuestions;
+            accountPassword.LastModifiedBy      = accountPassword.CreatedBy   = postedPassword?.CreatedBy;
             accountPassword.LastModifiedDate    = accountPassword.CreatedDate = DateTime.Now;
-                    
+
+            if( postedPassword?.CurrentPassword == null ) {
+                return new BadRequestObjectResult("Invalid request body");
+            }   
             accountPassword.SavePassword(e, postedPassword.CurrentPassword);
 
             await passwordCollection.AddAsync(accountPassword);
-            return (ActionResult)new OkObjectResult(accountPassword);
+            return new OkObjectResult(accountPassword);
         }
     }
 }

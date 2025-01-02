@@ -1,13 +1,4 @@
-
-using System;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using PasswordService.Models;
-
-namespace PasswordService
+namespace PasswordService.API
 {
     public static partial class PasswordService
     {
@@ -17,7 +8,7 @@ namespace PasswordService
             ILogger log)            
         {
             log.LogInformation($"GetApiStatus - health check");
-            return (ActionResult)new OkObjectResult( new { state = "OK!" });
+            return new OkObjectResult( new { state = "OK!" });
         }
     }
 }
