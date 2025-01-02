@@ -50,12 +50,14 @@ tasks:
     dir: ./src/passwordapp.api
     cmds:
     - dotnet publish -c Release --self-contained --nologo -o publish/linux 
-    - cd publish/linux && zip -r deploy.zip .
-    - func azure functionapp publish {{.FUNCTION_NAME}}
+    - cd publish/linux && zip -r vault.zip .
+    - az storage copy --only-show-errors -s publish/linux/vault.zip --account-name {{.STORAGE_ACCOUNT_NAME}} --destination-container app
     vars:
       FUNCTION_NAME:
         sh: terraform -chdir=../../infrastructure output -raw FUNCTION_NAME
-  
+      STORAGE_ACCOUNT_NAME:
+        sh: terraform -chdir=../../infrastructure output -raw STORAGE_ACCOUNT_NAME
+
   deploy-ui:
     desc: Deploy application to Azure Static Web Apps
     dir: ./src/passwordapp.ui

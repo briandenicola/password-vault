@@ -1,25 +1,24 @@
 namespace PasswordService.API
 {
-    public static partial class PasswordService
+    public partial class PasswordService
     {
         [FunctionName("GetPasswordHistoryById")]
-        public static IActionResult GetPasswordHistoryById(
+        public IActionResult GetPasswordHistoryById(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = "passwords/{id}/history")] HttpRequest req,
             [CosmosDB(
                 databaseName: "%COSMOS_DATABASE_NAME%",
                 containerName: "%COSMOS_COLLECTION_NAME%",
                 PartitionKey = "%COSMOS_PARTITION_KEY%",
                 Connection = "cosmosdb",
-                Id = "{id}")] AccountPassword accountPassword,
-            ILogger log)            
+                Id = "{id}")] AccountPassword accountPassword)            
         {
-            log.LogInformation($"GetPasswordHistoryById request for {accountPassword.id}");
+            _logger.LogInformation($"GetPasswordHistoryById request for {accountPassword.id}");
 
             var history = new List<PasswordTrail>();
 
              var currentPassword = new PasswordTrail(){
                 SiteName = accountPassword.SiteName,
-                Password = accountPassword.DecryptPassword(e),
+                Password = accountPassword.DecryptPassword(_encryptor),
                 TimeStamp = accountPassword.CreatedDate
             };
             history.Add(currentPassword);
@@ -28,7 +27,7 @@ namespace PasswordService.API
                 var oldPasswords = from oldPassword in accountPassword.OldPasswords
                     select new PasswordTrail(){ 
                         SiteName = accountPassword.SiteName,
-                        Password = oldPassword.DecryptPassword(e),
+                        Password = oldPassword.DecryptPassword(_encryptor),
                         TimeStamp = oldPassword.CreatedDate
                     };
                 history.AddRange(oldPasswords);

@@ -50,7 +50,8 @@ resource "azurerm_linux_function_app" "this" {
     COSMOS_LEASE_NAME                      = "leases"
     COSMOS_PARTITION_KEY                   = "Passwords"
     WEBSITE_USE_PLACEHOLDER_DOTNETISOLATED = 1
-    WEBSITE_RUN_FROM_PACKAGE               = 1
+    WEBSITE_RUN_FROM_PACKAGE               = "${azurerm_storage_account.this.primary_blob_endpoint}${local.app_container_name}/vault.zip"
+
   }
 }
 

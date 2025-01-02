@@ -17,3 +17,8 @@ output "FUNCTION_NAME" {
     value = azurerm_linux_function_app.this.name
     sensitive = false
 }
+
+output "STORAGE_ACCOUNT_NAME" {
+    value = azurerm_storage_account.this.name
+    sensitive = false
+}

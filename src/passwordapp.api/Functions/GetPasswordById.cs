@@ -1,9 +1,9 @@
 namespace PasswordService.API
 {
-    public static partial class PasswordService
+    public partial class PasswordService
     {
         [FunctionName("GetPasswordById")]
-        public static IActionResult GetPasswordById(
+        public IActionResult GetPasswordById(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = "passwords/{id}")] HttpRequest req,
             [CosmosDB(
                 databaseName: "%COSMOS_DATABASE_NAME%",
@@ -13,10 +13,10 @@ namespace PasswordService.API
                 Id = "{id}")] AccountPassword accountPassword,
             ILogger log)            
         {
-            log.LogInformation($"GetPasswordById request for {accountPassword.id}");
+            _logger.LogInformation($"GetPasswordById request for {accountPassword.id}");
 
             var clone = accountPassword.Clone();
-            clone.CurrentPassword = clone.DecryptPassword(e);
+            clone.CurrentPassword = clone.DecryptPassword(_encryptor);
 
             return new OkObjectResult(clone);
         }

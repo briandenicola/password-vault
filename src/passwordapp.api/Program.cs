@@ -8,5 +8,4 @@ var host = new HostBuilder()
                .AddConsole();
     })
     .Build();
-
 host.Run();

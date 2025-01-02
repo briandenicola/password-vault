@@ -1,13 +1,13 @@
 namespace PasswordService.API
 {
-    public static partial class PasswordService
+    public partial class PasswordService
     {
         [FunctionName("GetApiStatus")]
-        public static IActionResult GetApiStatus(
+        public IActionResult GetApiStatus(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = "passwords/healthz")] HttpRequest req,
             ILogger log)            
         {
-            log.LogInformation($"GetApiStatus - health check");
+            _logger.LogInformation($"GetApiStatus - health check");
             return new OkObjectResult( new { state = "OK!" });
         }
     }

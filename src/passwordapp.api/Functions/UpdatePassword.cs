@@ -2,25 +2,24 @@ using Newtonsoft.Json;
 
 namespace PasswordService.API
 {
-    public static partial class PasswordService
+    public partial class PasswordService
     {
         [FunctionName("UpdatePassword")]
-        public static async Task<IActionResult> UpdatePassword(
+        public async Task<IActionResult> UpdatePassword(
             [HttpTrigger(AuthorizationLevel.Function, "put", Route = "passwords/{id}")] HttpRequest req,
             [CosmosDB(
                 databaseName: "%COSMOS_DATABASE_NAME%",
                 containerName: "%COSMOS_COLLECTION_NAME%",
                 PartitionKey = "%COSMOS_PARTITION_KEY%",
                 Connection = "cosmosdb",
-                Id = "{id}")] AccountPassword accountPassword,
-            ILogger log)            
+                Id = "{id}")] AccountPassword accountPassword)            
         {
             if( accountPassword.isDeleted == true ) {
-                log.LogInformation($"UpdatePassword Request received for {accountPassword.id} but document is marked deleted");
+                _logger.LogInformation($"UpdatePassword Request received for {accountPassword.id} but document is marked deleted");
                 return new OkObjectResult(null);
             }
 
-            log.LogInformation($"UpdatePassword request for {accountPassword.id}");
+            _logger.LogInformation($"UpdatePassword request for {accountPassword.id}");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
 
@@ -37,7 +36,7 @@ namespace PasswordService.API
             accountPassword.AccountName = updates.AccountName;
             accountPassword.Notes = updates.Notes; 
             accountPassword.SecurityQuestions = updates.SecurityQuestions;
-            accountPassword.UpdatePassword(e, updates.CurrentPassword, accountPassword.LastModifiedDate);
+            accountPassword.UpdatePassword(_encryptor, updates.CurrentPassword, accountPassword.LastModifiedDate);
             accountPassword.LastModifiedDate = DateTime.Now;
             accountPassword.LastModifiedBy   = updates.LastModifiedBy;
 

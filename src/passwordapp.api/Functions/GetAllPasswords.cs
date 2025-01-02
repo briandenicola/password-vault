@@ -1,9 +1,9 @@
-namespace PasswordServiceAPI
+namespace PasswordService.API
 {
-    public static partial class PasswordService
+    public partial class PasswordService
     {
         [FunctionName("GetAllPasswords")]
-        public static IActionResult GetAllPasswords(
+        public IActionResult GetAllPasswords(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = "passwords")] HttpRequest req,
             [CosmosDB(
                 databaseName: "%COSMOS_DATABASE_NAME%",
@@ -11,10 +11,9 @@ namespace PasswordServiceAPI
                 PartitionKey = "%COSMOS_PARTITION_KEY%",
                 Connection = "cosmosdb",
                 SqlQuery = "SELECT * FROM c where c.isDeleted = false")]
-                IEnumerable<AccountPassword> passwordCollection,
-            ILogger log)
+                IEnumerable<AccountPassword> passwordCollection)
         {
-            log.LogInformation($"GetAllPasswords request received");
+            _logger.LogInformation($"GetAllPasswords request received");
             return new OkObjectResult(passwordCollection);
         }
     }
