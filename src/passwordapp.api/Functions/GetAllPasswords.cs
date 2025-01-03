@@ -2,19 +2,24 @@ namespace PasswordService.API
 {
     public partial class PasswordService
     {
-        [FunctionName("GetAllPasswords")]
+        [Function(nameof(GetAllPasswords))]
         public IActionResult GetAllPasswords(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "passwords")] HttpRequest req,
-            [CosmosDB(
-                databaseName: "%COSMOS_DATABASE_NAME%",
-                containerName: "%COSMOS_COLLECTION_NAME%",
-                PartitionKey = "%COSMOS_PARTITION_KEY%",
-                Connection = "cosmosdb",
-                SqlQuery = "SELECT * FROM c where c.isDeleted = false")]
-                IEnumerable<AccountPassword> passwordCollection)
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "passwords")] HttpRequestData req, 
+            [CosmosDBInput(
+                "%COSMOS_DATABASE_NAME%", 
+                "%COSMOS_COLLECTION_NAME%", 
+                PartitionKey = "%COSMOS_PARTITION_KEY%", 
+                Connection = "COSMOSDB")] IReadOnlyList<AccountPassword> passwordCollection)
         {
             _logger.LogInformation($"GetAllPasswords request received");
-            return new OkObjectResult(passwordCollection);
+            if (passwordCollection != null && passwordCollection.Any())
+            {
+                var activeAccounts = (from p in passwordCollection
+                    where p.isDeleted == false
+                    select p).ToList();
+                return new OkObjectResult(activeAccounts);
+            }
+            return new NotFoundObjectResult("No passwords found");
         }
     }
 }

@@ -40,7 +40,7 @@
 
         public void SavePassword(Encryptor e, string password) 
         {   
-            this.CurrentPassword = this.EncryptPassword(e, password);
+            CurrentPassword = EncryptPassword(e, password);
         }
 
         public void UpdatePassword(Encryptor e, string newPassword, DateTime lastModifiedDate )

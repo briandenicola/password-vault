@@ -4,29 +4,27 @@ namespace PasswordService.API
 {
     public partial class PasswordService
     {
-        [FunctionName("UpdatePassword")]
-        public async Task<IActionResult> UpdatePassword(
-            [HttpTrigger(AuthorizationLevel.Function, "put", Route = "passwords/{id}")] HttpRequest req,
-            [CosmosDB(
-                databaseName: "%COSMOS_DATABASE_NAME%",
-                containerName: "%COSMOS_COLLECTION_NAME%",
-                PartitionKey = "%COSMOS_PARTITION_KEY%",
-                Connection = "cosmosdb",
-                Id = "{id}")] AccountPassword accountPassword)            
+        [Function(nameof(UpdatePassword))]
+        [CosmosDBOutput( "%COSMOS_DATABASE_NAME%", "%COSMOS_COLLECTION_NAME%", PartitionKey = "%COSMOS_PARTITION_KEY%", Connection = "COSMOSDB")] 
+        public async Task<object> UpdatePassword( 
+            [HttpTrigger(AuthorizationLevel.Function, "put", Route = "passwords/{id}")] HttpRequestData req, 
+            [CosmosDBInput(
+                "%COSMOS_DATABASE_NAME%", 
+                "%COSMOS_COLLECTION_NAME%", 
+                PartitionKey = "%COSMOS_PARTITION_KEY%", 
+                Connection = "COSMOSDB",
+                Id = "{id}")] AccountPassword accountPassword)
         {
-            if( accountPassword.isDeleted == true ) {
-                _logger.LogInformation($"UpdatePassword Request received for {accountPassword.id} but document is marked deleted");
-                return new OkObjectResult(null);
-            }
-
             _logger.LogInformation($"UpdatePassword request for {accountPassword.id}");
-
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-
-            if( string.IsNullOrEmpty(requestBody) ) {
+            var postedBody = await req.ReadAsStringAsync();
+            if( postedBody == null) {
                 return new BadRequestObjectResult("Invalid request body");
-            }   
-            AccountPassword? updates = JsonConvert.DeserializeObject<AccountPassword>(requestBody);
+            }
+            AccountPassword? updates = JsonConvert.DeserializeObject<AccountPassword>(postedBody);
+
+            if( accountPassword == null || accountPassword.CurrentPassword == null ) {
+                return new BadRequestObjectResult("Invalid request body");
+            }
 
             if( updates == null || updates.CurrentPassword == null ) {
                 return new BadRequestObjectResult("Invalid request body");
@@ -40,8 +38,7 @@ namespace PasswordService.API
             accountPassword.LastModifiedDate = DateTime.Now;
             accountPassword.LastModifiedBy   = updates.LastModifiedBy;
 
-            return new OkObjectResult(accountPassword);
-        
+            return accountPassword;
         }
             
     }

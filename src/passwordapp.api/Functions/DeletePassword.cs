@@ -2,14 +2,16 @@ namespace PasswordService.API
 {
     public partial class PasswordService
     {
-        [FunctionName("DeletePassword")]
-        public IActionResult DeletePassword(
-            [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "passwords/{id}")] HttpRequest req,
-            [CosmosDB(
-                databaseName: "%COSMOS_DATABASE_NAME%",
-                containerName: "%COSMOS_COLLECTION_NAME%",
-                PartitionKey = "%COSMOS_PARTITION_KEY%",
-                Connection = "cosmosdb",
+
+        [Function(nameof(DeletePassword))]
+        [CosmosDBOutput( "%COSMOS_DATABASE_NAME%", "%COSMOS_COLLECTION_NAME%", PartitionKey = "%COSMOS_PARTITION_KEY%", Connection = "COSMOSDB")] 
+        public object? DeletePassword(
+            [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "passwords/{id}")] HttpRequestData req,
+            [CosmosDBInput(
+                "%COSMOS_DATABASE_NAME%", 
+                "%COSMOS_COLLECTION_NAME%", 
+                PartitionKey = "%COSMOS_PARTITION_KEY%", 
+                Connection = "COSMOSDB",
                 Id = "{id}")] AccountPassword accountPassword)            
         {
             if( accountPassword.isDeleted == true) {
@@ -21,7 +23,7 @@ namespace PasswordService.API
             
             accountPassword.isDeleted = true;
             accountPassword.LastModifiedDate = DateTime.Now;
-            return new OkObjectResult(accountPassword);
+            return accountPassword;
         }
     }
 }

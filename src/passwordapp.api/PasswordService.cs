@@ -3,7 +3,7 @@ namespace PasswordService.API
 {
     public partial class PasswordService
     {
-        private readonly ILogger<PasswordService> _logger;
+        private ILogger<PasswordService> _logger;
         private string _partitionKey;
 
         private Encryptor _encryptor; 

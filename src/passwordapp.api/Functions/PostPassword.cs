@@ -1,25 +1,25 @@
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace PasswordService.API
 {
     public partial class PasswordService
     {
-        [FunctionName("PostPassword")]
-        public async Task<IActionResult> PostPassword(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "passwords")] HttpRequest req,
-            [CosmosDB(
-                databaseName: "%COSMOS_DATABASE_NAME%",
-                containerName: "%COSMOS_COLLECTION_NAME%",
-                PartitionKey = "%COSMOS_PARTITION_KEY%",
-                Connection = "cosmosdb")] IAsyncCollector<AccountPassword> passwordCollection)
+        [Function(nameof(PostPassword))]
+        [CosmosDBOutput( "%COSMOS_DATABASE_NAME%", "%COSMOS_COLLECTION_NAME%", PartitionKey = "%COSMOS_PARTITION_KEY%", Connection = "COSMOSDB")] 
+        public async Task<object> PostPassword(
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "passwords")] HttpRequestData  req)
         {
             var accountPassword = new AccountPassword();
             accountPassword.GenerateId();
 
             _logger.LogInformation($"PostPassword request new account received");
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            var postedPassword = JsonConvert.DeserializeObject<AccountPassword>(requestBody);
+            var postedBody = await req.ReadAsStringAsync();
+            if( postedBody == null) {
+                return new BadRequestObjectResult("Invalid request body");
+            }
+            AccountPassword? postedPassword = JsonConvert.DeserializeObject<AccountPassword>(postedBody);
 
             if( postedPassword == null) {
                 return new BadRequestObjectResult("Invalid request body");
@@ -37,9 +37,8 @@ namespace PasswordService.API
                 return new BadRequestObjectResult("Invalid request body");
             }   
             accountPassword.SavePassword(_encryptor, postedPassword.CurrentPassword);
-
-            await passwordCollection.AddAsync(accountPassword);
-            return new OkObjectResult(accountPassword);
+            _logger.LogInformation($"PostPassword request for {accountPassword.id} with a password of {accountPassword.CurrentPassword}");
+            return accountPassword;
         }
     }
 }

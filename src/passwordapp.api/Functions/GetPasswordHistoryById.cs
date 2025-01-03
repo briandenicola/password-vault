@@ -2,14 +2,15 @@ namespace PasswordService.API
 {
     public partial class PasswordService
     {
-        [FunctionName("GetPasswordHistoryById")]
-        public IActionResult GetPasswordHistoryById(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "passwords/{id}/history")] HttpRequest req,
-            [CosmosDB(
-                databaseName: "%COSMOS_DATABASE_NAME%",
-                containerName: "%COSMOS_COLLECTION_NAME%",
-                PartitionKey = "%COSMOS_PARTITION_KEY%",
-                Connection = "cosmosdb",
+        [Function(nameof(GetPasswordHistoryById))]
+        [CosmosDBOutput( "%COSMOS_DATABASE_NAME%", "%COSMOS_COLLECTION_NAME%", PartitionKey = "%COSMOS_PARTITION_KEY%", Connection = "COSMOSDB")] 
+        public object GetPasswordHistoryById(
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "passwords/{id}/history")] HttpRequestData req,
+            [CosmosDBInput(
+                "%COSMOS_DATABASE_NAME%", 
+                "%COSMOS_COLLECTION_NAME%", 
+                PartitionKey = "%COSMOS_PARTITION_KEY%", 
+                Connection = "COSMOSDB",
                 Id = "{id}")] AccountPassword accountPassword)            
         {
             _logger.LogInformation($"GetPasswordHistoryById request for {accountPassword.id}");
@@ -33,7 +34,7 @@ namespace PasswordService.API
                 history.AddRange(oldPasswords);
             }
 
-            return new OkObjectResult(history.OrderByDescending(x => x.TimeStamp));
+            return history.OrderByDescending(x => x.TimeStamp);
         }
     }
 }
