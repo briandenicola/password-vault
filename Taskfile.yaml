@@ -10,8 +10,8 @@ dotenv:
 
 vars:
   TAG: "Password Vault on Azure Functions"
-  DEFAULT_REGION: canadacentral
-  COSMOSDB_FREE_TIER: false
+  DEFAULT_REGION: centralus
+  COSMOSDB_FREE_TIER: true
   DEPLOY_MAINTENANCE: true
 
 tasks:
