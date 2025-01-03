@@ -20,17 +20,23 @@ tasks:
     - task --list 
     
   up:
-    desc: Creates a complete {{.TAG}} environment
+    desc: Creates the infrastructure for a {{.TAG}} environment
     dir: ./infrastructure
     cmds:
-    - terraform init
-    - terraform workspace new {{.REGION}} || true
-    - terraform workspace select {{.REGION}}
+    - task: init
     - task: keys
     - task: apply
+
+  init:
+    desc: Initialized Terraform
+    dir: ./infrastructure
+    cmds:
+    - terraform init -backend-config="subscription_id={{.CORE_SUBSCRIPTION_ID}}"
+    - terraform workspace new {{.REGION}} || true
+    - terraform workspace select {{.REGION}}
     vars: 
       REGION: '{{default .DEFAULT_REGION .CLI_ARGS}}'  
-  
+
   keys:
     internal: true
     dir: ./scripts
@@ -39,6 +45,7 @@ tasks:
 
   apply:
     dir: ./infrastructure
+    desc: Applies a Terraform plan
     cmds:
     - silent: true
       cmd: terraform apply -auto-approve -var "region={{.REGION}}" 
@@ -47,6 +54,23 @@ tasks:
         -var "deploy_maintenance_infrastructure={{.DEPLOY_MAINTENANCE}}"
         -var "password_encryption_key={{.ENCRYPTION_KEY}}"
         -var "password_encryption_initialization_vector={{.ENCRYPTION_IV}}"
+        -var "production_ui_url={{.VUE_APP_AAD_REDIRECT_URL}}"
+        -compact-warnings
+    vars: 
+      REGION: '{{default .DEFAULT_REGION .CLI_ARGS}}'
+
+  plan:
+    dir: ./infrastructure
+    desc: Creates a Terraform plan for review
+    cmds:
+    - silent: true
+      cmd: terraform plan -var "region={{.REGION}}" 
+        -var "tags={{.TAG}}"
+        -var "enable_cosmosdb_free_tier={{.COSMOSDB_FREE_TIER}}"
+        -var "deploy_maintenance_infrastructure={{.DEPLOY_MAINTENANCE}}"
+        -var "password_encryption_key={{.ENCRYPTION_KEY}}"
+        -var "password_encryption_initialization_vector={{.ENCRYPTION_IV}}"
+        -var "production_ui_url={{.VUE_APP_AAD_REDIRECT_URL}}"
         -compact-warnings
     vars: 
       REGION: '{{default .DEFAULT_REGION .CLI_ARGS}}'
@@ -87,7 +111,7 @@ tasks:
     - cmd: swa deploy ./dist --deployment-token {{.DEPLOY_TOKEN}}  --env {{.ENV}}
       silent: true
     vars:
-      SWA:
+      SWA: 
         sh: terraform -chdir=../../infrastructure output -raw SWA_NAME 
       DEPLOY_TOKEN:
         sh: az staticwebapp secrets list --name {{.SWA}} --query "properties.apiKey" -o tsv

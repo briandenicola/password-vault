@@ -7,6 +7,11 @@ resource "azurerm_service_plan" "this" {
 }
 
 resource "azurerm_linux_function_app" "this" {
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
   name                          = local.functions_name
   resource_group_name           = azurerm_resource_group.this.name
   location                      = azurerm_resource_group.this.location
@@ -35,7 +40,7 @@ resource "azurerm_linux_function_app" "this" {
   app_settings = {
     VAULT_HEALTH_URL                      = "https://${var.app_name}-functions.azurewebsites.net/api/passwords/healthz"
     WEBSITE_RUN_FROM_PACKAGE              = "${azurerm_storage_account.this.primary_blob_endpoint}${local.app_container_name}/maintenance.zip"
-    APPLICATIONINSIGHTS_CONNECTION_STRING = data.azurerm_application_insights.this.connection_string
-    APPINSIGHTS_INSTRUMENTATIONKEY        = data.azurerm_application_insights.this.instrumentation_key
+    APPLICATIONINSIGHTS_CONNECTION_STRING  = "@Microsoft.KeyVault(SecretUri=${data.azurerm_key_vault_secret.appinsights_connection_string.id})"
+    APPINSIGHTS_INSTRUMENTATIONKEY         = "@Microsoft.KeyVault(SecretUri=${data.azurerm_key_vault_secret.appinsights_key.id})" 
   }
 }

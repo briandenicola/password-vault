@@ -23,3 +23,7 @@ variable "password_encryption_key" {
 variable "password_encryption_initialization_vector" {
   description = "Password Encryption Initialization Vector"
 }
+
+variable "production_ui_url" {
+  description = "The Custom Domain for the Static Web App"
+}

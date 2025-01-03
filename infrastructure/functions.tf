@@ -14,6 +14,11 @@ resource "azurerm_user_assigned_identity" "functions_identity" {
 }
 
 resource "azurerm_linux_function_app" "this" {
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
   name                          = local.functions_name
   resource_group_name           = azurerm_resource_group.this.name
   location                      = azurerm_resource_group.this.location
@@ -41,12 +46,12 @@ resource "azurerm_linux_function_app" "this" {
     }
     cors  {
       allowed_origins     = [
-        "https://${azurerm_static_web_app.this.default_host_name}"
+        "https://${azurerm_static_web_app.this.default_host_name}",
+        var.production_ui_url
       ]
       support_credentials = false
     }
   }
-
 
   app_settings = {
     AesKey                                 = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.aes_encryption_key.id})",
@@ -57,8 +62,8 @@ resource "azurerm_linux_function_app" "this" {
     COSMOS_PARTITION_KEY                   = "Passwords"
     WEBSITE_USE_PLACEHOLDER_DOTNETISOLATED = 1
     WEBSITE_RUN_FROM_PACKAGE               = "${azurerm_storage_account.this.primary_blob_endpoint}${local.app_container_name}/vault.zip"
-    APPLICATIONINSIGHTS_CONNECTION_STRING  = azurerm_application_insights.this.connection_string
-    APPINSIGHTS_INSTRUMENTATIONKEY         = azurerm_application_insights.this.instrumentation_key
+    APPLICATIONINSIGHTS_CONNECTION_STRING  = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.appinsights_connection_string.id})"
+    APPINSIGHTS_INSTRUMENTATIONKEY         = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.appinsights_key.id})" 
   }
 }
 

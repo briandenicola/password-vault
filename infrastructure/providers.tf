@@ -9,7 +9,6 @@ terraform {
   backend "azurerm" {
     resource_group_name  = "Core-ResourceGroup"
     storage_account_name = "denicolafamily"
-    subscription_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
     container_name       = "state"
     key                  = "vault.terraform.tfstate"
   }
