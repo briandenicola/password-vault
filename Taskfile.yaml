@@ -1,6 +1,12 @@
 version: '3'
 
-dotenv: ['./infrastructure/.env']
+env:
+  ENV: production
+
+dotenv: 
+  - src/passwordapp.ui/.env
+  - src/passwordapp.ui/.env.{{.ENV}}
+  - infrastructure/.env
 
 vars:
   TAG: "Password Vault on Azure Functions"
@@ -54,10 +60,10 @@ tasks:
     - zip -r maintenance.zip .
     - az storage copy --only-show-errors -s maintenance.zip --account-name {{.STORAGE_ACCOUNT_NAME}} --destination-container app
     vars:
-      FUNCTION_NAME: thrush-15239-maintenance-functions
-        #sh: terraform -chdir=../../infrastructure output -raw MAINTENANCE_FUNCTION_NAME
-      STORAGE_ACCOUNT_NAME: thrush15239sb
-        #sh: terraform -chdir=../../infrastructure output -raw MAINTENANCE_STORAGE_ACCOUNT_NAME
+      FUNCTION_NAME: 
+        sh: terraform -chdir=../../infrastructure output -raw MAINTENANCE_FUNCTION_NAME
+      STORAGE_ACCOUNT_NAME: 
+        sh: terraform -chdir=../../infrastructure output -raw MAINTENANCE_STORAGE_ACCOUNT_NAME
 
   deploy-api:
     desc: Deploy application to Azure Static Web Apps
@@ -76,8 +82,9 @@ tasks:
     desc: Deploy application to Azure Static Web Apps
     dir: ./src/passwordapp.ui
     cmds:
-    - swa build
-    - cmd: swa deploy ./dist --deployment-token {{.DEPLOY_TOKEN}}
+    - npm install
+    - npm run build
+    - cmd: swa deploy ./dist --deployment-token {{.DEPLOY_TOKEN}}  --env {{.ENV}}
       silent: true
     vars:
       SWA:

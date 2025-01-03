@@ -9,6 +9,9 @@ src/passwordapp.api/local.settings.json
 src/passwordapp.maintenance/maintenance.zip
 src/passwordapp.maintenance/.python_packages/
 src/passwordapp.maintenance/local.settings.json
+src/passwordapp.ui/.env.production
+src/passwordapp.ui/dist
+src/passwordapp.ui/package-lock.json
 
 # Terraform 
 .terraform/
@@ -367,11 +370,3 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
-infrastructure/terraform/terraform.tfstate
-infrastructure/terraform/terraform.tfstate.backup
-infrastructure/terraform/variables.tfvars
-infrastructure/terraform/.terraform/
-source/ui/.env
-source/ui/build
-source/ui/src/config.json
-.env
