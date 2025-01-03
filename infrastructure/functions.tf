@@ -39,7 +39,14 @@ resource "azurerm_linux_function_app" "this" {
       use_dotnet_isolated_runtime = true
       dotnet_version              = "8.0"
     }
+    cors  {
+      allowed_origins     = [
+        "https://${azurerm_static_web_app.this.default_host_name}"
+      ]
+      support_credentials = false
+    }
   }
+
 
   app_settings = {
     AesKey                                 = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.aes_encryption_key.id})",
