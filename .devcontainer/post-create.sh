@@ -9,7 +9,7 @@ sudo apt update
 sudo apt install -y jq zip
 
 #Install Azure Static WebApp cli
-sudo npm install -g @azure/static-web-apps-cli
+npm install -g @azure/static-web-apps-cli
 
 #Install envsubst
 curl -Lso envsubst https://github.com/a8m/envsubst/releases/download/v1.2.0/envsubst-Linux-x86_64
