@@ -3,7 +3,7 @@
 	"build": {
 		"dockerfile": "Dockerfile",
 		"args": { 
-			"VARIANT": "dev-8.0-jammy",
+			"VARIANT": "dev-9.0-bookworm",
 			"NODE_VERSION": "lts/*"
 		}
 	},
