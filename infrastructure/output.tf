@@ -22,3 +22,8 @@ output "STORAGE_ACCOUNT_NAME" {
     value = azurerm_storage_account.this.name
     sensitive = false
 }
+
+output "AZURE_FUNCTION_HOST_KEY" {
+    value = data.azurerm_function_app_host_keys.host_key.primary_key
+    sensitive = true
+}

@@ -16,13 +16,12 @@ namespace PasswordService.API
         {
             if( accountPassword.isDeleted == true) {
                 _logger.LogInformation($"DeletePassword Request received for {accountPassword.id} but document is already marked deleted");
-                return new OkObjectResult(null);
             }
-
-            _logger.LogInformation($"DeletePassword request for {accountPassword.id}");
-            
-            accountPassword.isDeleted = true;
-            accountPassword.LastModifiedDate = DateTime.Now;
+            else {
+                _logger.LogInformation($"DeletePassword request for {accountPassword.id}");
+                accountPassword.isDeleted = true;
+                accountPassword.LastModifiedDate = DateTime.Now;
+            }
             return accountPassword;
         }
     }

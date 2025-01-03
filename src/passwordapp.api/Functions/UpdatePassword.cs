@@ -16,6 +16,7 @@ namespace PasswordService.API
                 Id = "{id}")] AccountPassword accountPassword)
         {
             _logger.LogInformation($"UpdatePassword request for {accountPassword.id}");
+            
             var postedBody = await req.ReadAsStringAsync();
             if( postedBody == null) {
                 return new BadRequestObjectResult("Invalid request body");

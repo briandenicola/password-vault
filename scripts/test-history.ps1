@@ -12,7 +12,6 @@ $opts = @{
 }
 
 if( $nul -ne $id ) {
-    Write-Host "Getting  $id ..."
     if( $url -imatch "localhost" ) {
         $opts.Add('Uri', ("{0}/api/passwords/{1}/history" -f $url,$id))
     }

@@ -44,14 +44,14 @@ resource "azurerm_linux_function_app" "this" {
   app_settings = {
     AesKey                                 = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.aes_encryption_key.id})",
     AesIV                                  = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.aes_encryption_iv.id})",
-    COSMOS_ACCOUNT_NAME                    = azurerm_cosmosdb_account.this.name
+    CosmosDB                               = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.cosmosdb_connection_string.id})",
     COSMOS_DATABASE_NAME                   = "AccountPasswords"
     COSMOS_COLLECTION_NAME                 = "Passwords"
-    COSMOS_LEASE_NAME                      = "leases"
     COSMOS_PARTITION_KEY                   = "Passwords"
     WEBSITE_USE_PLACEHOLDER_DOTNETISOLATED = 1
     WEBSITE_RUN_FROM_PACKAGE               = "${azurerm_storage_account.this.primary_blob_endpoint}${local.app_container_name}/vault.zip"
-
+    APPLICATIONINSIGHTS_CONNECTION_STRING  = azurerm_application_insights.this.connection_string
+    APPINSIGHTS_INSTRUMENTATIONKEY         = azurerm_application_insights.this.instrumentation_key
   }
 }
 

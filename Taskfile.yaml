@@ -1,6 +1,6 @@
 version: '3'
 
-dotenv: ['.env']
+dotenv: ['./infrastructure/.env']
 
 vars:
   TAG: "Password Vault on Azure Functions"
@@ -49,7 +49,7 @@ tasks:
     desc: Deploy application to Azure Static Web Apps
     dir: ./src/passwordapp.api
     cmds:
-    - dotnet publish -c Release --self-contained --nologo -o publish/linux 
+    - dotnet publish -c Release --nologo -o publish/linux 
     - cd publish/linux && zip -r vault.zip .
     - az storage copy --only-show-errors -s publish/linux/vault.zip --account-name {{.STORAGE_ACCOUNT_NAME}} --destination-container app
     vars:

@@ -21,13 +21,13 @@ namespace PasswordService.API
             }
             AccountPassword? postedPassword = JsonConvert.DeserializeObject<AccountPassword>(postedBody);
 
-            if( postedPassword == null) {
+            if( postedPassword == null || postedPassword?.SiteName == null || postedPassword?.AccountName == null ) {
                 return new BadRequestObjectResult("Invalid request body");
             }   
 
             accountPassword.PartitionKey        = _partitionKey;
-            accountPassword.SiteName            = postedPassword?.SiteName;
-            accountPassword.AccountName         = postedPassword?.AccountName;
+            accountPassword.SiteName            = postedPassword.SiteName;
+            accountPassword.AccountName         = postedPassword.AccountName;
             accountPassword.Notes               = postedPassword?.Notes;
             accountPassword.SecurityQuestions   = postedPassword?.SecurityQuestions;
             accountPassword.LastModifiedBy      = accountPassword.CreatedBy   = postedPassword?.CreatedBy;
