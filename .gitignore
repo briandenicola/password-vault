@@ -6,6 +6,9 @@
 # ENV files
 .env
 src/passwordapp.api/local.settings.json
+src/passwordapp.maintenance/maintenance.zip
+src/passwordapp.maintenance/.python_packages/
+src/passwordapp.maintenance/local.settings.json
 
 # Terraform 
 .terraform/

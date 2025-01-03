@@ -27,3 +27,13 @@ output "AZURE_FUNCTION_HOST_KEY" {
     value = data.azurerm_function_app_host_keys.host_key.primary_key
     sensitive = true
 }
+
+output "MAINTENANCE_FUNCTION_NAME" {
+    value = module.maintenance[0].FUNCTION_NAME
+    sensitive = false
+}
+
+output "MAINTENANCE_STORAGE_ACCOUNT_NAME" {
+    value = module.maintenance[0].STORAGE_ACCOUNT_NAME
+    sensitive = false
+}

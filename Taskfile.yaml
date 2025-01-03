@@ -6,7 +6,7 @@ vars:
   TAG: "Password Vault on Azure Functions"
   DEFAULT_REGION: canadacentral
   COSMOSDB_FREE_TIER: false
-  DEPLOY_MAINTENANCE: false
+  DEPLOY_MAINTENANCE: true
 
 tasks:
   default:
@@ -44,6 +44,20 @@ tasks:
         -compact-warnings
     vars: 
       REGION: '{{default .DEFAULT_REGION .CLI_ARGS}}'
+
+  deploy-maintenance:
+    desc: Deploy backup and keepalive functions
+    dir: ./src/passwordapp.maintenance
+    cmds:
+    - rm -rf maintenance.zip || true
+    - pip install  --target=".python_packages/lib/site-packages" -r requirements.txt
+    - zip -r maintenance.zip .
+    - az storage copy --only-show-errors -s maintenance.zip --account-name {{.STORAGE_ACCOUNT_NAME}} --destination-container app
+    vars:
+      FUNCTION_NAME: thrush-15239-maintenance-functions
+        #sh: terraform -chdir=../../infrastructure output -raw MAINTENANCE_FUNCTION_NAME
+      STORAGE_ACCOUNT_NAME: thrush15239sb
+        #sh: terraform -chdir=../../infrastructure output -raw MAINTENANCE_STORAGE_ACCOUNT_NAME
 
   deploy-api:
     desc: Deploy application to Azure Static Web Apps

@@ -4,6 +4,10 @@ locals {
   storage_name              = "${replace(local.resource_name, "-", "")}sb"
   functions_host_plan_name  = "${local.resource_name}-linux-maintenance-hosting"
   functions_name            = "${local.resource_name}-maintenance-functions"
+  ai_name                   = "${local.resource_name}-insights"
+  app_rg_name               = "${local.resource_name}_rg"
+  maintenance_rg_name       = "${local.resource_name}_maintenance_functions_rg"
+  app_container_name        = "app"
 }
 
 

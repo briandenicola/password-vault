@@ -1,5 +1,5 @@
 resource "azurerm_resource_group" "this" {
-  name     = "${local.resource_name}_maintenance_functions_rg"
+  name     = local.maintenance_rg_name
   location = local.location
 
   tags = {

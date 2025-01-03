@@ -7,3 +7,8 @@ resource "azurerm_storage_account" "this" {
   account_kind             = "StorageV2"
 }
 
+resource "azurerm_storage_container" "apps_container" {
+  name                  = local.app_container_name
+  storage_account_id    = azurerm_storage_account.this.id
+  container_access_type = "private"
+}
