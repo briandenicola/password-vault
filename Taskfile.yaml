@@ -44,6 +44,16 @@ tasks:
     cmds:
     - bash ./gen-encryption-keys.sh
 
+  host-key:
+    desc: Displays Azure Functions Host Key
+    dir: ./infrastructure
+    cmds:
+    - cmd: echo -e '\t➡️\033[1m\e[38;5;45mAzure Function Host Key == {{.HOST_KEY}}'
+      silent: true
+    vars: 
+      HOST_KEY: 
+        sh: terraform output -raw AZURE_FUNCTION_HOST_KEY
+
   apply:
     dir: ./infrastructure
     desc: Applies a Terraform plan
