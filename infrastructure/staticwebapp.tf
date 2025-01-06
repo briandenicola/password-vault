@@ -7,6 +7,7 @@ resource "azurerm_static_web_app" "this" {
 }
 
 resource "azurerm_static_web_app_custom_domain" "vault" {
+  count             = var.add_custom_domain ? 1 : 0
   static_web_app_id = azurerm_static_web_app.this.id
   domain_name       = var.production_ui_url
   validation_type   = "cname-delegation"

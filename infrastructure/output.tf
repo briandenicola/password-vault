@@ -29,11 +29,11 @@ output "AZURE_FUNCTION_HOST_KEY" {
 }
 
 output "MAINTENANCE_FUNCTION_NAME" {
-    value = module.maintenance[0].FUNCTION_NAME
+    value = length(module.maintenance) > 0 ? module.maintenance[0].FUNCTION_NAME :  null
     sensitive = false
 }
 
 output "MAINTENANCE_STORAGE_ACCOUNT_NAME" {
-    value = module.maintenance[0].STORAGE_ACCOUNT_NAME
+    value = length(module.maintenance) > 0 ? module.maintenance[0].STORAGE_ACCOUNT_NAME :  null
     sensitive = false
 }

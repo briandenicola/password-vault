@@ -10,9 +10,10 @@ dotenv:
 
 vars:
   TAG: "Password Vault on Azure Functions"
-  DEFAULT_REGION: centralus
-  COSMOSDB_FREE_TIER: true
-  DEPLOY_MAINTENANCE: true
+  DEFAULT_REGION: canadacentral
+  COSMOSDB_FREE_TIER: false
+  DEPLOY_MAINTENANCE: false
+  ADD_CUSTOM_DOMAIN: false 
 
 tasks:
   default:
@@ -31,7 +32,7 @@ tasks:
     desc: Initialized Terraform
     dir: ./infrastructure
     cmds:
-    - terraform init -backend-config="subscription_id={{.CORE_SUBSCRIPTION_ID}}"
+    - terraform init #-backend-config="subscription_id={{.CORE_SUBSCRIPTION_ID}}"
     - terraform workspace new {{.REGION}} || true
     - terraform workspace select {{.REGION}}
     vars: 
@@ -54,6 +55,7 @@ tasks:
         -var "deploy_maintenance_infrastructure={{.DEPLOY_MAINTENANCE}}"
         -var "password_encryption_key={{.ENCRYPTION_KEY}}"
         -var "password_encryption_initialization_vector={{.ENCRYPTION_IV}}"
+        -var "add_custom_domain={{.ADD_CUSTOM_DOMAIN}}"
         -var "production_ui_url={{.VUE_APP_AAD_REDIRECT_URL}}"
         -compact-warnings
     vars: 

@@ -24,6 +24,7 @@ locals {
   authorized_ip_ranges      = "${chomp(data.http.myip.response_body)}/32"
   static_webapp_location    = contains(local.swa_regions, local.location) ? local.location : "centralus"
   tenant_id                 = data.azurerm_client_config.current.tenant_id
+  local_host                = "http://localhost"
   app_container_name        = "app"
 }
 

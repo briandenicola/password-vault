@@ -24,6 +24,12 @@ variable "password_encryption_initialization_vector" {
   description = "Password Encryption Initialization Vector"
 }
 
+variable "add_custom_domain" {
+  default = false
+  description = "Add custom domain to the Static Web App"
+}
+
 variable "production_ui_url" {
   description = "The Custom Domain for the Static Web App"
 }
+
