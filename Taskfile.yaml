@@ -1,0 +1,137 @@
+version: '3'
+
+env:
+  ENV: production
+
+dotenv: 
+  - src/passwordapp.ui/.env
+  - src/passwordapp.ui/.env.{{.ENV}}
+  - infrastructure/.env
+
+vars:
+  TAG: "Password Vault on Azure Functions"
+  DEFAULT_REGION: canadacentral
+  COSMOSDB_FREE_TIER: false
+  DEPLOY_MAINTENANCE: false
+  ADD_CUSTOM_DOMAIN: false 
+
+tasks:
+  default:
+    cmds:
+    - task --list 
+    
+  up:
+    desc: Creates the infrastructure for a {{.TAG}} environment
+    dir: ./infrastructure
+    cmds:
+    - task: init
+    - task: keys
+    - task: apply
+
+  init:
+    desc: Initialized Terraform
+    dir: ./infrastructure
+    cmds:
+    - terraform init #-backend-config="subscription_id={{.CORE_SUBSCRIPTION_ID}}"
+    - terraform workspace new {{.REGION}} || true
+    - terraform workspace select {{.REGION}}
+    vars: 
+      REGION: '{{default .DEFAULT_REGION .CLI_ARGS}}'  
+
+  keys:
+    internal: true
+    dir: ./scripts
+    cmds:
+    - bash ./gen-encryption-keys.sh
+
+  host-key:
+    desc: Displays Azure Functions Host Key
+    dir: ./infrastructure
+    cmds:
+    - cmd: echo -e '\t➡️\033[1m\e[38;5;45mAzure Function Host Key == {{.HOST_KEY}}'
+      silent: true
+    vars: 
+      HOST_KEY: 
+        sh: terraform output -raw AZURE_FUNCTION_HOST_KEY
+
+  apply:
+    dir: ./infrastructure
+    desc: Applies a Terraform plan
+    cmds:
+    - silent: true
+      cmd: terraform apply -auto-approve -var "region={{.REGION}}" 
+        -var "tags={{.TAG}}"
+        -var "enable_cosmosdb_free_tier={{.COSMOSDB_FREE_TIER}}"
+        -var "deploy_maintenance_infrastructure={{.DEPLOY_MAINTENANCE}}"
+        -var "password_encryption_key={{.ENCRYPTION_KEY}}"
+        -var "password_encryption_initialization_vector={{.ENCRYPTION_IV}}"
+        -var "add_custom_domain={{.ADD_CUSTOM_DOMAIN}}"
+        -var "production_ui_url={{.VUE_APP_AAD_REDIRECT_URL}}"
+        -compact-warnings
+    vars: 
+      REGION: '{{default .DEFAULT_REGION .CLI_ARGS}}'
+
+  plan:
+    dir: ./infrastructure
+    desc: Creates a Terraform plan for review
+    cmds:
+    - silent: true
+      cmd: terraform plan -var "region={{.REGION}}" 
+        -var "tags={{.TAG}}"
+        -var "enable_cosmosdb_free_tier={{.COSMOSDB_FREE_TIER}}"
+        -var "deploy_maintenance_infrastructure={{.DEPLOY_MAINTENANCE}}"
+        -var "password_encryption_key={{.ENCRYPTION_KEY}}"
+        -var "password_encryption_initialization_vector={{.ENCRYPTION_IV}}"
+        -var "production_ui_url={{.VUE_APP_AAD_REDIRECT_URL}}"
+        -compact-warnings
+    vars: 
+      REGION: '{{default .DEFAULT_REGION .CLI_ARGS}}'
+
+  deploy-maintenance:
+    desc: Deploy backup and keepalive functions
+    dir: ./src/passwordapp.maintenance
+    cmds:
+    - rm -rf maintenance.zip || true
+    - pip install  --target=".python_packages/lib/site-packages" -r requirements.txt
+    - zip -r maintenance.zip .
+    - az storage copy --only-show-errors -s maintenance.zip --account-name {{.STORAGE_ACCOUNT_NAME}} --destination-container app
+    vars:
+      FUNCTION_NAME: 
+        sh: terraform -chdir=../../infrastructure output -raw MAINTENANCE_FUNCTION_NAME
+      STORAGE_ACCOUNT_NAME: 
+        sh: terraform -chdir=../../infrastructure output -raw MAINTENANCE_STORAGE_ACCOUNT_NAME
+
+  deploy-api:
+    desc: Deploy application to Azure Static Web Apps
+    dir: ./src/passwordapp.api
+    cmds:
+    - rm -rf publish
+    - dotnet publish -c Release --nologo -o publish/linux 
+    - cd publish/linux && zip -r vault.zip .
+    - az storage copy --only-show-errors -s publish/linux/vault.zip --account-name {{.STORAGE_ACCOUNT_NAME}} --destination-container app
+    vars:
+      FUNCTION_NAME:
+        sh: terraform -chdir=../../infrastructure output -raw FUNCTION_NAME
+      STORAGE_ACCOUNT_NAME:
+        sh: terraform -chdir=../../infrastructure output -raw STORAGE_ACCOUNT_NAME
+
+  deploy-ui:
+    desc: Deploy application to Azure Static Web Apps
+    dir: ./src/passwordapp.ui
+    cmds:
+    - npm install
+    - npm run build
+    - cmd: swa deploy ./dist --deployment-token {{.DEPLOY_TOKEN}}  --env {{.ENV}}
+      silent: true
+    vars:
+      SWA: 
+        sh: terraform -chdir=../../infrastructure output -raw SWA_NAME 
+      DEPLOY_TOKEN:
+        sh: az staticwebapp secrets list --name {{.SWA}} --query "properties.apiKey" -o tsv
+
+  down:
+    desc: Destroys all Azure resources and cleans up Terraform
+    dir: ./infrastructure
+    cmds:
+    - az group list --tag Application="{{.TAG}}" --query "[].name" -o tsv | xargs -ot -n 1 az group delete -y --verbose --no-wait -n || true
+    - rm -rf terraform.tfstate.d .terraform.lock.hcl .terraform terraform.tfstate terraform.tfstate.backup .terraform.tfstate.lock.info || true

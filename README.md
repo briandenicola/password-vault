@@ -1,105 +1,57 @@
 # Introduction 
-This project is a demo on how to use Azure Functions with HTTP Triggers, Cosmosdb, and a VUE SPA application all protected by Azure AD
-It can be deployed using Azure Dev Ops.
-It was built locally using Azure Functions Core Tools and Azure Cosmosdb Development Container
+This project is a demo on how to use Azure Functions with HTTP Triggers, Cosmosdb, and a VUE SPA application protected by Entra ID
 
-# Folders
-* Infrastructure - Script using Azure CLI to create resources in Azure - Azure Functions, Key Vault, Cosmos DB.  
-* Scripts - A place for various automations
-* Tests - Various PowerShell scripts to start up the local environment and to test the Functions API
-* Source\cli - A C# command line interface for the Vault
-* Source\maintenance - Python Functions to backup Cosmos and keep alive the Azure Function
-* Source\functionapp - C# Code for Azure Functions
-* Source\passwordapp.ui - VUE Code for UI
+[![Open in GitHub Codespaces](https://img.shields.io/static/v1?style=for-the-badge&label=GitHub+Codespaces&message=Open&color=brightgreen&logo=github)](https://codespaces.new/briandenicola/eShopOnAKS?quickstart=1)
+[![Open in Dev Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/briandenicola/eShopOnAKS)  
 
-# Prerequistes 
-* [The Azure Function commandline tool](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=linux%2Ccsharp%2Cbash#v2)
-* [The Azure cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-linux?pivots=apt)
+## Required Tools
+* A Posix compliant System. It could be one of the following:
+    * [Github CodeSpaces](https://github.com/features/codespaces)
+    * Azure Linux VM - Standard_B1s VM will work ($18/month)
+    * Windows 11 with [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install)
+* [dotnet 8](https://dotnet.microsoft.com/download) - The .NET SDK
+* [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) - A tool for managing Azure resources
+* [git](https://git-scm.com/) - The source control tool
+* [Taskfile](https://taskfile.dev/#/) - A task runner for the shell
+* [Terraform](https://www.terraform.io/) - A tool for building Azure infrastructure and infrastructure as code
 
-# Infrastucture Setup
-* ./Infrastructure/create_infrastructure.sh --region southcentralus
-   * Script will output the generated AppName and Azure AD ClientID for the API and UI Service Principals
-* ./Infrastructure/create_backup_infrastructure.sh --region southcentralus --name ${AppName} _(Optional)_
+### Optional Tools
+* [Windows Terminal](https://aka.ms/terminal) - A better terminal for Windows
+* [Zsh](https://ohmyz.sh/) - A better shell for Linux and Windows
+    
+> * **Note:** The Github Codespaces environment has all the tools pre-installed and configured.  You can use the following link to open the eShop project in Github Codespaces: [Open in Github Codespaces](https://codespaces.new/briandenicola/password-vault?quickstart=1)
+> * **Note:** [../.devcontainer/post-create.sh](../.devcontainer/post-create.sh) is a script that can be used to install the tools on a Linux VM. 
 
-# Azure AD Configurations
-* Password Vault API
-   * Name - ${AppName}-api
-   * Owners
-      * Add yourself as owner
-   * Authentication
-      * Add Web Platform
-      * Redirect Uris
-         - https://func-${appName}01.azurewebsites.net/.auth/login/aad/callback
-      * Deselect Implicit Grant
-   * Certificates & Secrets
-      * Ensure that no Client Secrets is defined. It is not needed. 
-   * App Roles
-      * Name - Default Access 
-      * Allow Member Types - Both (Users + applications) 
-      * Value - Default.Access
-   * Expose an API
-      * Set App Id
-         - https://func-${appName}01.azurewebsites.net
-      * Add Scopes
-         - PasswordHistory.Read
-         - Password.All
-   * Edit Manifest
-      * Update accessTokenAcceptedVersion from null to 2
-   * Enterprise Application Settings 
-      * Visible To Users: false
-* Password Vault UI
-   * Name - ${AppName}-ui
-   * Owners
-      * Add yourself as owner
-   * Authentication 
-      * Add Single-page Application.
-      * Redirect URIs
-         - http://localhost:8080
-         - https://ui${appName}01.z21.web.core.windows.net
-      * Deselect Implicit Grant
-   * Certificates & Secrets
-      * Ensure that no Client Secrets is defined. It is not needed. 
-   * API Permissions
-      * Grant access ${AppName}-api's 'Password.All' Scope as a delegated role under API
-   * Edit Manifest
-      * Update accessTokenAcceptedVersion from null to 2 
-   * Enterprise Application Settings 
-      * Visible To Users: false
-* Password Vault Maintenance _(Optional)_
-   * Name - ${AppName}-maintenance
-   * Owners
-      * Add yourself as owner
-   * Create a client secret but not Authenication Plaform.
-   * Add ${AppName}-api's 'Default Access' permission as an application role under API Permissions
-   * Enterprise Application Settings 
-      * Visible To Users: false
-* Password Vault Cli _(Optional)_
-   * Name - ${AppName}-cli
-   * Add Mobile and Desktop Application Platform under Authentication 
-   * Select _https://login.microsoftonline.com/common/oauth2/nativeclient_ for Redirect URL
-   * Enable Public Client Flow
-   * No Client Secrets is required because we're using Public Client flow.
-   * Grant ${AppName}-api's 'PasswordHistory.Read' Scope as a delegated role under API Permissions
-   * Enterprise Application Settings 
-      * Visible To Users: false
+### Task
+* The deployment of this application has been automated using [Taskfile](https://taskfile.dev/#/).  This was done instead of using a CI/CD pipeline to make it easier to understand the deployment process.  
+* Of course, the application can be deployed manually
+* The Taskfile is a simple way to run commands and scripts in a consistent manner.  
+* The [Taskfile](../Taskfile.yaml) definition is located in the root of the repository
+* The Task file declares the default values that can be updated to suit specific requirements: 
+    Name | Usage | Default Value
+    ------ | ------ | ------
+    TAG | Value used in Azure Tags | eShop On AKS
+    DEFAULT_REGION | Default region to deploy to | canadacentral
+    COSMOSDB_FREE_TIER | Use the Cosmos DB free tier | false
+    DEPLOY_MAINTENANCE | Deploy Azure  Functions for Keep Alives | false 
+    ADD_CUSTOM_DOMAIN | Add a custom domain to Azure Static Web Apps |  false 
 
-# Code Deploy
-## API Function App
-* cd ./Source/functionapp/
-* func azure functionapp publish func-${appName}
+* Running the `task` command without any options will run the default command. This will list all the available tasks.
+    * `task up`                  : Builds complete environment
+    * `task down`                : Destroys all Azure resources and cleans up Terraform
+    * `task deploy-api`          : Builds and deploys the API to Azure Functions
+    * `task deploy-maintenance`  : Deploys the maintenance function
+    * `task deploy-ui`           : Builds and deploys the UI to Azure Static Web Apps
+    * `task host-key`            : Gets the host key for the Azure Function
+    * `task init`                : Initializes Terraform
+    * `task plan`                : Creates a plan for Terraform
 
-## Front End UI
-* cd ./Source/passwordapp.ui
-* Copy and Paste output of create_infrastructure.sh script into .env.production 
-   * VUE_APP_API_ENDPOINT=https://func-${appName}01.azurewebsites.net
-   * VUE_APP_AAD_REDIRECT_URL=https://ui${appName}01.z21.web.core.windows.net/
-   * VUE_APP_API_KEY=(API Key from output of create_infrastructure.sh script)
-   * VUE_APP_AAD_CLIENT_ID=(API Client ID from output of create_infrastructure.sh script)
-   * VUE_APP_AAD_SCOPE=https://func-${appName}01.azurewebsites.net/Password.All
-* npm install
-* yarn build
-* az storage copy --source-local-path "dist/*" --destination-account-name ui${appName}01 --destination-container \$web --recursive --put-md5
+## Environment
+* An Azure subscription. An MSDN subscription will work.
+* An account with owner permission on the Azure subscription and Global Admin on the Azure AD tenant
+* :exclamation: Follow this guide to configure [Terraform](https://learn.microsoft.com/en-us/azure/developer/terraform/get-started-cloud-shell-powershell?tabs=bash) with an Service Principal
 
-## Maintenance Function App
-* cd ./Source/maintenance/
-* func azure functionapp publish ${appName}-maintenance --python
+## Navigation
+[Return to Main Index 🏠](../README.md) ‖
+[Next Section ⏩](./docs/entra.md)
+<p align="right">(<a href="#prerequisites">back to top</a>)</p>
