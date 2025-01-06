@@ -38,21 +38,28 @@
           @filtered="onFiltered"
           :items="passwords"
           :fields="fields">
+          <template v-slot:cell(siteName)="data">
+            <span class="d-inline-block text-truncate" style="max-width: 150px;">{{data.item.siteName}}</span>
+          </template>
           <template v-slot:cell(lastModifiedDate)="data">
             {{data.item.lastModifiedDate | formatDate}}
           </template>
           <template v-slot:cell(edit)="data">
             <b-button size="sm" 
-              variant="secondary"
-              @click.stop="copyPassword(data.item.id)"><font-awesome-icon icon="key" ></font-awesome-icon></b-button> |
-            <b-button 
-              size="sm"
-              variant="primary"
-              @click.stop="data.toggleDetails"><font-awesome-icon icon="info" ></font-awesome-icon></b-button> |
+              variant="success"
+              @click.stop="copyPassword(data.item.id)"><font-awesome-icon icon="copy" ></font-awesome-icon></b-button> |
             <b-button
               size="sm"
-              variant="success"
+              variant="primary"
+              @click.stop="displayPassword(data.item.id)"><font-awesome-icon icon="info" ></font-awesome-icon></b-button> |              
+            <b-button
+              size="sm"
+              variant="info"
               @click.stop="updatePassword(data.item.id)"><font-awesome-icon icon="user-edit" ></font-awesome-icon></b-button> |
+            <b-button 
+              size="sm"
+              variant="dark"
+              @click.stop="data.toggleDetails"><font-awesome-icon icon="bars" /></b-button> |              
             <b-button
               size="sm"
               variant="danger"
@@ -106,7 +113,7 @@
       ref="alertModal"
       :title="alertModalTitle"
       :ok-only="true">
-      <p class="my-4">{{ alertModalContent }}</p>
+      <p class="my-4 text-monospace">{{alertModalContent}}</p>
     </b-modal>
 
   </div>

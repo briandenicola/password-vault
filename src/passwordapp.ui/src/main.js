@@ -7,8 +7,10 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faKey } from '@fortawesome/free-solid-svg-icons'
 import { faUserEdit } from '@fortawesome/free-solid-svg-icons'
+import { faCopy } from '@fortawesome/free-solid-svg-icons'
 import { faInfo } from '@fortawesome/free-solid-svg-icons'
 import { faTrashAlt } from '@fortawesome/free-solid-svg-icons'
+import { faBars } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import Authentication from './components/azuread/AzureAD.Authentication.js'
 import Axios from 'axios'
@@ -18,7 +20,9 @@ import Axios from 'axios'
   library.add(faKey)
   library.add(faUserEdit)
   library.add(faInfo)
+  library.add(faCopy)
   library.add(faTrashAlt)
+  library.add(faBars)
 
   Vue.component('font-awesome-icon', FontAwesomeIcon)
   Vue.config.productionTip = false

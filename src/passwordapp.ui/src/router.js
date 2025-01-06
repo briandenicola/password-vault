@@ -8,6 +8,8 @@ import Authentication from './components/azuread/AzureAD.Authentication.js'
 
 Vue.use(Router)
 
+let requiresAuthentication = false
+
 var router = new Router({
   mode: 'history',
   base: process.env.BASE_URL,
@@ -17,7 +19,7 @@ var router = new Router({
       name: 'Home',
       component: Home,
       meta: {
-        requiresAuthentication: true
+        requiresAuthentication: requiresAuthentication
       },
     },
     {
@@ -25,7 +27,7 @@ var router = new Router({
       name: 'Update',
       component: Update,
       meta: {
-        requiresAuthentication: true
+        requiresAuthentication: requiresAuthentication
       },
     },
     {
@@ -33,7 +35,7 @@ var router = new Router({
       name: 'Create',
       component: Create,
       meta: {
-        requiresAuthentication: true
+        requiresAuthentication: requiresAuthentication
       },
     },
     {
@@ -41,7 +43,7 @@ var router = new Router({
       name: 'NotFound',
       component: NotFound,
       meta: {
-        requiresAuthentication: true
+        requiresAuthentication: requiresAuthentication
       },
     },
   ]

@@ -65,6 +65,13 @@ export default {
         this.totalRows = response.data.length;
       });
     },
+    displayPassword(passwordId) {
+      PasswordService.get(passwordId).then((response) => {
+        this.alertModalTitle = 'Success. . .';
+        this.alertModalContent = response.data.currentPassword;
+        this.$refs.alertModal.show();
+      });
+    },
     copyPassword(passwordId) {
       PasswordService.get(passwordId).then((response) => {
         if(navigator.clipboard) {

@@ -95,6 +95,7 @@ tasks:
     desc: Deploy application to Azure Static Web Apps
     dir: ./src/passwordapp.api
     cmds:
+    - rm -rf publish
     - dotnet publish -c Release --nologo -o publish/linux 
     - cd publish/linux && zip -r vault.zip .
     - az storage copy --only-show-errors -s publish/linux/vault.zip --account-name {{.STORAGE_ACCOUNT_NAME}} --destination-container app
