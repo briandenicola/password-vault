@@ -68,6 +68,10 @@
           <template slot="row-details" slot-scope="row">
             <b-card class="text-left">
               <b-row class="mb-2">
+                <b-col><b>Site:</b></b-col>
+                <b-col>{{ row.item.siteName }}</b-col>
+              </b-row>            
+              <b-row class="mb-2">
                 <b-col><b>Created By:</b></b-col>
                 <b-col>{{ row.item.createdBy }}</b-col>
               </b-row>
