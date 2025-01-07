@@ -53,3 +53,8 @@ Entra ID Application Registrations
 
 ## Password Vault Maintenance _(Optional)_
 > __Note:__ This use to be required but the code has been/will be migrated over to Azure Managed Identities 
+
+
+# Navigation
+[Previous Section ⏪](../README.md.md) ‖ [Return to Main Index 🏠](../README.md) ‖ [Next Section ⏩](./infrastructure.md)
+<p align="right">(<a href="#infrastructure">back to top</a>)</p>
