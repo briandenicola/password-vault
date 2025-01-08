@@ -20,7 +20,7 @@ This project is a demo on how to use Azure Functions with HTTP Triggers, Cosmosd
 * [Zsh](https://ohmyz.sh/) - A better shell for Linux and Windows
     
 > * **Note:** The Github Codespaces environment has all the tools pre-installed and configured.  You can use the following link to open the eShop project in Github Codespaces: [Open in Github Codespaces](https://codespaces.new/briandenicola/password-vault?quickstart=1)
-> * **Note:** [../.devcontainer/post-create.sh](../.devcontainer/post-create.sh) is a script that can be used to install the tools on a Linux VM. 
+> * **Note:** [./.devcontainer/post-create.sh](./.devcontainer/post-create.sh) is a script that can be used to install the tools on a Linux VM. 
 
 ### Task
 * The deployment of this application has been automated using [Taskfile](https://taskfile.dev/#/).  This was done instead of using a CI/CD pipeline to make it easier to understand the deployment process.  
