@@ -35,7 +35,8 @@ This project is a demo on how to use Azure Functions with HTTP Triggers, Cosmosd
     COSMOSDB_FREE_TIER | Use the Cosmos DB free tier | false
     DEPLOY_MAINTENANCE | Deploy Azure  Functions for Keep Alives | false 
     ADD_CUSTOM_DOMAIN | Add a custom domain to Azure Static Web Apps |  false 
-
+    APP_REQUIRES_AUTHENTICATION | Require authentication for the UI | true
+    
 * Running the `task` command without any options will run the default command. This will list all the available tasks.
     * `task up`                  : Builds complete environment
     * `task down`                : Destroys all Azure resources and cleans up Terraform

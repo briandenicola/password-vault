@@ -15,13 +15,13 @@ UI Build & Deployment
 * The Vault UI is built on VUE and uses Azure Static Web Apps.
 * The build and deploy is part of the same process.
 * The deployment uses the Azure Static Web Apps cli to deploy the application to Azure.
+* The `task deploy-ui` will populate the .env file with the correct values for the Application Insights and Azure Functions Host Key.  
+* For development, you can disable Entra ID authentication by setting VUE_APP_REQUIRES_AUTHENTICATION to false in the .env file.  This is not recommended for production.
 
 # Steps
-- :one: Create a .env.production file in the src/passwordapp.ui folder with the following values:
+- :one: Manually create a .env.production file in the src/passwordapp.ui folder with the following values:
 ```
     VUE_APP_AAD_REDIRECT_URL=https://${AZURE_STATIC_WEB_APP_NAME}.azurestaticapps.net || CUSTOM_DOMAIN_NAME }
-    VUE_APP_API_ENDPOINT=https://${appName}-functions.azurewebsites.net
-    VUE_APP_API_KEY={AZURE_FUNCTION_HOST_KEY} #`task host-key` will get the host key
     VUE_APP_AAD_CLIENT_ID=${AAD_CLIENT_ID_OF_API_APP_REG_CREATED_EARLIER}
     VUE_APP_AAD_TENANT_ID=${ENTRA_ID_TENANT_ID}
     VUE_APP_AAD_SCOPE=https://${appName}-functions.azurewebsites.net

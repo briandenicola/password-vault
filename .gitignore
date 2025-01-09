@@ -10,6 +10,7 @@ src/passwordapp.maintenance/maintenance.zip
 src/passwordapp.maintenance/.python_packages/
 src/passwordapp.maintenance/local.settings.json
 src/passwordapp.ui/.env.production
+src/passwordapp.ui/.env
 src/passwordapp.ui/dist
 src/passwordapp.ui/package-lock.json
 

@@ -8,7 +8,7 @@ import Authentication from './components/azuread/AzureAD.Authentication.js'
 
 Vue.use(Router)
 
-let requiresAuthentication = true
+let requiresAuthentication = process.env.VUE_APP_REQUIRES_AUTHENTICATION  == 'true' ? true : false;
 
 var router = new Router({
   mode: 'history',

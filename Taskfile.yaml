@@ -14,6 +14,7 @@ vars:
   COSMOSDB_FREE_TIER: false
   DEPLOY_MAINTENANCE: false
   ADD_CUSTOM_DOMAIN: false 
+  APP_REQUIRES_AUTHENTICATION: false
 
 tasks:
   default:
@@ -119,11 +120,27 @@ tasks:
     desc: Deploy application to Azure Static Web Apps
     dir: ./src/passwordapp.ui
     cmds:
+    - cmd: echo VUE_APP_TITLE=\"Password Vault\" > .env
+      silent: true
+    - cmd: echo VUE_APP_REQUIRES_AUTHENTICATION={{.APP_REQUIRES_AUTHENTICATION}} >> .env
+      silent: true
+    - cmd: echo VUE_APP_INSIGHTS_CONNECTION_STRING=\""{{.APP_INSIGHTS_CONNECTION_STRING}}\"" >> .env
+      silent: true
+    - cmd: echo VUE_APP_API_ENDPOINT=\"{{.FUNCTION_URL}}\" >> .env
+      silent: true
+    - cmd: echo VUE_APP_API_KEY=\"{{.AZURE_FUNCTION_HOST_KEY}}\" >> .env
+      silent: true
     - npm install
     - npm run build
     - cmd: swa deploy ./dist --deployment-token {{.DEPLOY_TOKEN}}  --env {{.ENV}}
       silent: true
     vars:
+      FUNCTION_URL:
+        sh: terraform -chdir=../../infrastructure output -raw FUNCTION_URL
+      AZURE_FUNCTION_HOST_KEY:
+        sh: terraform -chdir=../../infrastructure output -raw AZURE_FUNCTION_HOST_KEY
+      APP_INSIGHTS_CONNECTION_STRING:
+        sh: terraform -chdir=../../infrastructure output -raw APP_INSIGHTS_CONNECTION_STRING 
       SWA: 
         sh: terraform -chdir=../../infrastructure output -raw SWA_NAME 
       DEPLOY_TOKEN:
