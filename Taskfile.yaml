@@ -14,7 +14,7 @@ vars:
   COSMOSDB_FREE_TIER: false
   DEPLOY_MAINTENANCE: false
   ADD_CUSTOM_DOMAIN: false 
-  APP_REQUIRES_AUTHENTICATION: false
+  APP_REQUIRES_AUTHENTICATION: true
 
 tasks:
   default:
