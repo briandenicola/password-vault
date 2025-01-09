@@ -72,6 +72,23 @@ tasks:
     vars: 
       REGION: '{{default .DEFAULT_REGION .CLI_ARGS}}'
 
+  refresh:
+    dir: ./infrastructure
+    desc: Refresh a Terraform output values
+    cmds:
+    - silent: true
+      cmd: terraform refresh -var "region={{.REGION}}" 
+        -var "tags={{.TAG}}"
+        -var "enable_cosmosdb_free_tier={{.COSMOSDB_FREE_TIER}}"
+        -var "deploy_maintenance_infrastructure={{.DEPLOY_MAINTENANCE}}"
+        -var "password_encryption_key={{.ENCRYPTION_KEY}}"
+        -var "password_encryption_initialization_vector={{.ENCRYPTION_IV}}"
+        -var "add_custom_domain={{.ADD_CUSTOM_DOMAIN}}"
+        -var "production_ui_url={{.VUE_APP_AAD_REDIRECT_URL}}"
+        -compact-warnings
+    vars: 
+      REGION: '{{default .DEFAULT_REGION .CLI_ARGS}}'
+
   plan:
     dir: ./infrastructure
     desc: Creates a Terraform plan for review
