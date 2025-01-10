@@ -73,25 +73,23 @@ export default {
       });
     },
     copyPassword(passwordId) {
-      PasswordService.get(passwordId).then((response) => {
-        if(navigator.clipboard) {
-          navigator.clipboard.writeText(response.data.currentPassword).then(() => {
-            this.alertModalTitle = 'Success. . .';
-            this.alertModalContent = 'Password Copied to Clipboard';
-            this.$refs.alertModal.show();
-          })
-          .catch(() => {
-            this.alertModalTitle = 'Success. . .';
-            this.alertModalContent = response.data.currentPassword;
-            this.$refs.alertModal.show();
-          });
-        } 
-        else {
-          this.alertModalTitle = 'Success. . .';
-          this.alertModalContent = response.data.currentPassword;
-          this.$refs.alertModal.show();
-        }
-      });
+      try {
+        const text = new ClipboardItem({
+          "text/plain": PasswordService.get(passwordId)
+            .then(response => response.data.currentPassword)
+            .then(text => new Blob([text], { type: "text/plain" }))
+        })
+        navigator.clipboard.write([text])
+        
+        this.alertModalTitle = 'Success. . .';
+        this.alertModalContent = 'Password Copied to Clipboard';
+        this.$refs.alertModal.show();
+      } 
+      catch(err)  {
+        this.alertModalTitle = 'Error. . .';
+        this.alertModalContent = "Copy failed with error: " + err;
+        this.$refs.alertModal.show();
+      };
     },
     onDeleteConfirm() {
       PasswordService.delete(this.selectedPasswordId).then(() => {
