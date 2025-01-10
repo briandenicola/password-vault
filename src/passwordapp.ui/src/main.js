@@ -16,6 +16,7 @@ import Authentication from './components/azuread/AzureAD.Authentication.js'
 import { ClickAnalyticsPlugin } from '@microsoft/applicationinsights-clickanalytics-js';
 import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import Axios from 'axios'
+import './registerServiceWorker'
 
 (async () => 
 {
@@ -51,6 +52,7 @@ import Axios from 'axios'
   }});
   appInsights.loadAppInsights();
   appInsights.trackPageView();
+  
 
   new Vue({
     router,
