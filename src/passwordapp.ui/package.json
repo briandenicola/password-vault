@@ -17,6 +17,7 @@
     "@microsoft/applicationinsights-web": "^3.3.4",
     "axios": "^0.21.1",
     "bootstrap-vue": "^2.15.0",
+    "module": "^1.2.5",
     "moment": "^2.26.0",
     "register-service-worker": "^1.7.2",
     "vue": "^2.6.11",

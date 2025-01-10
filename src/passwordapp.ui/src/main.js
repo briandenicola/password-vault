@@ -53,7 +53,6 @@ import './registerServiceWorker'
   appInsights.loadAppInsights();
   appInsights.trackPageView();
   
-
   new Vue({
     router,
     render: function (h) { return h(App) }
