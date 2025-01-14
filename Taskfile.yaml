@@ -133,6 +133,14 @@ tasks:
       STORAGE_ACCOUNT_NAME:
         sh: terraform -chdir=../../infrastructure output -raw STORAGE_ACCOUNT_NAME
 
+  test-api:
+    desc: Hit the Health Page of the API to validate
+    cmds:
+    - curl -vvv https://{{.FUNCTION_NAME}}.azurewebsites.net/api/passwords/healthz
+    vars:
+      FUNCTION_NAME:
+        sh: terraform -chdir=./infrastructure output -raw FUNCTION_NAME
+        
   deploy-ui:
     desc: Deploy application to Azure Static Web Apps
     dir: ./src/passwordapp.ui
