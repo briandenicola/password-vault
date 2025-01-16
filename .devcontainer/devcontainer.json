@@ -16,8 +16,8 @@
 				"ms-azuretools.vscode-docker",
 				"ms-azuretools.vscode-azureterraform",
 				"ms-vscode.powershell",
-				"ms-vscode.azure-account",
-				"ms-kubernetes-tools.aks-devx-tools",
+				"ms-vscode.azure-account",				
+				"ms-kubernetes-tools.vscode-kubernetes-tools",
 				"github.vscode-pull-request-github",				
 				"github.copilot",
 				"mindaro.mindaro" 
