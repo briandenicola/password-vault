@@ -10,10 +10,10 @@ vault_url=os.environ["VAULT_HEALTH_URL"]
 vault_resource_id=os.environ["VAULT_APP_ID_URL"]
 
 def keepSiteAlive(token):
-    header = {'Authorization': token}
-    r = requests.get(vault_url, headers=header, timeout=15)
+    headers = {'Authorization': 'Bearer ' + token}
+    r = requests.get(vault_url, headers=headers, timeout=15)
 
-def main(mytimer: func.TimerRequest) -> None:
+def main(keepalivetimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
     logging.info('[%s] - Health Check fired', utc_timestamp)
     
@@ -21,9 +21,12 @@ def main(mytimer: func.TimerRequest) -> None:
         keepSiteAlive('')
         return
     
-    managed_identity = msal.SystemAssignedManagedIdentity()
-    global_app = msal.ManagedIdentityClient(managed_identity, http_client=requests.Session())
-    result = global_app.acquire_token_for_client(resource=env.VAULT_RESOURCE_ID)')
+    managed_identity = msal.SystemAssignedManagedIdentity(
+        http_client=requests.Session(),
+        token_cache=msal.TokenCache() # Let this app (re)use an existing token cache and the TokenCache() is in-memory.
+    )
+    app = msal.ManagedIdentityClient(managed_identity, http_client=requests.Session())
+    result = app.acquire_token_for_client(resource=vault_resource_id)
     
     if "access_token" in result:
         keepSiteAlive(result['access_token'])
