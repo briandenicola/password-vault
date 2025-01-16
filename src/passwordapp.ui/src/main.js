@@ -1,4 +1,4 @@
-import Vue from 'vue'
+import Vue, { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import BootstrapVue from 'bootstrap-vue'
@@ -30,7 +30,7 @@ import './registerServiceWorker'
   Vue.component('font-awesome-icon', FontAwesomeIcon)
   Vue.config.productionTip = false
   Vue.use(BootstrapVue);
-
+  
   Axios.defaults.baseURL = process.env.VUE_APP_API_ENDPOINT;
   Axios.defaults.headers.common['x-functions-key'] = process.env.VUE_APP_API_KEY;
 
@@ -53,8 +53,6 @@ import './registerServiceWorker'
   appInsights.loadAppInsights();
   appInsights.trackPageView();
   
-  new Vue({
-    router,
-    render: function (h) { return h(App) }
-  }).$mount('#app');
+  createApp(App).use(router).mount('#app');
+  
 })();

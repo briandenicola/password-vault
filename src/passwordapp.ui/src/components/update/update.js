@@ -6,14 +6,17 @@ export default {
   name: 'Update',
   data() {
     return {
-      formData: PasswordService.newPassword(),
-      alertModalTitle: '',
-      alertModalContent: '',
-      isSuccessfully: false,
+      formData:           PasswordService.newPassword(),
+      id:                 '',
+      alertModalTitle:    '',
+      alertModalContent:  '',
+      isSuccessfully:     false,
     };
   },
   created() {
-    PasswordService.get(this.$router.currentRoute.params.id).then((response) => {
+    this.id = this.$router.currentRoute.value.params.id;
+    PasswordService.get(this.id)
+    .then((response) => {
       this.formData = response.data;
     });
   },
@@ -23,12 +26,14 @@ export default {
     },
     updatePassword() {
       this.formData.lastModifiedBy = Authentication.getUserProfile();
-      PasswordService.update(this.$router.currentRoute.params.id, this.formData).then(() => {
+      PasswordService.update(this.id, this.formData)
+      .then(() => {
         this.isSuccessfully = true;
         this.alertModalTitle = 'Successfully';
         this.alertModalContent = 'Successfully updated Account';
         this.$refs.alertModal.show();
-      }).catch((error) => {
+      })
+      .catch((error) => {
         this.isSuccessfully = false;
         this.alertModalTitle = 'Error';
         this.alertModalContent = error.response.data;

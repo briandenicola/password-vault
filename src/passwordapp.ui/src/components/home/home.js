@@ -4,13 +4,6 @@ import Authentication from '@/components/azuread/AzureAD.Authentication.js';
 
 export default {
   name: 'PasswordList',
-  filters: {
-    formatDate: function(value) {
-      if (value) {
-        return Moment(String(value)).format('MM/DD/YYYY hh:mm:ss A')
-      }
-    }
-  },
   computed: {
     isAuthenticated() {
       return Authentication.isAuthenticated();
@@ -18,22 +11,23 @@ export default {
   },
   data() {
     return {
-      passwords: [],
-      currentPage: 1,
-      perPage: 10,
-      totalRows: 0,
-      filter: null,
-      sortBy: "siteName",
-      sortDesc: false,
+      passwords:    [],
+      currentPage:  1,
+      perPage:      10,
+      totalRows:    0,
+      filter:       null,
+      sortBy:       "siteName",
+      sortDesc:     false,
       fields: [ 
-        { key: 'accountName', label: 'Account', sortable: true},
-        { key: 'siteName', label: 'Site', sortable: true}, 
-        { key: 'lastModifiedDate', label: 'Last Modified', sortable: false},
-        { key: 'edit', label: 'Edit/Remove' }
+        { key: 'accountName',       label: 'Account',       sortable: true},
+        { key: 'siteName',          label: 'Site',          sortable: true}, 
+        { key: 'lastModifiedDate',  label: 'Last Modified', sortable: false},
+        { key: 'edit',              label: 'Edit/Remove' }
       ],
+      currentAccounts:    [],
       selectedPasswordId: null,
-      alertModalTitle: '',
-      alertModalContent: '',
+      alertModalTitle:    '',
+      alertModalContent:  '',
     };
   },
 
@@ -44,13 +38,23 @@ export default {
   methods: {
     logOut() {
       Authentication.signOut();
-    },
+    }, 
+    toggleDetails(row) {
+      if(row._showDetails){
+        this.$set(row, '_showDetails', false)
+      }else{
+        this.currentAccounts.forEach(item => {
+          this.$set(item, '_showDetails', false)
+        })
+
+        this.$nextTick(() => {
+          this.$set(row, '_showDetails', true)
+        })
+      }
+    },    
     onFiltered (filteredItems) {
       this.totalRows = filteredItems.length;
       this.currentPage = 1;
-    },
-    showPassword(passwordId) {
-      this.$router.push({ name: 'Details', params: { id: passwordId } });
     },
     updatePassword(passwordId) {
       this.$router.push({ name: 'Update', params: { id: passwordId } });
@@ -60,13 +64,20 @@ export default {
       this.$refs.deleteConfirmModal.show();
     },
     fetchPasswords() {
-      PasswordService.getAll().then((response) => {
+      PasswordService.getAll()
+      .then((response) => {
         this.passwords = response.data;
         this.totalRows = response.data.length;
       });
     },
+    formatDate(date) {      
+      if (date) {
+        return Moment(String(date)).format('MM/DD/YYYY hh:mm:ss A')
+      } 
+    },
     displayPassword(passwordId) {
-      PasswordService.get(passwordId).then((response) => {
+      PasswordService.get(passwordId)
+      .then((response) => {
         this.alertModalTitle = 'Success. . .';
         this.alertModalContent = response.data.currentPassword;
         this.$refs.alertModal.show();
@@ -92,12 +103,14 @@ export default {
       };
     },
     onDeleteConfirm() {
-      PasswordService.delete(this.selectedPasswordId).then(() => {
+      PasswordService.delete(this.selectedPasswordId)
+      .then(() => {
         this.alertModalTitle = 'Successfully';
         this.alertModalContent = 'Successfully deleted Account';
         this.$refs.alertModal.show();
         this.fetchPasswords();
-      }).catch((error) => {
+      })
+      .catch((error) => {
         this.alertModalTitle = 'Error';
         this.alertModalContent = error.response.data;
         this.$refs.alertModal.show();

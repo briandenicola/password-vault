@@ -1,18 +1,15 @@
 import Vue from 'vue'
-import Router from 'vue-router'
+import {createRouter, createMemoryHistory} from 'vue-router'
 import NotFound from '@/components/notfound/pagenotfound.vue'
 import Home from '@/components/home/home.vue'
 import Create from '@/components/create/create.vue'
 import Update from '@/components/update/update.vue'
 import Authentication from './components/azuread/AzureAD.Authentication.js'
 
-Vue.use(Router)
-
 let requiresAuthentication = process.env.VUE_APP_REQUIRES_AUTHENTICATION  == 'true' ? true : false;
 
-var router = new Router({
-  mode: 'history',
-  base: process.env.BASE_URL,
+var router = createRouter({
+  history: createMemoryHistory(process.env.BASE_URL),
   routes: [
     {
       path: '/',
@@ -38,14 +35,8 @@ var router = new Router({
         requiresAuthentication: requiresAuthentication
       },
     },
-    {
-      path: '*',
-      name: 'NotFound',
-      component: NotFound,
-      meta: {
-        requiresAuthentication: requiresAuthentication
-      },
-    },
+    { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFound },
+    { path: '/:pathMatch(.*)', name: 'bad-not-found', component: NotFound },
   ]
 })
 

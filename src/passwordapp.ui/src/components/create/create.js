@@ -21,7 +21,7 @@ export default {
         this.$router.push({ name: 'Home' });
       }
     },
-    createPassword() {
+    createNewAccount() {
       this.formData.createdBy = this.formData.lastModifiedBy = Authentication.getUserProfile(); 
       PasswordService.create(this.formData).then(() => {
         this.isSuccessfully = true;

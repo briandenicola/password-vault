@@ -1,7 +1,7 @@
 <template>
   <b-container fluid>
     <div class="form-wrapper">
-      <b-form @submit.prevent="createPassword">
+      <b-form @submit.prevent="createNewAccount">
         <b-form-group 
           :label-cols="2" 
           breakpoint="md" 

@@ -20,7 +20,13 @@
         </b-form-group>
       </b-col>
     </b-row>
-    <br>
+    
+    <b-row>
+      <b-col md="6" class="my-1">
+        <b-pagination :total-rows="totalRows" :per-page="perPage" v-model="currentPage" class="my-0" />
+      </b-col>
+    </b-row>
+
     <b-row>
       <b-col md="12">
         <b-table
@@ -37,12 +43,13 @@
           :filter="filter"
           @filtered="onFiltered"
           :items="passwords"
-          :fields="fields">
+          :fields="fields"
+          v-model="currentAccounts">
           <template v-slot:cell(siteName)="data">
             <span class="d-inline-block text-truncate" style="max-width: 150px;">{{data.item.siteName}}</span>
           </template>
           <template v-slot:cell(lastModifiedDate)="data">
-            {{data.item.lastModifiedDate | formatDate}}
+            {{ formatDate(data.item.lastModifiedDate) }}
           </template>
           <template v-slot:cell(edit)="data">
             <b-button size="sm" 
@@ -59,42 +66,44 @@
             <b-button 
               size="sm"
               variant="dark"
-              @click.stop="data.toggleDetails"><font-awesome-icon icon="bars" /></b-button> |              
+              @click.stop="toggleDetails(data.item)"><font-awesome-icon icon="bars" /></b-button> |              
             <b-button
               size="sm"
               variant="danger"
-              @click.stop="deletePassword(data.item.id)"><font-awesome-icon icon="trash-alt" ></font-awesome-icon></b-button>
-          </template>
-          <template slot="row-details" slot-scope="row">
+              @click.stop="deletePassword(data.item.id)"><font-awesome-icon icon="trash-alt" ></font-awesome-icon></b-button>             
+          </template>          
+          <template v-slot:row-details="{ item }">
             <b-card class="text-left">
-              <b-row class="mb-2">
-                <b-col><b>Site:</b></b-col>
-                <b-col>{{ row.item.siteName }}</b-col>
-              </b-row>            
-              <b-row class="mb-2">
-                <b-col><b>Created By:</b></b-col>
-                <b-col>{{ row.item.createdBy }}</b-col>
-              </b-row>
-              <b-row class="mb-2">
-                <b-col><b>Updated By:</b></b-col>
-                <b-col>{{ row.item.lastModifiedBy }}</b-col>
-              </b-row>
-              <b-row class="mb-2">
-                <b-col><b>Security Questions:</b></b-col>
-                <b-col></b-col>
-              </b-row>
-              <span class="mb-2" v-for="securityQuestion in row.item.securityQuestions" :key="securityQuestion" >
-                <b-row class="mb-2" v-if="securityQuestion.question !== '' && securityQuestion.answer !== '' " >
-                  <b-col><i>{{securityQuestion.question}}</i>: </b-col>
-                  <b-col>{{securityQuestion.answer}}</b-col>
+              <b-card class="text-left">
+                <b-row class="mb-2">
+                  <b-col><b>Site:</b></b-col>
+                  <b-col>{{ item.siteName }}</b-col>
+                </b-row>            
+                <b-row class="mb-2">
+                  <b-col><b>Created By:</b></b-col>
+                  <b-col>{{ item.createdBy }}</b-col>
                 </b-row>
-              </span>
-              <b-row class="mb-2">
-                <b-col><b>Notes:</b></b-col>
-                <b-col>{{ row.item.notes }}</b-col>
-              </b-row>
+                <b-row class="mb-2">
+                  <b-col><b>Updated By:</b></b-col>
+                  <b-col>{{ item.lastModifiedBy }}</b-col>
+                </b-row>
+                <b-row class="mb-2">
+                  <b-col><b>Security Questions:</b></b-col>
+                  <b-col></b-col>
+                </b-row>
+                <span class="mb-2" v-for="securityQuestion in item.securityQuestions" :key="securityQuestion" >
+                  <b-row class="mb-2" v-if="securityQuestion.question !== '' && securityQuestion.answer !== '' " >
+                    <b-col><i>{{securityQuestion.question}}</i>: </b-col>
+                    <b-col>{{securityQuestion.answer}}</b-col>
+                  </b-row>
+                </span>
+                <b-row class="mb-2">
+                  <b-col><b>Notes:</b></b-col>
+                  <b-col>{{ item.notes }}</b-col>
+                </b-row>
+              </b-card>         
             </b-card>
-          </template>
+          </template>          
         </b-table>
       </b-col>  
     </b-row>
