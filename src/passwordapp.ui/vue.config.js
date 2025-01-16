@@ -28,7 +28,12 @@ module.exports = {
                 src: "/img/icons/apple-touch-icon.png",
                 sizes: "32x32",
                 type: "image/png"
-            }
+            },
+            {
+                src: "/img/icons/android-chrome-192x192.png",
+                sizes: "192x192",
+                type: "image/png"
+            }            
         ]
     },
     chainWebpack: (config) => {
