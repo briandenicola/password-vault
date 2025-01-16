@@ -51,7 +51,7 @@
           :label-cols="2"
           breakpoint="md"
           horizontal
-          label="Security Question #1:"
+          label="Question #1:"
           for="securityQuestion1">
           <b-col sm="auto">
             <b-input
@@ -65,7 +65,7 @@
           :label-cols="2"
           breakpoint="md"
           horizontal
-          label="Security Answer #1:"
+          label="Answer #1:"
           for="securityAnswer1">
           <b-col sm="auto">
             <b-input
@@ -79,7 +79,7 @@
           :label-cols="2"
           breakpoint="md"
           horizontal
-          label="Security Question #2:"
+          label="Question #2:"
           for="securityQuestion2">
           <b-col sm="auto">
             <b-input
@@ -93,7 +93,7 @@
           :label-cols="2"
           breakpoint="md"
           horizontal
-          label="Security Answer #2:"
+          label="Answer #2:"
           for="securityAnswer2">
           <b-col sm="auto">
             <b-input
@@ -107,7 +107,7 @@
           :label-cols="2"
           breakpoint="md"
           horizontal
-          label="Security Question #3:"
+          label="Question #3:"
           for="securityQuestion3">
           <b-col sm="auto">
             <b-input
@@ -121,7 +121,7 @@
           :label-cols="2"
           breakpoint="md"
           horizontal
-          label="Security Answer #3:"
+          label="Answer #3:"
           for="securityAnswer3">
           <b-col sm="auto">
             <b-input
