@@ -16,11 +16,12 @@
 				"ms-azuretools.vscode-docker",
 				"ms-azuretools.vscode-azureterraform",
 				"ms-vscode.powershell",
-				"ms-vscode.azure-account",				
-				"ms-kubernetes-tools.vscode-kubernetes-tools",
+				"ms-vscode.azure-account",
+				"ms-azuretools.vscode-azurefunctions",
 				"github.vscode-pull-request-github",				
 				"github.copilot",
-				"mindaro.mindaro" 
+				"mindaro.mindaro",
+				"vue.volar"
 			]
 		}
 	},
