@@ -10,3 +10,7 @@ variable "tags" {
 variable "app_name" {
   description = "Name of the application"
 }
+
+variable "app_requires_authentication" {
+  description = "Enable Authentication for the Azure Functions APIs"
+}

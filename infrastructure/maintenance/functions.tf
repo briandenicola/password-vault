@@ -39,8 +39,10 @@ resource "azurerm_linux_function_app" "this" {
   }
   app_settings = {
     VAULT_HEALTH_URL                      = "https://${var.app_name}-functions.azurewebsites.net/api/passwords/healthz"
+    VAULT_API_AUTH_ENABLED                = var.app_requires_authentication
+    VAULT_APP_ID_URL                      = "https://${var.app_name}-functions.azurewebsites.net (PLACEHOLDER)"
     WEBSITE_RUN_FROM_PACKAGE              = "${azurerm_storage_account.this.primary_blob_endpoint}${local.app_container_name}/maintenance.zip"
-    APPLICATIONINSIGHTS_CONNECTION_STRING  = "@Microsoft.KeyVault(SecretUri=${data.azurerm_key_vault_secret.appinsights_connection_string.id})"
-    APPINSIGHTS_INSTRUMENTATIONKEY         = "@Microsoft.KeyVault(SecretUri=${data.azurerm_key_vault_secret.appinsights_key.id})" 
+    APPLICATIONINSIGHTS_CONNECTION_STRING = "@Microsoft.KeyVault(SecretUri=${data.azurerm_key_vault_secret.appinsights_connection_string.id})"
+    APPINSIGHTS_INSTRUMENTATIONKEY        = "@Microsoft.KeyVault(SecretUri=${data.azurerm_key_vault_secret.appinsights_key.id})"
   }
 }

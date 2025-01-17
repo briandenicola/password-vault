@@ -68,6 +68,7 @@ tasks:
         -var "password_encryption_initialization_vector={{.ENCRYPTION_IV}}"
         -var "add_custom_domain={{.ADD_CUSTOM_DOMAIN}}"
         -var "production_ui_url={{.VUE_APP_AAD_REDIRECT_URL}}"
+        -var "app_requires_authentication={{.APP_REQUIRES_AUTHENTICATION}}"
         -compact-warnings
     vars: 
       REGION: '{{default .DEFAULT_REGION .CLI_ARGS}}'
@@ -85,6 +86,7 @@ tasks:
         -var "password_encryption_initialization_vector={{.ENCRYPTION_IV}}"
         -var "add_custom_domain={{.ADD_CUSTOM_DOMAIN}}"
         -var "production_ui_url={{.VUE_APP_AAD_REDIRECT_URL}}"
+        -var "app_requires_authentication={{.APP_REQUIRES_AUTHENTICATION}}"
         -compact-warnings
     vars: 
       REGION: '{{default .DEFAULT_REGION .CLI_ARGS}}'
@@ -104,7 +106,7 @@ tasks:
         -compact-warnings
     vars: 
       REGION: '{{default .DEFAULT_REGION .CLI_ARGS}}'
-
+      
   deploy-maintenance:
     desc: Deploy backup and keepalive functions
     dir: ./src/passwordapp.maintenance

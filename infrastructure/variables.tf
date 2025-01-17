@@ -33,3 +33,7 @@ variable "production_ui_url" {
   description = "The Custom Domain for the Static Web App"
 }
 
+variable "app_requires_authentication" {
+  description = "Enable Authentication for the Azure Functions APIs"
+  default     = false
+}
