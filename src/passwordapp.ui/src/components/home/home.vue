@@ -46,10 +46,10 @@
           :fields="fields"
           v-model="currentAccounts">
           <template v-slot:cell(accountName)="data">
-            <span class="d-inline-block text-truncate text-lowercase" style="max-width: 150px;">{{data.item.accountName}}</span>
+            <span class="d-inline-block text-truncate text-lowercase" style="max-width: 200px;">{{data.item.accountName}}</span>
           </template>          
           <template v-slot:cell(siteName)="data">
-            <span class="d-inline-block text-truncate text-lowercase" style="max-width: 150px;">{{data.item.siteName}}</span>
+            <span class="d-inline-block text-truncate text-lowercase" style="max-width: 250px;">{{data.item.siteName}}</span>
           </template>
           <template v-slot:cell(lastModifiedDate)="data">
             {{ formatDate(data.item.lastModifiedDate) }}
