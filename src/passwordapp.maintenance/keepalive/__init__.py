@@ -18,15 +18,16 @@ def main(keepalivetimer: func.TimerRequest) -> None:
     logging.info('[%s] - Health Check fired', utc_timestamp)
     
     if vaul_auth_enabled == 'false':
+        logging.info('[%s] - Checking %s without authentication', utc_timestamp, vault_url)
         keepSiteAlive('')
         return
     
     managed_identity = msal.SystemAssignedManagedIdentity()
-
     app = msal.ManagedIdentityClient(managed_identity, http_client=requests.Session()) 
     result = app.acquire_token_for_client(resource=vault_resource_id)
     
     if "access_token" in result:
+        logging.info('[%s] - Checking %s with authentication', utc_timestamp, vault_url)
         keepSiteAlive(result['access_token'])
     else:
         logging.Error('[%s] - Access Token could not be obtained', utc_timestamp)
