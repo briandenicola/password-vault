@@ -21,11 +21,9 @@ def main(keepalivetimer: func.TimerRequest) -> None:
         keepSiteAlive('')
         return
     
-    managed_identity = msal.SystemAssignedManagedIdentity(
-        http_client=requests.Session(),
-        token_cache=msal.TokenCache() # Let this app (re)use an existing token cache and the TokenCache() is in-memory.
-    )
-    app = msal.ManagedIdentityClient(managed_identity, http_client=requests.Session())
+    managed_identity = msal.SystemAssignedManagedIdentity()
+
+    app = msal.ManagedIdentityClient(managed_identity, http_client=requests.Session()) 
     result = app.acquire_token_for_client(resource=vault_resource_id)
     
     if "access_token" in result:
