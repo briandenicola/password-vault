@@ -5,25 +5,24 @@
     <b-row class="navbar navbar-default">
       <b-col class="col-sm-3 col-md-3 pull-left">
         <div class="table-responsive">
-          <router-link :to="{ name: 'Create' }">Create</router-link> |
-          <a href="#" v-on:click.stop="logOut()">Log Out</a>
+          | <router-link :to="{ name: 'Create' }">New Account</router-link> |
         </div>
       </b-col>
       <b-col class="col-sm-4 col-md-4 pull-right">
+          | <a href="#" v-on:click.stop="logOut()">Sign Out</a> |
+      </b-col>
+    </b-row>
+    
+    <b-row>
+      <b-col md="12" class="col-xs-12">
         <b-form-group horizontal>
           <b-input-group>
-            <b-form-input v-model="filter" placeholder="Search" />
+            <b-form-input v-model="filter" placeholder="Search for Account..." />
             <b-input-group-append>
               <b-btn :disabled="!filter" @click="filter = ''">Clear</b-btn>
             </b-input-group-append>
           </b-input-group>
         </b-form-group>
-      </b-col>
-    </b-row>
-    
-    <b-row>
-      <b-col md="6" class="my-1">
-        <b-pagination :total-rows="totalRows" :per-page="perPage" v-model="currentPage" class="my-0" />
       </b-col>
     </b-row>
 
