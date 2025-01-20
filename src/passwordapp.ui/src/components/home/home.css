@@ -22,7 +22,7 @@
 }
 
 .dark-mode .modal-content {
-    background-color: #3e3e3d;
+    background-color: #121212;
     border-color: black;
     color: white;
 }
@@ -32,15 +32,16 @@
 }
 
 .dark-mode .table-striped tbody tr:nth-of-type(even) {
-    background-color: #3e3e3d !important;
+    background-color: #1E1E1E !important;
 }
 
 .dark-mode .table-striped tbody tr:nth-of-type(odd) {
-    background-color: #2C2C2EFF !important;
+    background-color: #2A2A2A !important;
 }
 
 .dark-mode .table-hover tbody tr:hover {
-    background-color: #5a5a5a;
+    background-color: gray;
+    color: white;
 }
 
 .dark-mode .form-control {
@@ -66,6 +67,6 @@
 }
 
 .dark-mode .card-body {
-    background-color: #3e3e3d;
+    background-color: #121212;
     color: white;
 }
