@@ -24,3 +24,30 @@
 .dark-mode .table {
     color: white;
 }
+
+.dark-mode .form-control {
+    background-color: lightgray;
+    border-color: lightgray;
+    color: white;
+}
+
+.dark-mode .form-control:focus {
+    background-color: lightgray;
+    border-color: lightgray;
+    color: white;
+}
+
+.dark-mode .page-item.active .page-link {
+    background-color: #5a5a5a;
+    border-color: #5a5a5a;
+}
+
+.dark-mode .page-item.disabled .page-link {
+    background-color: lightgray;
+    border-color: lightgray;
+}
+
+.dark-mode .card-body {
+    background-color: #3e3e3d;
+    color: white;
+}
