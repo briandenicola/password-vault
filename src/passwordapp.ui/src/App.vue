@@ -1,4 +1,10 @@
 <template>
+  <div :class="{ 'dark-mode': isDarkMode }">
+    <nav class="navbar">
+      <button class="btn" @click="toggleDarkMode">
+        <font-awesome-icon icon="moon" />
+      </button>
+    </nav>
   <b-container fluid id="app">
     <b-row>
       <b-col />
@@ -9,26 +15,37 @@
       </b-col>
     </b-row>
   </b-container>
+  </div> 
 </template>
 
-<style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-#nav {
-  padding: 30px;
-}
+<script>
+import { ref } from 'vue';
 
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
+export default {
+  setup() {
+    const isDarkMode = ref(localStorage.getItem('darkMode') === 'true');
 
-#nav a.router-link-exact-active {
-  color: #42b983;
-}
+    const toggleDarkMode = () => {
+      isDarkMode.value = !isDarkMode.value;
+      localStorage.setItem('darkMode', isDarkMode.value);
+      if (isDarkMode.value) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    };
+
+    if (isDarkMode.value) {
+      document.body.classList.add('dark-mode');
+    }
+
+    return {
+      isDarkMode,
+      toggleDarkMode,
+    };
+  },
+};
+</script>
+
+<style scoped>
 </style>

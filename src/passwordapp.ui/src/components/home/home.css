@@ -12,3 +12,15 @@
     color: black;
     text-align: center; 
 }
+
+.dark-mode .homeText {
+    color: white;
+}
+
+.dark-mode .my-4 {
+    color: white;
+}
+
+.dark-mode .table {
+    color: white;
+}

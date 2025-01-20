@@ -151,6 +151,8 @@ tasks:
       silent: true
     - cmd: echo VUE_APP_REQUIRES_AUTHENTICATION={{.APP_REQUIRES_AUTHENTICATION}} >> .env
       silent: true
+    - cmd: echo VUE_APP_REQUIRES_APP_INSIGHTS=true >> .env
+      silent: true
     - cmd: echo VUE_APP_INSIGHTS_CONNECTION_STRING=\""{{.APP_INSIGHTS_CONNECTION_STRING}}\"" >> .env
       silent: true
     - cmd: echo VUE_APP_API_ENDPOINT=\"{{.FUNCTION_URL}}\" >> .env

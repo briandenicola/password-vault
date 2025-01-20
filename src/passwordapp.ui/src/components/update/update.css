@@ -8,3 +8,9 @@
   border-radius: 4px;
   box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
 }
+
+.dark-mode .form-wrapper {
+  background-color: #3e3e3d;
+  border: 1px solid #5a5a5a;
+  color: white;
+}
