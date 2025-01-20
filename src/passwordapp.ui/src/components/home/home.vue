@@ -5,11 +5,8 @@
     <b-row class="navbar navbar-default">
       <b-col class="col-sm-3 col-md-3 pull-left">
         <div class="table-responsive">
-          | <router-link :to="{ name: 'Create' }">New Account</router-link> |
+          | <router-link :to="{ name: 'Create' }">New Account</router-link> | <a href="#" v-on:click.stop="logOut()">Sign Out</a> |
         </div>
-      </b-col>
-      <b-col class="col-sm-4 col-md-4 pull-right">
-          | <a href="#" v-on:click.stop="logOut()">Sign Out</a> |
       </b-col>
     </b-row>
     
