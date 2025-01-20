@@ -22,13 +22,17 @@
 }
 
 .dark-mode .modal-content {
-    background-color: black;
+    background-color: #3e3e3d;
     border-color: black;
     color: white;
 }
 
 .dark-mode .table {
     color: white;
+}
+
+.dark-mode .table-hover tbody tr:hover {
+    background-color: #5a5a5a;
 }
 
 .dark-mode .form-control {
