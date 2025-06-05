@@ -7,6 +7,7 @@ API Build & Deployment
 
 # Steps
 - :one: `task deploy-api`          - Builds and deploys the API to Azure Functions
+- :two: Manually add the Azure Static Web Apps Default domain and your Custom Domain to the Azure Functions CORS settings.  This is required for the UI to call the API.
 <p align="right">(<a href="#build">back to top</a>)</p>
 
 

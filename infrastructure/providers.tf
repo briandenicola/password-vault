@@ -6,12 +6,12 @@ terraform {
       version = "~> 4"
     }
   }
-  backend "azurerm" {
-    resource_group_name  = "Core-ResourceGroup"
-    storage_account_name = "denicolafamily"
-    container_name       = "state"
-    key                  = "vault.terraform.tfstate"
-  }
+  # backend "azurerm" {
+  #   resource_group_name  = "Core-ResourceGroup"
+  #   storage_account_name = "denicolafamily"
+  #   container_name       = "state"
+  #   key                  = "vault.terraform.tfstate"
+  # }
 }
 
 provider "azurerm" {

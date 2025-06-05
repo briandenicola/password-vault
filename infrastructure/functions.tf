@@ -44,13 +44,14 @@ resource "azurerm_linux_function_app" "this" {
       use_dotnet_isolated_runtime = true
       dotnet_version              = "8.0"
     }
-    cors  {
-      allowed_origins     = [
-        "https://${azurerm_static_web_app.this.default_host_name}",
-        var.production_ui_url
-      ]
-      support_credentials = false
-    }
+    # Bug in the provider is adding incorrect value for linux_fx_version
+    # cors  {
+    #   allowed_origins     = [
+    #     "https://${azurerm_static_web_app.this.default_host_name}",
+    #     var.production_ui_url
+    #   ]
+    #   support_credentials = false
+    # }
   }
 
   app_settings = {
