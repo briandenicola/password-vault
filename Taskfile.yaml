@@ -28,6 +28,7 @@ tasks:
     - task: init
     - task: keys
     - task: apply
+    - task: cors
 
   init:
     desc: Initialized Terraform
@@ -44,6 +45,20 @@ tasks:
     dir: ./scripts
     cmds:
     - bash ./gen-encryption-keys.sh
+
+  cors:
+    desc: Adds CORS to Azure Functions 
+    dir: ./infrastructure
+    cmds:
+    - az functionapp cors add -g {{.RG}} -n {{.FUNCTION_NAME}} --allowed-origins {{.SWA}}
+    - az functionapp cors add -g {{.RG}} -n {{.FUNCTION_NAME}} --allowed-origins {{.VUE_APP_AAD_REDIRECT_URL}}
+    vars:
+      FUNCTION_NAME: 
+        sh: terraform output -raw FUNCTION_NAME
+      RG:
+        sh: terraform output -raw APP_RESOURCE_GROUP
+      SWA:
+        sh: terraform output -raw SWA_DEFAULT_URL
 
   host-key:
     desc: Displays Azure Functions Host Key
