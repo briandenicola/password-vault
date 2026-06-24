@@ -1,4 +1,4 @@
-ARG VARIANT="8.0-bullseye-slim"
+ARG VARIANT="10.0-bookworm-slim"
 FROM mcr.microsoft.com/devcontainers/dotnet:${VARIANT}
 
 ARG NODE_VERSION="none"

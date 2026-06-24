@@ -1,6 +1,6 @@
 API Build & Deployment
 =============
-* The Vault API is built on dotnet8 and uses Azure Functions with HTTP Triggers.
+* The Vault API is built on dotnet10 and uses Azure Functions with HTTP Triggers.
 * It runs as a serverless API on an Linux based Azure Function
 * The build and deploy is part of the same process.
 * The deployment uploads the published code to an Azure Storage Account and the Function references the code from the storage account using the WEBSITE_RUN_FROM_PACKAGE environment variable.

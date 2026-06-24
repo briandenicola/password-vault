@@ -26,7 +26,7 @@ namespace PasswordService.Common
             byte[] cipherArray;
             using (HMACSHA512 hmac = new HMACSHA512(_key))
             {
-                var plainTextArray = Encoding.ASCII.GetBytes(plainText);
+                var plainTextArray = Encoding.UTF8.GetBytes(plainText);
                 var hash = hmac.ComputeHash(plainTextArray);
                 var salt = GenerateSalt();
 
