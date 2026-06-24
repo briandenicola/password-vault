@@ -24,7 +24,8 @@ Legend — Priority: **P0** do first / **P1** soon / **P2** nice-to-have / **P3*
 > ✅ `FE-4` (reused/duplicate-password Security Audit page),
 > ✅ `FE-1` (live password strength meter on create/update),
 > ✅ `FE-2` (tags + search across account/site/notes/tags + tag filter),
-> ✅ `FE-5` (password-age reminders: age label + stale "Old" badge, configurable threshold).
+> ✅ `FE-5` (password-age reminders: age label + stale "Old" badge, configurable threshold),
+> ✅ `FE-6` (recycle bin: view + restore soft-deleted accounts).
 > New writes are now AES-GCM; legacy `v1` still reads, and existing data can be migrated with `vault-migrate`.
 > Design for `OFF-4` in [`design/e2ee.md`](design/e2ee.md); PRF spike validated on devices.
 
@@ -147,7 +148,7 @@ a few (marked) are easier *after* end-to-end encryption (see Theme 8).
 | FE-3 | P2 | M | **Breach check (HaveIBeenPwned).** Privacy-preserving k-anonymity range API to flag pwned passwords. No secret leaves the client. |
 | FE-4 | P2 | S | ✅ **Done.** **Reused / duplicate password report.** New `/audit` route + **Security Audit** page (linked from the vault nav). Pure, unit-tested grouping logic in `components/audit/reuse.js` (`findReusedPasswords`/`countReusedAccounts`); the page fetches each entry's server-decrypted password (the list returns only encrypted blobs, and AES-GCM gives identical passwords different ciphertext), groups accounts sharing a password, and lists each group with a **Change** action (→ Update page, where the generator lives). Plaintext is dropped right after grouping and never enters reactive state / the DOM. 10 Vitest tests + headless smoke-validated. |
 | FE-5 | P2 | S | ✅ **Done.** **Password age / expiry reminders.** Pure, tested `utils/age.js` (`daysSince`/`monthsSince`/`isStale`/`ageLabel`, injectable "now"). The vault list shows a human age ("3 months", "2 years") under **Last Modified** and an **Old** warning Tag (with tooltip) when an entry is older than the configurable threshold. Threshold lives in settings (`list.staleAfterMonths`, default 24 months; **Never**/6mo/1/2/3yr choices on the Settings page). 15 Vitest tests + headless smoke-validated (only the 1200-day entry flagged). |
-| FE-6 | P2 | M | **Recycle bin / restore.** `isDeleted` already exists in the model but there's no UI to view or restore soft-deleted entries. |
+| FE-6 | P2 | M | ✅ **Done.** **Recycle bin / restore.** Soft-delete already set `isDeleted=true`; now there's a **Recycle Bin** page (`/trash`, linked from the vault nav) to view and recover deleted accounts. New API endpoints: `GET passwords/deleted` (lists soft-deleted entries; literal route beats `{id}`) and `POST passwords/{id}/restore` (clears `isDeleted`, bumps `LastModifiedDate`, upserts via the Cosmos output binding). `Password.Service.js` gains `getDeleted()`/`restore(id)`; the page lists account/site/deleted-date with a per-row **Restore** action that removes the row and confirms. Headless smoke-validated (lists 2 deleted, restore POSTs the right id, row clears). *Note:* this is recovery only — there's no hard "empty trash" yet (the Cosmos output binding upserts, so a true purge needs the Cosmos SDK; tracked as a follow-up). |
 | FE-7 | P2 | M | **TOTP (2FA) secret storage + code generation.** Store TOTP seeds and show rolling 6-digit codes. High family value. |
 | FE-8 | P2 | M | **Import / export.** CSV + Bitwarden/1Password/browser formats — useful for onboarding family members and as an exit hatch. Pairs with the Theme 3 migration work. |
 | FE-9 | P3 | M | **Secure notes / attachments.** Free-form encrypted notes or small files (e.g. recovery codes, passport scans). |

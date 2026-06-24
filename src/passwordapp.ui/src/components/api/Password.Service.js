@@ -35,6 +35,12 @@ export default {
     getHistory(id) {
         return Axios.get(`${API_ENDPOINT}/${id}/history`);
     },
+    getDeleted() {
+        return Axios.get(`${API_ENDPOINT}/deleted`);
+    },
+    restore(id) {
+        return Axios.post(`${API_ENDPOINT}/${id}/restore`);
+    },
     create(data) {
         return Axios.post(API_ENDPOINT, data);
     },
