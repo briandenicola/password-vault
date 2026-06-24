@@ -15,6 +15,7 @@
       </b-col>
     </b-row>
   </b-container>
+    <UpdatePrompt />
   </div> 
 </template>
 
@@ -23,10 +24,12 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { IdleTimer } from '@/components/utils/idle-timer.js';
 import { loadSettings } from '@/components/settings/settings.store.js';
 import Authentication from '@/components/azuread/AzureAD.Authentication.js';
+import UpdatePrompt from '@/components/pwa/update-prompt.vue';
 
 const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
 
 export default {
+  components: { UpdatePrompt },
   setup() {
     const isDarkMode = ref(localStorage.getItem('darkMode') === 'true');
 
