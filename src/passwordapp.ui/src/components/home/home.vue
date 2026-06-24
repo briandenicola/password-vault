@@ -12,9 +12,18 @@
 
     <div class="row">
       <div class="col-12 my-2">
-        <div class="d-flex gap-2">
-          <InputText v-model="filter" placeholder="Search for Account..." class="flex-grow-1" />
-          <Button label="Clear" severity="secondary" :disabled="!filter" @click="filter = ''" />
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <InputText v-model="filter" placeholder="Search account, site, notes, tags..." class="flex-grow-1" />
+          <Select
+            v-model="selectedTag"
+            :options="tagChoices"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="All tags"
+            class="tag-filter"
+            :showClear="true"
+            v-if="allTags.length" />
+          <Button label="Clear" severity="secondary" :disabled="!filter && !selectedTag" @click="filter = ''; selectedTag = null;" />
         </div>
       </div>
     </div>
@@ -35,7 +44,10 @@
           size="small">
           <Column field="accountName" header="Account" sortable>
             <template #body="{ data }">
-              <span class="d-inline-block text-truncate text-lowercase" style="max-width: 200px;">{{ data.accountName }}</span>
+              <div class="d-inline-block text-truncate text-lowercase" style="max-width: 200px;">{{ data.accountName }}</div>
+              <div v-if="tagsOf(data).length" class="mt-1">
+                <Tag v-for="tag in tagsOf(data)" :key="tag" :value="tag" severity="secondary" class="me-1 mb-1" @click.stop="selectedTag = tag" style="cursor: pointer;" />
+              </div>
             </template>
           </Column>
           <Column field="siteName" header="Site" sortable>
@@ -44,7 +56,11 @@
             </template>
           </Column>
           <Column field="lastModifiedDate" header="Last Modified" sortable>
-            <template #body="{ data }">{{ formatDate(data.lastModifiedDate) }}</template>
+            <template #body="{ data }">
+              <div>{{ formatDate(data.lastModifiedDate) }}</div>
+              <small class="text-muted">{{ ageOf(data) }}</small>
+              <Tag v-if="isStaleRow(data)" severity="warn" value="Old" class="ms-1" v-tooltip.top="'This password hasn\'t changed in a while — consider updating it.'" />
+            </template>
           </Column>
           <Column header="Edit/Remove">
             <template #body="{ data }">

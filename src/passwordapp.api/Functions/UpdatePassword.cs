@@ -34,6 +34,7 @@ namespace PasswordService.API
             accountPassword.SiteName = updates.SiteName;
             accountPassword.AccountName = updates.AccountName;
             accountPassword.Notes = updates.Notes; 
+            accountPassword.Tags = updates.Tags;
             accountPassword.SecurityQuestions = updates.SecurityQuestions;
             accountPassword.UpdatePassword(_encryptor, updates.CurrentPassword, accountPassword.LastModifiedDate);
             accountPassword.LastModifiedDate = DateTime.Now;

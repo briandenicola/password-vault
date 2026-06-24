@@ -69,6 +69,10 @@
           <label class="col-3 col-form-label">Rows per page:</label>
           <div class="col"><Select v-model="settings.list.perPage" :options="perPageChoices" size="small" /></div>
         </div>
+        <div class="row mb-2">
+          <label class="col-3 col-form-label">Flag passwords older than:</label>
+          <div class="col"><Select v-model="settings.list.staleAfterMonths" :options="staleChoices" optionLabel="text" optionValue="value" size="small" /></div>
+        </div>
       </div>
     </div>
 

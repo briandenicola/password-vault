@@ -26,6 +26,14 @@
         </div>
 
         <div class="row mb-2">
+          <label class="col-2 col-form-label" for="tags">Tags:</label>
+          <div class="col">
+            <InputText id="tags" v-model="tagsInput" maxlength="200" class="w-100" placeholder="comma,separated,tags" />
+            <small class="text-muted">Separate tags with commas (e.g. email, finance).</small>
+          </div>
+        </div>
+
+        <div class="row mb-2">
           <label class="col-2 col-form-label" for="securityQuestion1">Question #1:</label>
           <div class="col"><InputText id="securityQuestion1" v-model="formData.securityQuestions[0].question" maxlength="100" class="w-100" /></div>
         </div>

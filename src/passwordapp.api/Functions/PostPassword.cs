@@ -29,6 +29,7 @@ namespace PasswordService.API
             accountPassword.SiteName            = postedPassword.SiteName;
             accountPassword.AccountName         = postedPassword.AccountName;
             accountPassword.Notes               = postedPassword?.Notes;
+            accountPassword.Tags                = postedPassword?.Tags;
             accountPassword.SecurityQuestions   = postedPassword?.SecurityQuestions;
             accountPassword.LastModifiedBy      = accountPassword.CreatedBy   = postedPassword?.CreatedBy;
             accountPassword.LastModifiedDate    = accountPassword.CreatedDate = DateTime.Now;
