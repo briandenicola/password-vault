@@ -10,8 +10,8 @@ let pendingClear = null;
 export function copyWithAutoClear(text, seconds, deps = {}) {
   const {
     clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : undefined,
-    setTimer = setTimeout,
-    clearTimer = clearTimeout,
+    setTimer = (fn, ms) => setTimeout(fn, ms),
+    clearTimer = (id) => clearTimeout(id),
   } = deps;
 
   if (!clipboard || typeof clipboard.writeText !== 'function') {

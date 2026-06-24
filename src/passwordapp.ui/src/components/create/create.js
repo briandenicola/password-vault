@@ -11,12 +11,21 @@ export default {
       alertModalTitle: '',
       alertModalContent: '',
       isSuccessfully: false,
+      showAlertModal: false,
     };
   },
   methods: {
     onGenerated(password) {
       this.formData.currentPassword = password;
     },
+    onAlertOk() {
+
+      this.showAlertModal = false;
+
+      this.onAlertModalOkClick();
+
+    },
+
     onAlertModalOkClick() {
       if (this.isSuccessfully) {
         this.$router.push({ name: 'Home' });
@@ -28,14 +37,14 @@ export default {
         this.isSuccessfully = true;
         this.alertModalTitle = 'Successfully';
         this.alertModalContent = 'Successfully created Account / Password';
-        this.$refs.alertModal.show();
+        this.showAlertModal = true;
         this.formData = PasswordService.newPassword();
         
       }).catch((error) => {
         this.isSuccessfully = false;
         this.alertModalTitle = 'Error';
         this.alertModalContent = "Got an error " + error.response.data;
-        this.$refs.alertModal.show();
+        this.showAlertModal = true;
       });
     },
   },

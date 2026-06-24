@@ -2,166 +2,120 @@
  <div>
     <h1 class="homeText">Password Vault</h1>
     <br/>
-    <b-row class="navbar navbar-default">
-      <b-col class="col-sm-3 col-md-3 pull-left">
+    <div class="row navbar navbar-default">
+      <div class="col-sm-12">
         <div class="table-responsive">
           | <router-link :to="{ name: 'Create' }">New Account</router-link> | <router-link :to="{ name: 'Settings' }">Settings</router-link> | <a href="#" v-on:click.stop="logOut()">Sign Out</a> |
         </div>
-      </b-col>
-    </b-row>
-    
-    <b-row>
-      <b-col md="12" class="col-xs-12">
-        <b-form-group horizontal>
-          <b-input-group>
-            <b-form-input v-model="filter" placeholder="Search for Account..." />
-            <b-input-group-append>
-              <b-btn :disabled="!filter" @click="filter = ''">Clear</b-btn>
-            </b-input-group-append>
-          </b-input-group>
-        </b-form-group>
-      </b-col>
-    </b-row>
+      </div>
+    </div>
 
-    <b-row>
-      <b-col md="12">
-        <b-table
-          :sort-by.sync="sortBy"
-          :sort-desc.sync="sortDesc"
-          stacked="sm"
-          centered
-          striped
-          hover
-          bordered
-          small
-          :current-page="currentPage"
-          :per-page="perPage"
-          :filter="filter"
-          @filtered="onFiltered"
-          :items="passwords"
-          :fields="fields"
-          v-model="currentAccounts">
-          <template v-slot:cell(accountName)="data">
-            <span class="d-inline-block text-truncate text-lowercase" style="max-width: 200px;">{{data.item.accountName}}</span>
-          </template>          
-          <template v-slot:cell(siteName)="data">
-            <span class="d-inline-block text-truncate text-lowercase" style="max-width: 250px;">{{data.item.siteName}}</span>
-          </template>
-          <template v-slot:cell(lastModifiedDate)="data">
-            {{ formatDate(data.item.lastModifiedDate) }}
-          </template>
-          <template v-slot:cell(edit)="data">
-            <b-button size="sm" 
-              variant="success"
-              @click.stop="copyPassword(data.item.id)"><font-awesome-icon icon="copy" ></font-awesome-icon></b-button> |
-            <b-button
-              size="sm"
-              variant="primary"
-              @click.stop="displayPassword(data.item.id)"><font-awesome-icon icon="info" ></font-awesome-icon></b-button> |              
-            <b-button
-              size="sm"
-              variant="info"
-              @click.stop="updatePassword(data.item.id)"><font-awesome-icon icon="user-edit" ></font-awesome-icon></b-button> |
-            <b-button 
-              size="sm"
-              variant="dark"
-              @click.stop="toggleDetails(data.item)"><font-awesome-icon icon="bars" /></b-button> |              
-            <b-button
-              size="sm"
-              variant="warning"
-              @click.stop="showHistory(data.item.id)"><font-awesome-icon :icon="['fas', 'clock-rotate-left']" ></font-awesome-icon></b-button> |
-            <b-button
-              size="sm"
-              variant="danger"
-              @click.stop="deletePassword(data.item.id)"><font-awesome-icon icon="trash-alt" ></font-awesome-icon></b-button>             
-          </template>          
-          <template v-slot:row-details="{ item }">
-            <b-card class="text-left">
-              <b-card class="text-left">
-                <b-row class="mb-2">
-                  <b-col><b>Site:</b></b-col>
-                  <b-col>{{ item.siteName }}</b-col>
-                </b-row>            
-                <b-row class="mb-2">
-                  <b-col><b>Created By:</b></b-col>
-                  <b-col>{{ item.createdBy }}</b-col>
-                </b-row>
-                <b-row class="mb-2">
-                  <b-col><b>Updated By:</b></b-col>
-                  <b-col>{{ item.lastModifiedBy }}</b-col>
-                </b-row>
-                <b-row class="mb-2">
-                  <b-col><b>Security Questions:</b></b-col>
-                  <b-col></b-col>
-                </b-row>
-                <span class="mb-2" v-for="securityQuestion in item.securityQuestions" :key="securityQuestion" >
-                  <b-row class="mb-2" v-if="securityQuestion.question !== '' && securityQuestion.answer !== '' " >
-                    <b-col><i>{{securityQuestion.question}}</i>: </b-col>
-                    <b-col>{{securityQuestion.answer}}</b-col>
-                  </b-row>
+    <div class="row">
+      <div class="col-12 my-2">
+        <div class="d-flex gap-2">
+          <InputText v-model="filter" placeholder="Search for Account..." class="flex-grow-1" />
+          <Button label="Clear" severity="secondary" :disabled="!filter" @click="filter = ''" />
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <DataTable
+          :value="filteredPasswords"
+          dataKey="id"
+          v-model:expandedRows="expandedRows"
+          paginator
+          :rows="perPage"
+          :rowsPerPageOptions="[5, 10, 20, 50, 100]"
+          :sortField="sortBy"
+          :sortOrder="sortDesc ? -1 : 1"
+          stripedRows
+          responsiveLayout="stack"
+          size="small">
+          <Column field="accountName" header="Account" sortable>
+            <template #body="{ data }">
+              <span class="d-inline-block text-truncate text-lowercase" style="max-width: 200px;">{{ data.accountName }}</span>
+            </template>
+          </Column>
+          <Column field="siteName" header="Site" sortable>
+            <template #body="{ data }">
+              <span class="d-inline-block text-truncate text-lowercase" style="max-width: 250px;">{{ data.siteName }}</span>
+            </template>
+          </Column>
+          <Column field="lastModifiedDate" header="Last Modified" sortable>
+            <template #body="{ data }">{{ formatDate(data.lastModifiedDate) }}</template>
+          </Column>
+          <Column header="Edit/Remove">
+            <template #body="{ data }">
+              <div class="d-flex flex-wrap gap-1">
+                <Button size="small" severity="success" @click.stop="copyPassword(data.id)" v-tooltip.top="'Copy'"><font-awesome-icon icon="copy" /></Button>
+                <Button size="small" @click.stop="displayPassword(data.id)" v-tooltip.top="'Reveal'"><font-awesome-icon icon="info" /></Button>
+                <Button size="small" severity="info" @click.stop="updatePassword(data.id)" v-tooltip.top="'Edit'"><font-awesome-icon icon="user-edit" /></Button>
+                <Button size="small" severity="contrast" @click.stop="toggleDetails(data)" v-tooltip.top="'Details'"><font-awesome-icon icon="bars" /></Button>
+                <Button size="small" severity="warn" @click.stop="showHistory(data.id)" v-tooltip.top="'History'"><font-awesome-icon :icon="['fas', 'clock-rotate-left']" /></Button>
+                <Button size="small" severity="danger" @click.stop="deletePassword(data.id)" v-tooltip.top="'Delete'"><font-awesome-icon icon="trash-alt" /></Button>
+              </div>
+            </template>
+          </Column>
+          <template #expansion="{ data }">
+            <div class="card text-start">
+              <div class="card-body">
+                <div class="row mb-2"><div class="col"><b>Site:</b></div><div class="col">{{ data.siteName }}</div></div>
+                <div class="row mb-2"><div class="col"><b>Created By:</b></div><div class="col">{{ data.createdBy }}</div></div>
+                <div class="row mb-2"><div class="col"><b>Updated By:</b></div><div class="col">{{ data.lastModifiedBy }}</div></div>
+                <div class="row mb-2"><div class="col"><b>Security Questions:</b></div><div class="col"></div></div>
+                <span class="mb-2" v-for="securityQuestion in data.securityQuestions" :key="securityQuestion.question">
+                  <div class="row mb-2" v-if="securityQuestion.question !== '' && securityQuestion.answer !== ''">
+                    <div class="col"><i>{{ securityQuestion.question }}</i>:</div>
+                    <div class="col">{{ securityQuestion.answer }}</div>
+                  </div>
                 </span>
-                <b-row class="mb-2">
-                  <b-col><b>Notes:</b></b-col>
-                  <b-col>{{ item.notes }}</b-col>
-                </b-row>
-              </b-card>         
-            </b-card>
-          </template>          
-        </b-table>
-      </b-col>  
-    </b-row>
+                <div class="row mb-2"><div class="col"><b>Notes:</b></div><div class="col">{{ data.notes }}</div></div>
+              </div>
+            </div>
+          </template>
+        </DataTable>
+      </div>
+    </div>
 
-    <b-row>
-      <b-col md="6" class="my-1">
-        <b-pagination :total-rows="totalRows" :per-page="perPage" v-model="currentPage" class="my-0" />
-      </b-col>
-    </b-row>
-
-    <b-modal
-      ref="deleteConfirmModal"
-      title="Confirm your action"
-      @ok="onDeleteConfirm"
-      @hide="onDeleteModalHide">
+    <Dialog v-model:visible="showDeleteModal" modal header="Confirm your action" :style="{ width: '30rem' }">
       <p class="my-4">Are you sure you want to delete this account?</p>
-    </b-modal>
- 
-    <b-modal
-      ref="alertModal"
-      :title="alertModalTitle"
-      :ok-only="true">
-      <p class="my-4 text-monospace">{{alertModalContent}}</p>
-    </b-modal>
+      <template #footer>
+        <Button label="Cancel" severity="secondary" @click="onDeleteCancel" />
+        <Button label="Delete" severity="danger" @click="onDeleteConfirm" />
+      </template>
+    </Dialog>
 
-    <b-modal
-      ref="historyModal"
-      title="Password History"
-      size="lg"
-      :ok-only="true">
+    <Dialog v-model:visible="showAlertModal" modal :header="alertModalTitle" :style="{ width: '30rem' }">
+      <p class="my-4 font-monospace">{{ alertModalContent }}</p>
+      <template #footer>
+        <Button label="OK" @click="showAlertModal = false" />
+      </template>
+    </Dialog>
+
+    <Dialog v-model:visible="showHistoryModal" modal header="Password History" :style="{ width: '50rem' }">
       <p v-if="history.length === 0" class="my-4">No password history is available for this account.</p>
-      <b-table
-        v-else
-        stacked="sm"
-        striped
-        hover
-        bordered
-        small
-        :items="history"
-        :fields="historyFields">
-        <template v-slot:cell(timeStamp)="data">
-          {{ formatDate(data.item.timeStamp) }}
-          <b-badge v-if="data.index === 0" variant="success" class="ml-1">Current</b-badge>
-        </template>
-        <template v-slot:cell(password)="data">
-          <span class="text-monospace">{{ data.item.password }}</span>
-        </template>
-        <template v-slot:cell(copy)="data">
-          <b-button
-            size="sm"
-            variant="success"
-            @click.stop="copyText(data.item.password)"><font-awesome-icon icon="copy" ></font-awesome-icon></b-button>
-        </template>
-      </b-table>
-    </b-modal>
+      <DataTable v-else :value="history" stripedRows size="small" responsiveLayout="stack">
+        <Column header="When">
+          <template #body="{ data, index }">
+            {{ formatDate(data.timeStamp) }}
+            <Tag v-if="index === 0" severity="success" value="Current" class="ms-1" />
+          </template>
+        </Column>
+        <Column header="Password">
+          <template #body="{ data }"><span class="font-monospace">{{ data.password }}</span></template>
+        </Column>
+        <Column header="">
+          <template #body="{ data }">
+            <Button size="small" severity="success" @click.stop="copyText(data.password)"><font-awesome-icon icon="copy" /></Button>
+          </template>
+        </Column>
+      </DataTable>
+      <template #footer>
+        <Button label="OK" @click="showHistoryModal = false" />
+      </template>
+    </Dialog>
 
   </div>
 </template>

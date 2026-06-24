@@ -1,170 +1,84 @@
 <template>
-  <b-container fluid>
+  <div class="container-fluid">
     <div class="form-wrapper">
-      <b-form @submit.prevent="updatePassword">
-        <b-form-group 
-          :label-cols="2" 
-          breakpoint="md" 
-          horizontal 
-          label="Account Name:"
-          for="accountName">
-          <b-col sm="auto">
-            <b-input 
-              id="accountName" 
-              v-model="formData.accountName" 
-              maxlength="60" 
-              required />
-          </b-col>
-        </b-form-group>
- 
-        <b-form-group
-          :label-cols="2"
-          breakpoint="md"
-          horizontal
-          label="Site Name:"
-          for="siteName">
-          <b-col sm="auto">
-            <b-input
-              id="siteName"
-              v-model="formData.siteName"
-              maxlength="100"
-              required />
-          </b-col>
-        </b-form-group>
- 
-        <b-form-group
-          :label-cols="2"
-          breakpoint="md"
-          horizontal
-          label="Password:"
-          for="currentPassword">
-          <b-col sm="auto">
-            <b-input
-              id="currentPassword"
-              v-model="formData.currentPassword"
-              maxlength="100"
-              required />
+      <form @submit.prevent="updatePassword">
+        <div class="row mb-2">
+          <label class="col-2 col-form-label" for="accountName">Account Name:</label>
+          <div class="col">
+            <InputText id="accountName" v-model="formData.accountName" maxlength="60" required class="w-100" />
+          </div>
+        </div>
+
+        <div class="row mb-2">
+          <label class="col-2 col-form-label" for="siteName">Site Name:</label>
+          <div class="col">
+            <InputText id="siteName" v-model="formData.siteName" maxlength="100" required class="w-100" />
+          </div>
+        </div>
+
+        <div class="row mb-2">
+          <label class="col-2 col-form-label" for="currentPassword">Password:</label>
+          <div class="col">
+            <InputText id="currentPassword" v-model="formData.currentPassword" maxlength="100" required class="w-100" />
             <password-generator class="mt-2" @generated="onGenerated" />
-          </b-col>
-        </b-form-group>
- 
-        <b-form-group
-          :label-cols="2"
-          breakpoint="md"
-          horizontal
-          label="Question #1:"
-          for="securityQuestion1">
-          <b-col sm="auto">
-            <b-input
-              id="securityQuestion1"
-              v-model="formData.securityQuestions[0].question"
-              maxlength="100" />
-          </b-col>
-        </b-form-group>
+          </div>
+        </div>
 
-        <b-form-group
-          :label-cols="2"
-          breakpoint="md"
-          horizontal
-          label="Answer #1:"
-          for="securityAnswer1">
-          <b-col sm="auto">
-            <b-input
-              id="securityAnswer1"
-              v-model="formData.securityQuestions[0].answer"
-              maxlength="500" />
-          </b-col>
-        </b-form-group>
+        <div class="row mb-2">
+          <label class="col-2 col-form-label" for="securityQuestion1">Question #1:</label>
+          <div class="col"><InputText id="securityQuestion1" v-model="formData.securityQuestions[0].question" maxlength="100" class="w-100" /></div>
+        </div>
+        <div class="row mb-2">
+          <label class="col-2 col-form-label" for="securityAnswer1">Answer #1:</label>
+          <div class="col"><InputText id="securityAnswer1" v-model="formData.securityQuestions[0].answer" maxlength="500" class="w-100" /></div>
+        </div>
+        <div class="row mb-2">
+          <label class="col-2 col-form-label" for="securityQuestion2">Question #2:</label>
+          <div class="col"><InputText id="securityQuestion2" v-model="formData.securityQuestions[1].question" maxlength="100" class="w-100" /></div>
+        </div>
+        <div class="row mb-2">
+          <label class="col-2 col-form-label" for="securityAnswer2">Answer #2:</label>
+          <div class="col"><InputText id="securityAnswer2" v-model="formData.securityQuestions[1].answer" maxlength="500" class="w-100" /></div>
+        </div>
+        <div class="row mb-2">
+          <label class="col-2 col-form-label" for="securityQuestion3">Question #3:</label>
+          <div class="col"><InputText id="securityQuestion3" v-model="formData.securityQuestions[2].question" maxlength="100" class="w-100" /></div>
+        </div>
+        <div class="row mb-2">
+          <label class="col-2 col-form-label" for="securityAnswer3">Answer #3:</label>
+          <div class="col"><InputText id="securityAnswer3" v-model="formData.securityQuestions[2].answer" maxlength="500" class="w-100" /></div>
+        </div>
 
-        <b-form-group
-          :label-cols="2"
-          breakpoint="md"
-          horizontal
-          label="Question #2:"
-          for="securityQuestion2">
-          <b-col sm="auto">
-            <b-input
-              id="securityQuestion2"
-              v-model="formData.securityQuestions[1].question"
-              maxlength="100" />
-          </b-col>
-        </b-form-group>
+        <div class="row mb-2">
+          <label class="col-2 col-form-label" for="notes">Notes:</label>
+          <div class="col"><Textarea id="notes" v-model="formData.notes" maxlength="5000" :rows="5" class="w-100" /></div>
+        </div>
 
-        <b-form-group
-          :label-cols="2"
-          breakpoint="md"
-          horizontal
-          label="Answer #2:"
-          for="securityAnswer2">
-          <b-col sm="auto">
-            <b-input
-              id="securityAnswer2"
-              v-model="formData.securityQuestions[1].answer"
-              maxlength="500"/>
-          </b-col>
-        </b-form-group>
+        <div class="row mb-2">
+          <label class="col-2 col-form-label" for="createdBy">Created By:</label>
+          <div class="col"><InputText id="createdBy" v-model="formData.createdBy" maxlength="100" readonly class="w-100" /></div>
+        </div>
+        <div class="row mb-2">
+          <label class="col-2 col-form-label" for="updatedBy">Last Updated By:</label>
+          <div class="col"><InputText id="updatedBy" v-model="formData.lastModifiedBy" maxlength="100" readonly class="w-100" /></div>
+        </div>
 
-        <b-form-group
-          :label-cols="2"
-          breakpoint="md"
-          horizontal
-          label="Question #3:"
-          for="securityQuestion3">
-          <b-col sm="auto">
-            <b-input
-              id="securityQuestion3"
-              v-model="formData.securityQuestions[2].question"
-              maxlength="100" />
-          </b-col>
-        </b-form-group>
-
-        <b-form-group
-          :label-cols="2"
-          breakpoint="md"
-          horizontal
-          label="Answer #3:"
-          for="securityAnswer3">
-          <b-col sm="auto">
-            <b-input
-              id="securityAnswer3"
-              v-model="formData.securityQuestions[2].answer"
-              maxlength="500" />
-          </b-col>
-        </b-form-group>
-
-        <b-form-group
-          :label-cols="2"
-          breakpoint="md"
-          horizontal
-          label="Notes:"
-          for="notes">
-          <b-col sm="auto">
-            <b-form-textarea
-              id="notes"
-              v-model="formData.notes"
-              maxlength="5000"
-              :rows="5"
-              :max-rows="25"/>
-          </b-col>
-        </b-form-group>
-            
-        <b-row>
-          <b-col sm="auto" align-h="end">
-            <b-button size="sm" type="submit" variant="info">Save</b-button> |
-            <b-button size="sm" :to="{ name: 'Home' }" variant="danger">Cancel</b-button>
-          </b-col>
-        </b-row>
-      </b-form>
+        <div class="row">
+          <div class="col d-flex justify-content-end gap-2">
+            <Button size="small" type="submit" severity="info" label="Save" />
+            <Button size="small" severity="danger" label="Cancel" @click="$router.push({ name: 'Home' })" />
+          </div>
+        </div>
+      </form>
     </div>
 
-    <b-modal
-      ref="alertModal"
-      :title="alertModalTitle"
-      :ok-only="true"
-      @ok="onAlertModalOkClick">
+    <Dialog v-model:visible="showAlertModal" modal :header="alertModalTitle" :style="{ width: '30rem' }">
       <p class="my-4">{{ alertModalContent }}</p>
-    </b-modal> 
-  </b-container>
+      <template #footer>
+        <Button label="OK" @click="onAlertOk" />
+      </template>
+    </Dialog>
+  </div>
 </template>
 
 <style src="./update.css" />

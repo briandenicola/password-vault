@@ -103,4 +103,16 @@ describe('AzureAD.Authentication (MSAL v5)', () => {
     await Authentication.signOut();
     expect(fake.lastLogout).toEqual({ account });
   });
+
+  it('still resolves init (so the app can mount) when handleRedirectPromise rejects', async () => {
+    // Reproduces the no_token_request_cache_error path: a stale/failed redirect must
+    // not block bootstrap. The cached account should still be adopted.
+    const account = { username: 'cached@example.com' };
+    const fake = makeFakeMsal({ accounts: [account] });
+    fake.handleRedirectPromise = async () => { throw new Error('no_token_request_cache_error'); };
+    Authentication._setAuthService(fake);
+    await expect(Authentication.initialize()).resolves.toBeUndefined();
+    expect(Authentication.isAuthenticated()).toBe(true);
+    expect(Authentication.getUserProfile()).toBe('cached@example.com');
+  });
 });

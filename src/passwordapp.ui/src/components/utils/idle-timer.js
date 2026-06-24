@@ -5,7 +5,7 @@
 // timer entirely. Timer functions are injectable for deterministic testing.
 
 export class IdleTimer {
-  constructor({ timeoutMs, onIdle, setTimer = setTimeout, clearTimer = clearTimeout }) {
+  constructor({ timeoutMs, onIdle, setTimer = (fn, ms) => setTimeout(fn, ms), clearTimer = (id) => clearTimeout(id) }) {
     this.timeoutMs = Number(timeoutMs) || 0;
     this.onIdle = onIdle;
     this.setTimer = setTimer;
