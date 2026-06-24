@@ -1,9 +1,14 @@
-﻿namespace PasswordService.Models
+﻿using PasswordService.Common;
+
+namespace PasswordService.Models
 {
     public class PasswordEntity
     {
         public string? EncryptedPassword { get; set;}
         public string? HmacHash { get; set; }
+
+        /// <summary>The on-disk format this entity was parsed from (MIG-1). Defaults to legacy v1.</summary>
+        public SecretFormat Format { get; private set; } = SecretFormat.V1CbcHmac;
 
         public PasswordEntity()
         {
@@ -12,9 +17,10 @@
 
         public PasswordEntity( string encryptedPassword ) 
         {
-            var cipherText = encryptedPassword.Split(':');
-            EncryptedPassword = cipherText[1];
-            HmacHash = cipherText[0];
+            var envelope = SecretEnvelope.Parse(encryptedPassword);
+            Format = envelope.Format;
+            EncryptedPassword = envelope.Ciphertext;
+            HmacHash = envelope.HmacHash;
         }
 
         public PasswordEntity( string hmacHash, string encryptedPassword ) 
@@ -25,7 +31,7 @@
 
         public override string ToString() 
         {
-            return $"{ HmacHash }:{ EncryptedPassword }";
+            return SecretEnvelope.FromV1(HmacHash ?? string.Empty, EncryptedPassword ?? string.Empty).Serialize();
         }
     }
 
