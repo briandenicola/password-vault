@@ -28,6 +28,12 @@ export default {
       selectedPasswordId: null,
       alertModalTitle:    '',
       alertModalContent:  '',
+      history:            [],
+      historyFields: [
+        { key: 'timeStamp', label: 'When',     sortable: false },
+        { key: 'password',  label: 'Password', sortable: false },
+        { key: 'copy',      label: '' },
+      ],
     };
   },
 
@@ -82,6 +88,31 @@ export default {
         this.alertModalContent = response.data.currentPassword;
         this.$refs.alertModal.show();
       });
+    },
+    showHistory(passwordId) {
+      PasswordService.getHistory(passwordId)
+      .then((response) => {
+        this.history = response.data;
+        this.$refs.historyModal.show();
+      })
+      .catch((error) => {
+        this.alertModalTitle = 'Error. . .';
+        this.alertModalContent = 'Unable to load password history: ' + error;
+        this.$refs.alertModal.show();
+      });
+    },
+    copyText(text) {
+      try {
+        navigator.clipboard.writeText(text);
+        this.alertModalTitle = 'Success. . .';
+        this.alertModalContent = 'Password Copied to Clipboard';
+        this.$refs.alertModal.show();
+      }
+      catch(err) {
+        this.alertModalTitle = 'Error. . .';
+        this.alertModalContent = "Copy failed with error: " + err;
+        this.$refs.alertModal.show();
+      }
     },
     copyPassword(passwordId) {
       try {

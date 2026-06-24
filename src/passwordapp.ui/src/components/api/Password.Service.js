@@ -31,6 +31,9 @@ export default {
             throw error;
         }
     },
+    getHistory(id) {
+        return Axios.get(`${API_ENDPOINT}/${id}/history`);
+    },
     create(data) {
         return Axios.post(API_ENDPOINT, data);
     },

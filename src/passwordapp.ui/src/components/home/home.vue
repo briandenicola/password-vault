@@ -68,6 +68,10 @@
               @click.stop="toggleDetails(data.item)"><font-awesome-icon icon="bars" /></b-button> |              
             <b-button
               size="sm"
+              variant="warning"
+              @click.stop="showHistory(data.item.id)"><font-awesome-icon :icon="['fas', 'clock-rotate-left']" ></font-awesome-icon></b-button> |
+            <b-button
+              size="sm"
               variant="danger"
               @click.stop="deletePassword(data.item.id)"><font-awesome-icon icon="trash-alt" ></font-awesome-icon></b-button>             
           </template>          
@@ -126,6 +130,37 @@
       :title="alertModalTitle"
       :ok-only="true">
       <p class="my-4 text-monospace">{{alertModalContent}}</p>
+    </b-modal>
+
+    <b-modal
+      ref="historyModal"
+      title="Password History"
+      size="lg"
+      :ok-only="true">
+      <p v-if="history.length === 0" class="my-4">No password history is available for this account.</p>
+      <b-table
+        v-else
+        stacked="sm"
+        striped
+        hover
+        bordered
+        small
+        :items="history"
+        :fields="historyFields">
+        <template v-slot:cell(timeStamp)="data">
+          {{ formatDate(data.item.timeStamp) }}
+          <b-badge v-if="data.index === 0" variant="success" class="ml-1">Current</b-badge>
+        </template>
+        <template v-slot:cell(password)="data">
+          <span class="text-monospace">{{ data.item.password }}</span>
+        </template>
+        <template v-slot:cell(copy)="data">
+          <b-button
+            size="sm"
+            variant="success"
+            @click.stop="copyText(data.item.password)"><font-awesome-icon icon="copy" ></font-awesome-icon></b-button>
+        </template>
+      </b-table>
     </b-modal>
 
   </div>
