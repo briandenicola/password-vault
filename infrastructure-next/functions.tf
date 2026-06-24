@@ -1,0 +1,72 @@
+resource "azurerm_service_plan" "this" {
+  name                = local.functions_host_plan_name
+  resource_group_name = azurerm_resource_group.this.name
+  location            = azurerm_resource_group.this.location
+  os_type             = "Linux"
+  sku_name            = "Y1"
+}
+
+resource "azurerm_user_assigned_identity" "functions_identity" {
+  name                = "${local.functions_name}-identity"
+  resource_group_name = azurerm_resource_group.this.name
+  location            = azurerm_resource_group.this.location
+}
+
+resource "azurerm_linux_function_app" "this" {
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
+  name                          = local.functions_name
+  resource_group_name           = azurerm_resource_group.this.name
+  location                      = azurerm_resource_group.this.location
+  service_plan_id               = azurerm_service_plan.this.id
+  https_only                    = true
+  enabled                       = true
+  public_network_access_enabled = true
+
+  identity {
+    type = "SystemAssigned, UserAssigned"
+    identity_ids = [
+      azurerm_user_assigned_identity.functions_identity.id
+    ]
+  }
+
+  storage_account_name            = azurerm_storage_account.this.name
+  storage_uses_managed_identity   = true
+  key_vault_reference_identity_id = azurerm_user_assigned_identity.functions_identity.id
+
+  site_config {
+    use_32_bit_worker = false
+    application_stack {
+      use_dotnet_isolated_runtime = true
+      dotnet_version              = "10.0"
+    }
+  }
+
+  app_settings = {
+    CosmosDB                               = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.cosmosdb_connection_string.id})"
+    COSMOS_DATABASE_NAME                   = local.cosmosdb_database_name
+    COSMOS_COLLECTION_NAME                 = local.cosmosdb_collections_name
+    COSMOS_PARTITION_KEY                   = "Passwords"
+    COSMOS_KEY_COLLECTION_NAME             = local.cosmosdb_vaultkeys_name
+    COSMOS_KEY_PARTITION_KEY               = "VaultKeys"
+    E2EE_ENABLED                           = var.app_e2ee_enabled ? "true" : "false"
+    AUTH_ENABLED                           = var.app_requires_authentication ? "true" : "false"
+    AAD_TENANT_ID                          = var.aad_tenant_id
+    AAD_AUDIENCE                           = var.aad_audience
+    AAD_ALLOWED_OIDS                       = var.aad_allowed_oids
+    WEBAUTHN_RP_ID                         = var.webauthn_rp_id
+    WEBSITE_USE_PLACEHOLDER_DOTNETISOLATED = 1
+    WEBSITE_RUN_FROM_PACKAGE               = "${azurerm_storage_account.this.primary_blob_endpoint}${local.app_container_name}/vault.zip"
+    APPLICATIONINSIGHTS_CONNECTION_STRING  = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.appinsights_connection_string.id})"
+    APPINSIGHTS_INSTRUMENTATIONKEY         = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.appinsights_key.id})"
+  }
+}
+
+data "azurerm_function_app_host_keys" "host_key" {
+  depends_on          = [azurerm_linux_function_app.this]
+  name                = local.functions_name
+  resource_group_name = azurerm_resource_group.this.name
+}
