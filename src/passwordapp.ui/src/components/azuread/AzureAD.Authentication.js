@@ -1,6 +1,12 @@
 import * as msal from "@azure/msal-browser";
 
-let username = "";
+// MSAL v5 requires an explicit, awaited `initialize()` before any other call, and the
+// redirect response must be processed (handleRedirectPromise) before the app decides
+// whether the user is signed in. The previous implementation kicked these off at module
+// load without awaiting them, so on the initial page load (and on the redirect back from
+// Entra) the app could mount before the account was known -- the long-standing
+// "does not handle initial page load properly" bug (UI-3). We now memoize a single
+// initialization promise and require callers to await it.
 
 const msalConfig = {
   auth: {
@@ -11,100 +17,100 @@ const msalConfig = {
   cache: {
     cacheLocation: "localStorage",
     storeAuthStateInCookie: false,
-  }
+  },
 };
 
-function handleRedirectResponse(resp) {
-  if (resp !== null) {
-    username = resp.account.username;
-  } else {
-    const currentAccounts = authService.getAllAccounts();
-    if (!currentAccounts) {
-      return; 
-    } else if (currentAccounts.length >= 1) {
-      username = currentAccounts[0].username;
+// Injectable for tests; defaults to a real PublicClientApplication.
+let authService = new msal.PublicClientApplication(msalConfig);
+let initialization = null;
+
+function applyActiveAccount(redirectResponse) {
+  if (redirectResponse && redirectResponse.account) {
+    authService.setActiveAccount(redirectResponse.account);
+    return;
+  }
+  if (!authService.getActiveAccount()) {
+    const accounts = authService.getAllAccounts();
+    if (accounts && accounts.length > 0) {
+      authService.setActiveAccount(accounts[0]);
     }
   }
 }
 
-//Still does not handle inital page load properly 
-const authService = new msal.PublicClientApplication(msalConfig);
-authService.handleRedirectPromise().then(handleRedirectResponse).catch((error) => {
-  console.log(error);
-});
+function ensureInitialized() {
+  if (!initialization) {
+    initialization = (async () => {
+      await authService.initialize();
+      const redirectResponse = await authService.handleRedirectPromise();
+      applyActiveAccount(redirectResponse);
+    })();
+  }
+  return initialization;
+}
 
-export default {
-
+const api = {
   tokenRequest: {
-    scopes: [process.env.VUE_APP_AAD_SCOPE]
+    scopes: [process.env.VUE_APP_AAD_SCOPE],
   },
 
   loginRequest: {
-    scopes: ["User.Read"]
+    scopes: ["User.Read"],
   },
 
-  initialize() {
-    const currentAccounts = authService.getAllAccounts();
-    if (!currentAccounts) {
-      return; 
-    } else if (currentAccounts.length >= 1) {
-      username = currentAccounts[0].username;
-    }
+  // Awaitable bootstrap. Safe to call multiple times; work happens once.
+  async initialize() {
+    await ensureInitialized();
   },
 
   isAuthenticated() {
-    if (username === "") {
-      return false;
-    }
-
-    let user = authService.getAccountByUsername(username);
-    if (!user || user.length < 1) {
-      return false;
-    }
-
-    return true;
+    return authService.getActiveAccount() !== null;
   },
 
   getUserProfile() {
-    return username;
+    const account = authService.getActiveAccount();
+    return account ? account.username : "";
   },
 
   async signIn() {
+    await ensureInitialized();
     await authService.loginRedirect(this.loginRequest);
   },
 
-  signOut() {
-    const logoutRequest = {
-      account: authService.getAccountByUsername(username)
-    };
-
-    authService.logoutRedirect(logoutRequest);
+  async signOut() {
+    await ensureInitialized();
+    await authService.logoutRedirect({ account: authService.getActiveAccount() });
   },
 
   async getTokenRedirect(request) {
-    request.account = authService.getAccountByUsername(username);
-    
-    try
-    {
-      var token = await authService.acquireTokenSilent(request); 
-      return token;
+    await ensureInitialized();
+    const account = authService.getActiveAccount();
+    if (!account) {
+      return null;
     }
-    catch(error) 
-    {
+
+    try {
+      return await authService.acquireTokenSilent({ ...request, account });
+    } catch (error) {
       if (error instanceof msal.InteractionRequiredAuthError) {
-        var tokenFromRedirection = await authService.acquireTokenRedirect(request);        
-        return tokenFromRedirection;
+        await authService.acquireTokenRedirect({ ...request, account });
       }
+      return null;
     }
-    
   },
 
   async getBearerToken() {
-    var response = await this.getTokenRedirect(this.tokenRequest);
-    if(response === null || response === undefined ) {
+    const response = await this.getTokenRedirect(this.tokenRequest);
+    if (response === null || response === undefined) {
       return null;
     }
     return response.accessToken;
   },
 
-}
+  // Test seam: swap the underlying MSAL instance and reset memoized init state.
+  _setAuthService(instance) {
+    authService = instance;
+    initialization = null;
+  },
+};
+
+export default api;

@@ -10,7 +10,7 @@
     "test:unit": "vitest run"
   },
   "dependencies": {
-    "@azure/msal-browser": "^2.39.0",
+    "@azure/msal-browser": "^5.15.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/vue-fontawesome": "^3.0.8",

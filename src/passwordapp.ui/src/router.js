@@ -49,8 +49,9 @@ var router = createRouter({
   ]
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuthentication)) {
+    await Authentication.initialize();
     if (Authentication.isAuthenticated()) {
       next();
     } else {
