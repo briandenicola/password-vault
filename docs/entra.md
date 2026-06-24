@@ -55,6 +55,32 @@ Entra ID Application Registrations
 > __Note:__ This use to be required but the code has been/will be migrated over to Azure Managed Identities 
 
 
+# Server-side token validation (AC-1 / AC-2)
+> __Note:__ Historically the API trusted only the function key embedded in the SPA bundle; the
+> Entra bearer token was sent but never checked. The API now validates the token server-side,
+> gated by a feature flag so it can be rolled out safely.
+
+## API app settings
+| Setting | Value | Notes |
+| ------ | ------ | ------ |
+| `AUTH_ENABLED` | `true` / `false` | Master switch. Default `false` (driven by the `app_requires_authentication` Terraform variable). |
+| `AAD_TENANT_ID` | tenant (directory) id | Builds the issuer `https://login.microsoftonline.com/<tenant>/v2.0` and fetches signing keys. |
+| `AAD_AUDIENCE` | `https://${appName}-functions.azurewebsites.net` | The API App Registration's App ID URI (and/or its client id), comma-separated if more than one. |
+| `AAD_ALLOWED_OIDS` | _(empty)_ | Optional `oid` allowlist. Leave empty to rely on the Enterprise App group assignment (e.g. the "parents" group). |
+
+When `AUTH_ENABLED=true`, every HTTP function except the anonymous health check (`passwords/healthz`)
+requires a valid bearer token (issuer + audience + signature + lifetime). Invalid/missing tokens get `401`.
+
+## Cutover runbook
+1. **Deploy** the API with `AUTH_ENABLED=false` (current default) — no behaviour change.
+2. **Configure** `AAD_TENANT_ID` and `AAD_AUDIENCE`, set `AUTH_ENABLED=true`, redeploy. The SPA already
+   sends the bearer token, so it keeps working; tokens are now actually enforced. Verify sign-in + CRUD.
+3. **AC-2 — drop the browser key:** once step 2 is verified, change the HTTP triggers from
+   `AuthorizationLevel.Function` to `AuthorizationLevel.Anonymous`, and remove `VUE_APP_API_KEY` /
+   the `x-functions-key` header from the SPA (`main.js`). The token is now the only credential.
+4. **Rotate** the old function key (it lived in `ui/.env` and git history) so the leaked value is dead.
+
+
 # Navigation
 [Previous Section ⏪](../README.md.md) ‖ [Return to Main Index 🏠](../README.md) ‖ [Next Section ⏩](./infrastructure.md)
 <p align="right">(<a href="#infrastructure">back to top</a>)</p>
