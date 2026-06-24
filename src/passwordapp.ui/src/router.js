@@ -5,6 +5,7 @@ import Home from '@/components/home/home.vue'
 import Create from '@/components/create/create.vue'
 import Update from '@/components/update/update.vue'
 import Settings from '@/components/settings/settings.vue'
+import Audit from '@/components/audit/audit.vue'
 import Authentication from './components/azuread/AzureAD.Authentication.js'
 
 let requiresAuthentication = process.env.VUE_APP_REQUIRES_AUTHENTICATION  == 'true' ? true : false;
@@ -40,6 +41,14 @@ var router = createRouter({
       path: '/settings',
       name: 'Settings',
       component: Settings,
+      meta: {
+        requiresAuthentication: requiresAuthentication
+      },
+    },
+    {
+      path: '/audit',
+      name: 'Audit',
+      component: Audit,
       meta: {
         requiresAuthentication: requiresAuthentication
       },
