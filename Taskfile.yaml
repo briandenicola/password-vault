@@ -230,16 +230,22 @@ tasks:
     - rm -rf terraform.tfstate.d .terraform.lock.hcl .terraform terraform.tfstate terraform.tfstate.backup .terraform.tfstate.lock.info || true
 
   # --- MIG-2 / MIG-3: legacy v1 -> v2 (AES-GCM) data migration ---
-  # Requires COSMOSDB (Cosmos connection string) exported in your shell or added to
-  # infrastructure/.env. AesKey/AesIV are sourced from infrastructure/.env (ENCRYPTION_*).
+  # COSMOSDB is auto-derived from the deployed infra (Terraform output), so no
+  # manual `export COSMOSDB=...` is needed. Override it by exporting COSMOSDB or
+  # adding it to infrastructure/.env (e.g. to run against a backup/offline).
+  # AesKey/AesIV are sourced from infrastructure/.env (ENCRYPTION_*).
   migrate:backup:
     desc: Snapshot every vault document to a timestamped JSON file
     dir: ./src/passwordapp.tools
     cmds:
     - dotnet run -- backup
+    vars: &migrate_vars
+      COSMOSDB:
+        sh: echo "${COSMOSDB:-$(terraform -chdir=../../infrastructure output -raw COSMOSDB_CONNECTION_STRING 2>/dev/null)}"
     env: &migrate_env
       AesKey: '{{.ENCRYPTION_KEY}}'
       AesIV: '{{.ENCRYPTION_IV}}'
+      COSMOSDB: '{{.COSMOSDB}}'
       COSMOS_DATABASE_NAME: AccountPasswords
       COSMOS_COLLECTION_NAME: Passwords
 
@@ -248,6 +254,7 @@ tasks:
     dir: ./src/passwordapp.tools
     cmds:
     - dotnet run -- verify
+    vars: *migrate_vars
     env: *migrate_env
 
   migrate:dryrun:
@@ -255,6 +262,7 @@ tasks:
     dir: ./src/passwordapp.tools
     cmds:
     - dotnet run -- migrate
+    vars: *migrate_vars
     env: *migrate_env
 
   migrate:apply:
@@ -262,4 +270,5 @@ tasks:
     dir: ./src/passwordapp.tools
     cmds:
     - dotnet run -- migrate --apply
+    vars: *migrate_vars
     env: *migrate_env

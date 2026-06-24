@@ -39,6 +39,11 @@ output "APP_INSIGHTS_CONNECTION_STRING" {
   sensitive = true
 }
 
+output "COSMOSDB_CONNECTION_STRING" {
+  value     = azurerm_cosmosdb_account.this.primary_sql_connection_string
+  sensitive = true
+}
+
 output "MAINTENANCE_FUNCTION_NAME" {
   value     = length(module.maintenance) > 0 ? module.maintenance[0].FUNCTION_NAME : null
   sensitive = false
