@@ -42,7 +42,7 @@ resource "azurerm_linux_function_app" "this" {
     use_32_bit_worker = false
     application_stack {
       use_dotnet_isolated_runtime = true
-      dotnet_version              = "8.0"
+      dotnet_version              = "10.0"
     }
     # Bug in the provider is adding incorrect value for linux_fx_version
     # cors  {
@@ -68,7 +68,7 @@ resource "azurerm_linux_function_app" "this" {
     WEBSITE_USE_PLACEHOLDER_DOTNETISOLATED = 1
     WEBSITE_RUN_FROM_PACKAGE               = "${azurerm_storage_account.this.primary_blob_endpoint}${local.app_container_name}/vault.zip"
     APPLICATIONINSIGHTS_CONNECTION_STRING  = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.appinsights_connection_string.id})"
-    APPINSIGHTS_INSTRUMENTATIONKEY         = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.appinsights_key.id})" 
+    APPINSIGHTS_INSTRUMENTATIONKEY         = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.appinsights_key.id})"
   }
 }
 

@@ -1,6 +1,6 @@
 variable "region" {
   description = "Region to deploy resources to"
-  default     =  "southcentralus"
+  default     = "southcentralus"
 }
 
 variable "tags" {
@@ -13,7 +13,7 @@ variable "enable_cosmosdb_free_tier" {
 }
 
 variable "deploy_maintenance_infrastructure" {
-  default     = false
+  default = false
 }
 
 variable "password_encryption_key" {
@@ -25,7 +25,7 @@ variable "password_encryption_initialization_vector" {
 }
 
 variable "add_custom_domain" {
-  default = false
+  default     = false
   description = "Add custom domain to the Static Web App"
 }
 
