@@ -63,7 +63,7 @@ Entra ID Application Registrations
 ## API app settings
 | Setting | Value | Notes |
 | ------ | ------ | ------ |
-| `AUTH_ENABLED` | `true` / `false` | Master switch. Default `false` (driven by the `app_requires_authentication` Terraform variable). |
+| `AUTH_ENABLED` | `true` / `false` | Master switch, **fail-closed: defaults to ON**. The HTTP triggers are `Anonymous` (AC-2), so token validation is the only guard — it is only skipped when this is the explicit string `false` (local/offline dev). |
 | `AAD_TENANT_ID` | tenant (directory) id | Builds the issuer `https://login.microsoftonline.com/<tenant>/v2.0` and fetches signing keys. |
 | `AAD_AUDIENCE` | `https://${appName}-functions.azurewebsites.net` | The API App Registration's App ID URI (and/or its client id), comma-separated if more than one. |
 | `AAD_ALLOWED_OIDS` | _(empty)_ | Optional `oid` allowlist. Leave empty to rely on the Enterprise App group assignment (e.g. the "parents" group). |
@@ -72,13 +72,20 @@ When `AUTH_ENABLED=true`, every HTTP function except the anonymous health check 
 requires a valid bearer token (issuer + audience + signature + lifetime). Invalid/missing tokens get `401`.
 
 ## Cutover runbook
-1. **Deploy** the API with `AUTH_ENABLED=false` (current default) — no behaviour change.
-2. **Configure** `AAD_TENANT_ID` and `AAD_AUDIENCE`, set `AUTH_ENABLED=true`, redeploy. The SPA already
-   sends the bearer token, so it keeps working; tokens are now actually enforced. Verify sign-in + CRUD.
-3. **AC-2 — drop the browser key:** once step 2 is verified, change the HTTP triggers from
-   `AuthorizationLevel.Function` to `AuthorizationLevel.Anonymous`, and remove `VUE_APP_API_KEY` /
-   the `x-functions-key` header from the SPA (`main.js`). The token is now the only credential.
-4. **Rotate** the old function key (it lived in `ui/.env` and git history) so the leaked value is dead.
+> **AC-2 landed in code:** HTTP triggers are now `Anonymous`, the SPA no longer sends a function
+> key, and `AUTH_ENABLED` is **fail-closed (defaults ON)**. So a deploy of this code enforces tokens
+> unless `AUTH_ENABLED=false` is set. Run the steps below in order against the live environment.
+
+1. **Configure** `AAD_TENANT_ID` and `AAD_AUDIENCE` on the Function App (see the table above) **before**
+   deploying, so the now-Anonymous triggers have working validation to fall back on.
+2. **Deploy** the API. With `AUTH_ENABLED` unset (or `true`), every HTTP function except the anonymous
+   health check requires a valid bearer token. The SPA already sends one — verify sign-in + full CRUD.
+   *Safety:* if the AAD settings are wrong, requests are denied (401), never served unauthenticated.
+3. **Deploy the SPA** (`task deploy-ui`) — it no longer writes `VUE_APP_API_KEY` or sends the
+   `x-functions-key` header. The Entra token is the only credential.
+4. **Rotate** the old function/host key (it lived in `ui/.env` and git history) so the leaked value is
+   dead. In the portal/CLI, regenerate the host key; nothing references it anymore.
+5. *(Local/offline dev only)* set `AUTH_ENABLED=false` in `local.settings.json` to bypass validation.
 
 
 # Navigation

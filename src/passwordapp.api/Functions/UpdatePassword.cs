@@ -7,7 +7,7 @@ namespace PasswordService.API
         [Function(nameof(UpdatePassword))]
         [CosmosDBOutput( "%COSMOS_DATABASE_NAME%", "%COSMOS_COLLECTION_NAME%", PartitionKey = "%COSMOS_PARTITION_KEY%", Connection = "COSMOSDB")] 
         public async Task<object> UpdatePassword( 
-            [HttpTrigger(AuthorizationLevel.Function, "put", Route = "passwords/{id}")] HttpRequestData req, 
+            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "passwords/{id}")] HttpRequestData req, 
             [CosmosDBInput(
                 "%COSMOS_DATABASE_NAME%", 
                 "%COSMOS_COLLECTION_NAME%", 

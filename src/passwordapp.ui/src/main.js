@@ -52,7 +52,6 @@ let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? 
   library.add(faMoon)
 
   Axios.defaults.baseURL = process.env.VUE_APP_API_ENDPOINT;
-  Axios.defaults.headers.common['x-functions-key'] = process.env.VUE_APP_API_KEY;
 
   await Authentication.initialize();
   if (Authentication.isAuthenticated()) {

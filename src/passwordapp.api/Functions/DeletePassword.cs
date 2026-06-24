@@ -6,7 +6,7 @@ namespace PasswordService.API
         [Function(nameof(DeletePassword))]
         [CosmosDBOutput( "%COSMOS_DATABASE_NAME%", "%COSMOS_COLLECTION_NAME%", PartitionKey = "%COSMOS_PARTITION_KEY%", Connection = "COSMOSDB")] 
         public object? DeletePassword(
-            [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "passwords/{id}")] HttpRequestData req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "passwords/{id}")] HttpRequestData req,
             [CosmosDBInput(
                 "%COSMOS_DATABASE_NAME%", 
                 "%COSMOS_COLLECTION_NAME%", 
