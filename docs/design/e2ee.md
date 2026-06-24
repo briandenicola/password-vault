@@ -101,8 +101,8 @@ PRF support depends on the authenticator + OS + browser. As of mid-2026:
 
 Therefore: keep **Entra for sign-in/identity**, but enroll a **synced platform passkey or
 security key** as the *encryption* credential so PRF is reliable. Feature-detect PRF at
-enrollment and refuse to enable E2EE on a device that can't do it (fall back to read via
-the transitional server path until the user enrolls a capable passkey).
+enrollment and **require** a PRF-capable passkey to use the vault — a device that cannot do
+PRF must enroll one (no degraded server-decrypt fallback after migration; see §9).
 
 ### Multi-device & multi-family-member
 Because only the **DEK** encrypts data and each passkey just **wraps** its own copy of the
@@ -193,18 +193,18 @@ server-side.
 | Infra (`infrastructure`) | After migration, remove the AES key/IV Key Vault secrets and the Function App's access to them. |
 | Docs / ops | Document passkey enrollment + recovery model and the PRF device-support matrix; update `entra.md`/`deploy.md`. |
 
-## 9. Open questions for regroup
+## 9. Decisions (resolved at regroup, 2026-06-24)
 
-1. ~~Master password vs. Entra-derived~~ — **decided:** WebAuthn passkey PRF (zero-knowledge,
+1. ~~Master password vs. Entra-derived~~ — **WebAuthn passkey PRF** (zero-knowledge,
    password-free).
-2. **Recovery strategy** (§4) — multiple enrolled passkeys is assumed; do we *also* want a
-   printed/offline recovery key from day one? (Recommended.)
-3. **Device fallback** — for a device without PRF support (e.g. older Windows Hello), do we
-   (a) require enrolling a synced platform passkey / security key, or (b) allow read-only via
-   the transitional server path until a capable passkey is enrolled?
-4. **Scope** — ship E2EE for the whole vault at once, or behind a feature flag for one test
-   user/device first? (Feature flag recommended given PRF support variance.)
-5. **Offline** — is `OFF-2` (offline read) actually wanted, or is E2EE valuable on its own?
+2. **Recovery:** multiple enrolled passkeys **plus a printed/offline recovery key from day
+   one** (the recovery key also wraps the DEK — §4). ✅
+3. **Device fallback:** a device without PRF support **must enroll a PRF-capable passkey**
+   (synced platform passkey or security key) to use the vault — no degraded server-decrypt
+   mode after migration. ✅
+4. **Rollout:** ship behind a **feature flag**, enabled for one device/user first, then the
+   family. ✅
+5. **Offline (`OFF-2`)** — still open; revisit after E2EE lands. E2EE is worthwhile on its own.
 
 ## 10. Recommended sequence
 
