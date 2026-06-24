@@ -21,7 +21,8 @@ Legend — Priority: **P0** do first / **P1** soon / **P2** nice-to-have / **P3*
 > ✅ `UI-1`/`UI-2` (clipboard auto-clear + idle auto-lock, settings-driven),
 > ✅ `UI-3`/`UI-6` (MSAL bootstrap rewrite + `@azure/msal-browser` v2→v5 upgrade),
 > ✅ `UI-4` (PrimeVue v4 migration; removed `@vue/compat` + `bootstrap-vue`, now Vue 3-native),
-> ✅ `FE-4` (reused/duplicate-password Security Audit page).
+> ✅ `FE-4` (reused/duplicate-password Security Audit page),
+> ✅ `FE-1` (live password strength meter on create/update).
 > New writes are now AES-GCM; legacy `v1` still reads, and existing data can be migrated with `vault-migrate`.
 > Design for `OFF-4` in [`design/e2ee.md`](design/e2ee.md); PRF spike validated on devices.
 
@@ -139,7 +140,7 @@ a few (marked) are easier *after* end-to-end encryption (see Theme 8).
 
 | ID | Pri | Effort | Item |
 |----|-----|--------|------|
-| FE-1 | P1 | S | **Strength meter on create/update.** Integrate `zxcvbn` for live feedback. |
+| FE-1 | P1 | S | ✅ **Done.** **Strength meter on create/update.** Live strength meter under the password field on both the create and update forms. Pure, unit-tested estimator in `components/utils/strength.js` (`estimatePasswordStrength`): entropy from charset pool size × length, reusing the generator's Weak/Fair/Strong/Excellent thresholds (40/60/80 bits), plus a `COMMON_PASSWORDS` blocklist and repeat/sequence detection that force a **Very weak** rating with a warning regardless of length. Reusable `strength/strength-meter.vue` (bar + Tag + bits + warning). Dependency-free (no zxcvbn). 15 Vitest tests + headless smoke-validated (live updates, common-password flagged, hidden when empty). |
 | FE-2 | P1 | M | **Search / filter / tags.** As entries grow, a family vault needs search by site/account and optional tags or folders. |
 | FE-3 | P2 | M | **Breach check (HaveIBeenPwned).** Privacy-preserving k-anonymity range API to flag pwned passwords. No secret leaves the client. |
 | FE-4 | P2 | S | ✅ **Done.** **Reused / duplicate password report.** New `/audit` route + **Security Audit** page (linked from the vault nav). Pure, unit-tested grouping logic in `components/audit/reuse.js` (`findReusedPasswords`/`countReusedAccounts`); the page fetches each entry's server-decrypted password (the list returns only encrypted blobs, and AES-GCM gives identical passwords different ciphertext), groups accounts sharing a password, and lists each group with a **Change** action (→ Update page, where the generator lives). Plaintext is dropped right after grouping and never enters reactive state / the DOM. 10 Vitest tests + headless smoke-validated. |

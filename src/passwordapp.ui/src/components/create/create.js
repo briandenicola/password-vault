@@ -1,10 +1,11 @@
 import PasswordService from '@/components/api/Password.Service.js';
 import Authentication from '@/components/azuread/AzureAD.Authentication.js';
 import PasswordGenerator from '@/components/generator/generator.vue';
+import PasswordStrength from '@/components/strength/strength-meter.vue';
 
 export default {
   name: 'Create',
-  components: { PasswordGenerator },
+  components: { PasswordGenerator, PasswordStrength },
   data() {
     return {
       formData: PasswordService.newPassword(),
