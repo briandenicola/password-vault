@@ -5,7 +5,7 @@
     <div class="row navbar navbar-default">
       <div class="col-sm-12">
         <div class="table-responsive">
-          | <router-link :to="{ name: 'Create' }">New Account</router-link> | <router-link :to="{ name: 'Audit' }">Security Audit</router-link> | <router-link :to="{ name: 'Trash' }">Recycle Bin</router-link> | <router-link :to="{ name: 'Settings' }">Settings</router-link> | <a href="#" v-on:click.stop="logOut()">Sign Out</a> |
+          | <router-link :to="{ name: 'Create' }">New Account</router-link> | <router-link :to="{ name: 'Audit' }">Security Audit</router-link> | <router-link :to="{ name: 'Trash' }">Recycle Bin</router-link> | <router-link :to="{ name: 'Transfer' }">Import / Export</router-link> | <router-link :to="{ name: 'Settings' }">Settings</router-link> | <a href="#" v-on:click.stop="logOut()">Sign Out</a> |
         </div>
       </div>
     </div>
