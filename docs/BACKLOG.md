@@ -57,7 +57,7 @@ Quality-of-life and "don't leave secrets lying around" items for a family tool.
 | UI-2 | P2 | S | **Auto-lock / re-auth timeout.** No idle lockout after revealing secrets. Add a session timeout that clears in-memory plaintext and requires re-auth. |
 | UI-3 | P2 | M | **Fix MSAL bootstrap + token storage.** `AzureAD.Authentication.js` admits it "does not handle initial page load properly" and caches tokens in `localStorage` (XSS-reachable). Fix the redirect-promise flow; consider `sessionStorage`. |
 | UI-4 | P3 | M | **Exit Vue 2 compat mode.** App runs Vue 3 in `@vue/compat` with `bootstrap-vue`. Finish the Vue 3 migration and replace EOL deps. Pure maintenance. |
-| UI-5 | P3 | S | **Password generator + strength meter.** Feature request: generate strong passwords on create/update. |
+| UI-5 | P3 | S | **Improve the existing generator.** A generator already exists (`utils.js:generatePassword`, CSPRNG + class guarantee + shuffle). Improvements only — see Theme 7 `GE-*`. |
 
 ## Theme 5 — Infrastructure hardening
 
@@ -90,3 +90,58 @@ Quality-of-life and "don't leave secrets lying around" items for a family tool.
 > Do CR-1 and MIG-3 *together first*: fix the UTF-8 bug, then run a verify pass so
 > any already-corrupted non-ASCII passwords are surfaced and re-entered by hand
 > rather than carried forward into the new scheme.
+
+---
+
+## Theme 7 — Feature ideas
+
+Realistic, family-friendly features. Most are independent of the security work;
+a few (marked) are easier *after* end-to-end encryption (see Theme 8).
+
+### Generator improvements (the existing one is good — polish it)
+
+| ID | Pri | Effort | Item |
+|----|-----|--------|------|
+| GE-1 | P2 | S | **Configurable options in the UI.** Length slider + toggles (upper/lower/digits/symbols). Today length is hardcoded to 13 (`utils.js:2`) with no UI controls. |
+| GE-2 | P3 | S | **Exclude-ambiguous mode.** Optional removal of `l/I/1/O/0` etc. for hand-typed passwords. |
+| GE-3 | P3 | S | **Passphrase / diceware mode.** Word-list passphrases for memorable master-style secrets. |
+| GE-4 | P3 | S | **Remove modulo bias.** `% charset.length` (`utils.js:11,29`) is slightly biased; use rejection sampling. Cosmetic for a family tool, but trivial to fix. |
+
+### Vault features
+
+| ID | Pri | Effort | Item |
+|----|-----|--------|------|
+| FE-1 | P1 | S | **Strength meter on create/update.** Integrate `zxcvbn` for live feedback. |
+| FE-2 | P1 | M | **Search / filter / tags.** As entries grow, a family vault needs search by site/account and optional tags or folders. |
+| FE-3 | P2 | M | **Breach check (HaveIBeenPwned).** Privacy-preserving k-anonymity range API to flag pwned passwords. No secret leaves the client. |
+| FE-4 | P2 | S | **Reused / duplicate password report.** Flag accounts sharing a password (do it client-side after decrypt — ironically what CR-3 stops the *server* from leaking). |
+| FE-5 | P2 | S | **Password age / expiry reminders.** Use existing `LastModifiedDate` to surface "this is 2+ years old". |
+| FE-6 | P2 | M | **Recycle bin / restore.** `isDeleted` already exists in the model but there's no UI to view or restore soft-deleted entries. |
+| FE-7 | P2 | M | **TOTP (2FA) secret storage + code generation.** Store TOTP seeds and show rolling 6-digit codes. High family value. |
+| FE-8 | P2 | M | **Import / export.** CSV + Bitwarden/1Password/browser formats — useful for onboarding family members and as an exit hatch. Pairs with the Theme 3 migration work. |
+| FE-9 | P3 | M | **Secure notes / attachments.** Free-form encrypted notes or small files (e.g. recovery codes, passport scans). |
+| FE-10 | P3 | L | **Per-item / shared-folder sharing.** Selective sharing instead of one shared vault (depends on AC-3 user scoping). |
+| FE-11 | P3 | M | **Biometric / WebAuthn app unlock.** Use platform authenticator to unlock the app locally. |
+| FE-12 | P3 | S | **Backup/restore UI.** A `scripts/decrypt-backup.py` exists as a CLI; expose backup/export from the UI. |
+
+---
+
+## Theme 8 — Offline caching (answering "how hard would it be?")
+
+Short answer: it's a **spectrum**, and the app already does the easy part. The
+catch is the current architecture **decrypts on the server**, so true offline
+access to secrets requires moving decryption to the client first.
+
+| ID | Pri | Effort | Item & difficulty notes |
+|----|-----|--------|--------------------------|
+| OFF-1 | P3 | **S — mostly done** | **App-shell offline.** Already a PWA: `registerServiceWorker.js` + `vue.config.js` `pwa{}` cache the UI shell. The app *loads* offline today; it just can't fetch data. Task is only to verify/upgrade the Workbox config and add an "offline" UI state. |
+| OFF-2 | P2 | **M–L** | **Read-only offline vault.** Cache entries in IndexedDB so the family can *view* passwords with no signal. **The blocker:** today `GetPasswordById` decrypts server-side and returns plaintext, so caching would mean storing plaintext (or the function key) in the browser — unacceptable. The clean path is to cache **encrypted** blobs and decrypt in the browser, which requires E2EE (OFF-4). Effort is M if you accept caching encrypted blobs + client decrypt; L if done carefully with key handling and auto-lock. |
+| OFF-3 | P3 | **L** | **Offline edits + sync.** Queue create/update/delete while offline and replay on reconnect, with conflict resolution (last-write-wins is simplest given low family concurrency). Genuinely the hardest piece; only worth it if OFF-2 proves valuable. |
+| OFF-4 | P2 | **L (enabler)** | **End-to-end / zero-knowledge encryption.** Derive the vault key in the browser from the user's Entra identity / a master password (e.g. via WebCrypto + PBKDF2/Argon2) and encrypt/decrypt entirely client-side. This is the *right* long-term shape for a password manager (the server never sees plaintext or the key), and it's what unlocks OFF-2/OFF-3 and FE-3/FE-4 safely. Big change; pairs with Theme 1's AES-GCM and Theme 3's versioned/migration format. |
+
+**Recommended offline path:** OFF-1 is essentially free (tidy it up). Don't chase
+OFF-2/OFF-3 directly — they're a trap without OFF-4. If offline access matters to
+the family, treat **OFF-4 (client-side E2EE)** as the real project; OFF-2 then
+becomes a straightforward IndexedDB cache of encrypted blobs, and OFF-3 an
+optional follow-up. If offline *isn't* a real need, skip the whole theme and keep
+decryption server-side — simpler and arguably safer for a small shared vault.
