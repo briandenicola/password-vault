@@ -49,6 +49,43 @@ MaintenanceDeployment
 <p align="right">(<a href="#build">back to top</a>)</p>
 
 
+Automated CI/CD (GitHub Actions)
+=============
+The same `task` targets above are also driven by GitHub Actions, so local and
+pipeline deploys never drift (**CD-7**):
+
+* **CI** (`.github/workflows/ci.yml`) — runs on every PR and push to `main`:
+  API build + tests, UI lint + unit tests + build, and `terraform fmt`/`validate`.
+* **Infrastructure** (`.github/workflows/infra.yml`) — `task plan` on PRs that
+  touch `infrastructure/**`, and `task apply` on merge to `main`. State lives in
+  the `azurerm` remote backend (`providers.tf`).
+* **Deploy** (`.github/workflows/deploy.yml`) — runs `task deploy-api` /
+  `deploy-ui` / `deploy-maintenance`. Trigger manually (pick a component) or on
+  merge to `main` for the paths that changed.
+
+**Authentication is OIDC only (CD-3)** — Azure login uses
+[federated credentials](https://learn.microsoft.com/azure/active-directory/workload-identities/workload-identity-federation),
+so no service-principal password or publish profile is stored as a secret.
+
+One-time setup (operator):
+1. Create an Entra app registration (or reuse the API one) and add **federated
+   credentials** trusting this repo's `pull_request` events and the
+   `production` environment.
+2. Grant it `Contributor` on the subscription and access to the Terraform state
+   storage account (`denicolafamily/state`).
+3. Add repository **secrets**: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`,
+   `AZURE_SUBSCRIPTION_ID`, `TF_ENCRYPTION_KEY`, `TF_ENCRYPTION_IV`, and
+   `AAD_CLIENT_ID`.
+4. Create a **`production` GitHub Environment** and require a reviewer — every
+   `apply`/deploy then waits for approval before touching live Azure.
+
+Secrets are never passed on the command line: the encryption key/IV reach
+Terraform through `TF_VAR_*` environment variables (**CD-5**), and they are
+marked `sensitive` in `variables.tf`.
+<p align="right">(<a href="#build">back to top</a>)</p>
+
+
+
 # Navigation
 [Previous Section ⏪](./entra.md) ‖ [Return to Main Index 🏠](../README.md) ‖ 
 <p align="right">(<a href="#build">back to top</a>)</p>

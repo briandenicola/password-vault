@@ -1,0 +1,123 @@
+name: Deploy
+
+# CD-2: deploy API, UI, and the Python maintenance function. CD-3: Azure auth
+# via OIDC federated credentials (no stored publish profile / SP secret).
+# CD-7: every job calls the same `task` target used locally, so there is no
+# drift between local and pipeline deploys.
+#
+# Deploys are gated behind the `production` GitHub Environment — configure it to
+# require a reviewer so every deploy is approved. Nothing here can run until the
+# owner adds the secrets below (see docs/deploy.md).
+#
+#   Secrets:  AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
+#             AAD_CLIENT_ID (API app registration; see docs/entra.md)
+
+on:
+  workflow_dispatch:
+    inputs:
+      component:
+        description: Which component to deploy
+        type: choice
+        default: all
+        options: [all, api, ui, maintenance]
+  push:
+    branches: [main]
+    paths:
+      - 'src/passwordapp.api/**'
+      - 'src/passwordapp.ui/**'
+      - 'src/passwordapp.maintenance/**'
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  api:
+    name: Deploy API
+    if: >-
+      github.event_name == 'push' ||
+      contains(fromJSON('["all","api"]'), github.event.inputs.component)
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '~> 1.7'
+      - uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy API
+        run: task deploy-api
+
+  ui:
+    name: Deploy UI
+    if: >-
+      github.event_name == 'push' ||
+      contains(fromJSON('["all","ui"]'), github.event.inputs.component)
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      AAD_CLIENT_ID: ${{ secrets.AAD_CLIENT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '~> 1.7'
+      - uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install SWA CLI
+        run: npm install -g @azure/static-web-apps-cli
+      - name: Deploy UI
+        run: task deploy-ui
+
+  maintenance:
+    name: Deploy maintenance function
+    if: >-
+      (github.event_name == 'push' &&
+       contains(toJSON(github.event.commits.*.modified), 'src/passwordapp.maintenance/')) ||
+      contains(fromJSON('["all","maintenance"]'), github.event.inputs.component)
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '~> 1.7'
+      - uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy maintenance function
+        run: task deploy-maintenance
