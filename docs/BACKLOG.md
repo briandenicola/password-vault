@@ -11,7 +11,8 @@ Legend — Priority: **P0** do first / **P1** soon / **P2** nice-to-have / **P3*
 
 > **Progress (branch `improvements/security-and-features-backlog`):** Phase 0 started —
 > ✅ `CR-1` (UTF-8 crypto fix + regression tests), ✅ `EN-1` (gitignore conflict),
-> ✅ `EN-2` (xUnit test project), ✅ **.NET 10 upgrade** (API + devcontainer + docs).
+> ✅ `EN-2` (xUnit test project), ✅ **.NET 10 upgrade** (API + devcontainer + docs),
+> ✅ `EN-3`/`CD-1` (CI workflow), ✅ `MIG-1` (versioned ciphertext format).
 > Design for `OFF-4` in [`design/e2ee.md`](design/e2ee.md); PRF spike validated on devices.
 
 ---
@@ -48,7 +49,7 @@ You want to move existing data onto the improved scheme without losing it.
 
 | ID | Pri | Effort | Item |
 |----|-----|--------|------|
-| MIG-1 | **P0** | M | **Versioned ciphertext format.** Stored blobs are `hmac:ciphertext` with no version marker (`PasswordEntity.cs`). Add a prefix (e.g. `v2.gcm.<nonce>.<tag>.<ct>`) so old and new entries can coexist and decrypt picks the right path. Prerequisite for any crypto change. |
+| MIG-1 | **P0** | M | ✅ **Done.** **Versioned ciphertext format.** Introduced `Common/SecretEnvelope.cs`: a version-aware parse/serialize for stored blobs. Legacy `hmac:ciphertext` is recognized as `v1` (no rewrite of existing data needed); the `v2.gcm.<iv>.<ct+tag>` format is parsed/serialized and ready for `CR-2`. Discriminator: legacy base64 never contains `.`, versioned blobs always do. `PasswordEntity` now delegates to the envelope and exposes `Format`. 14 regression tests (incl. real-Encryptor v1 round-trip, non-ASCII/emoji, malformed→`FormatException`). No crypto changed yet. |
 | MIG-2 | **P0** | M | **One-time re-encryption migration.** Write a small idempotent job (reuse `scripts/decrypt-backup.py` patterns) that reads each Cosmos record, decrypts with the legacy path, re-encrypts with AES-GCM, and writes back tagged `v2`. Dry-run + backup first. |
 | MIG-3 | P1 | S | **Pre-migration backup + verify.** Snapshot the Cosmos container and verify a round-trip decrypt of every entry *before* migrating, so CR-1's already-corrupted entries are identified (not silently re-saved). |
 
