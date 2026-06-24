@@ -51,6 +51,17 @@ describe('settings.store', () => {
     expect(loaded.list.sortBy).toBe('siteName'); // backfilled
     expect(loaded.generator.mode).toBe('password'); // backfilled
     expect(loaded.generator.password.length).toBe(defaultSettings().generator.password.length);
+    expect(loaded.security.clipboardClearSeconds).toBe(defaultSettings().security.clipboardClearSeconds); // backfilled
+  });
+
+  it('preserves and persists security preferences', () => {
+    const s = defaultSettings();
+    s.security.clipboardClearSeconds = 10;
+    s.security.autoLockMinutes = 15;
+    expect(saveSettings('alice', s, storage)).toBe(true);
+    const loaded = loadSettings('alice', storage);
+    expect(loaded.security.clipboardClearSeconds).toBe(10);
+    expect(loaded.security.autoLockMinutes).toBe(15);
   });
 
   it('ignores foreign / wrong-typed fields', () => {

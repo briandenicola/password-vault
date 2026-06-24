@@ -19,6 +19,10 @@ export function defaultSettings() {
       sortDesc: false,
       perPage: 10,
     },
+    security: {
+      clipboardClearSeconds: 30, // 0 = never auto-clear
+      autoLockMinutes: 5, // 0 = never auto-lock
+    },
   };
 }
 

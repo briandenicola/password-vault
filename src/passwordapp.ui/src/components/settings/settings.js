@@ -28,6 +28,20 @@ export default {
         { value: true, text: 'Descending' },
       ],
       perPageChoices: [5, 10, 20, 50, 100],
+      clipboardClearChoices: [
+        { value: 0, text: 'Never' },
+        { value: 10, text: '10 seconds' },
+        { value: 20, text: '20 seconds' },
+        { value: 30, text: '30 seconds' },
+        { value: 60, text: '60 seconds' },
+      ],
+      autoLockChoices: [
+        { value: 0, text: 'Never' },
+        { value: 1, text: '1 minute' },
+        { value: 5, text: '5 minutes' },
+        { value: 15, text: '15 minutes' },
+        { value: 30, text: '30 minutes' },
+      ],
     };
   },
   computed: {
