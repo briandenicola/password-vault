@@ -12,6 +12,7 @@ const emptyPassword = {
     siteName:           "",
     currentPassword:    "",
     notes:              "",
+    tags:               [],
     createdBy:          "",
     lastModifiedBy:     "",
     isDeleted:          false,

@@ -3,6 +3,8 @@ import Moment from 'moment';
 import Authentication from '@/components/azuread/AzureAD.Authentication.js';
 import { loadSettings } from '@/components/settings/settings.store.js';
 import { copyWithAutoClear } from '@/components/utils/clipboard.js';
+import { parseTags, collectTags, hasTag } from '@/components/utils/tags.js';
+import { isStale, ageLabel } from '@/components/utils/age.js';
 
 export default {
   name: 'PasswordList',
@@ -10,14 +12,27 @@ export default {
     isAuthenticated() {
       return Authentication.isAuthenticated();
     },
+    allTags() {
+      return collectTags(this.passwords);
+    },
+    tagChoices() {
+      return [{ label: 'All tags', value: null }]
+        .concat(this.allTags.map(t => ({ label: t, value: t })));
+    },
     filteredPasswords() {
-      if (!this.filter) {
-        return this.passwords;
+      let list = this.passwords;
+      if (this.selectedTag) {
+        list = list.filter(p => hasTag(p, this.selectedTag));
       }
-      const q = this.filter.toLowerCase();
-      return this.passwords.filter(p =>
-        (p.accountName || '').toLowerCase().includes(q) ||
-        (p.siteName || '').toLowerCase().includes(q));
+      if (this.filter) {
+        const q = this.filter.toLowerCase();
+        list = list.filter(p =>
+          (p.accountName || '').toLowerCase().includes(q) ||
+          (p.siteName || '').toLowerCase().includes(q) ||
+          (p.notes || '').toLowerCase().includes(q) ||
+          parseTags(p.tags).some(t => t.toLowerCase().includes(q)));
+      }
+      return list;
     },
   },
   data() {
@@ -26,8 +41,10 @@ export default {
       passwords:    [],
       perPage:      settings.list.perPage,
       filter:       '',
+      selectedTag:  null,
       sortBy:       settings.list.sortBy,
       sortDesc:     settings.list.sortDesc,
+      staleAfterMonths: settings.list.staleAfterMonths,
       clipboardClearSeconds: settings.security.clipboardClearSeconds,
       expandedRows: {},
       selectedPasswordId: null,
@@ -45,6 +62,15 @@ export default {
   },
 
   methods: {
+    tagsOf(row) {
+      return parseTags(row && row.tags);
+    },
+    ageOf(row) {
+      return ageLabel(row && row.lastModifiedDate);
+    },
+    isStaleRow(row) {
+      return isStale(row && row.lastModifiedDate, this.staleAfterMonths);
+    },
     logOut() {
       Authentication.signOut();
     },

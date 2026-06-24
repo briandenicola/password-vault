@@ -8,6 +8,7 @@
         public string? AccountName { get; set; }
         public string? CurrentPassword { get; set; }
         public List<PasswordHistory>? OldPasswords { get; set; }
+        public List<string>? Tags { get; set; }
         public string? Notes { get; set; }
         public List<Questions>? SecurityQuestions { get; set; }
         public bool isDeleted { get; set; }
@@ -25,6 +26,7 @@
                 SiteName = SiteName,
                 AccountName = AccountName,
                 Notes = Notes,
+                Tags = Tags,
                 SecurityQuestions = SecurityQuestions,
                 CreatedDate = CreatedDate,
                 CreatedBy = CreatedBy,

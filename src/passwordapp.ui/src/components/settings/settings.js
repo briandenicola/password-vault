@@ -28,6 +28,13 @@ export default {
         { value: true, text: 'Descending' },
       ],
       perPageChoices: [5, 10, 20, 50, 100],
+      staleChoices: [
+        { value: 0, text: 'Never' },
+        { value: 6, text: '6 months' },
+        { value: 12, text: '1 year' },
+        { value: 24, text: '2 years' },
+        { value: 36, text: '3 years' },
+      ],
       clipboardClearChoices: [
         { value: 0, text: 'Never' },
         { value: 10, text: '10 seconds' },

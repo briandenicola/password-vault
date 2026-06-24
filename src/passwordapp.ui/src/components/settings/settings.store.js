@@ -18,6 +18,7 @@ export function defaultSettings() {
       sortBy: 'siteName', // 'accountName' | 'siteName' | 'lastModifiedDate'
       sortDesc: false,
       perPage: 10,
+      staleAfterMonths: 24, // flag passwords at least this old; 0 = never
     },
     security: {
       clipboardClearSeconds: 30, // 0 = never auto-clear

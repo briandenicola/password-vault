@@ -2,10 +2,21 @@ import PasswordService from '@/components/api/Password.Service.js';
 import Authentication from '@/components/azuread/AzureAD.Authentication.js';
 import PasswordGenerator from '@/components/generator/generator.vue';
 import PasswordStrength from '@/components/strength/strength-meter.vue';
+import { parseTags, formatTags } from '@/components/utils/tags.js';
 
 export default {
   name: 'Update',
   components: { PasswordGenerator, PasswordStrength },
+  computed: {
+    tagsInput: {
+      get() {
+        return formatTags(this.formData.tags);
+      },
+      set(value) {
+        this.formData.tags = parseTags(value);
+      },
+    },
+  },
   data() {
     return {
       formData:           PasswordService.newPassword(),
