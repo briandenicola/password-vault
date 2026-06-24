@@ -327,7 +327,6 @@ paket-files/
 
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
-<<<<<<< HEAD
 *.pyc
 
 # Cake - Uncomment if you are using it
@@ -372,6 +371,4 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
-=======
-*.pyc
 .DS_Store

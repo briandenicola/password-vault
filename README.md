@@ -9,7 +9,7 @@ This repository demonstrates the integration of Azure Functions with HTTP Trigge
     * [GitHub Codespaces](https://github.com/features/codespaces)
     * Azure Linux VM (Standard_B1s VM recommended)
     * Windows 11 with [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install)
-* [.NET 8 SDK](https://dotnet.microsoft.com/download)
+* [.NET 10 SDK](https://dotnet.microsoft.com/download)
 * [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
 * [Git](https://git-scm.com/)
 * [Taskfile](https://taskfile.dev/#/)
