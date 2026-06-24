@@ -1,4 +1,6 @@
 import PasswordUtils from '@/components/utils/utils.js';
+import Authentication from '@/components/azuread/AzureAD.Authentication.js';
+import { loadSettings } from '@/components/settings/settings.store.js';
 import {
   DEFAULT_PASSWORD_OPTIONS,
   DEFAULT_PASSPHRASE_OPTIONS,
@@ -8,12 +10,13 @@ export default {
   name: 'PasswordGenerator',
   emits: ['generated'],
   data() {
+    const settings = loadSettings(Authentication.getUserProfile());
     return {
       showOptions: false,
-      mode: 'password', // 'password' | 'passphrase'
+      mode: settings.generator.mode, // 'password' | 'passphrase'
       errorMessage: '',
-      passwordOptions: { ...DEFAULT_PASSWORD_OPTIONS },
-      passphraseOptions: { ...DEFAULT_PASSPHRASE_OPTIONS },
+      passwordOptions: { ...DEFAULT_PASSWORD_OPTIONS, ...settings.generator.password },
+      passphraseOptions: { ...DEFAULT_PASSPHRASE_OPTIONS, ...settings.generator.passphrase },
       separatorChoices: [
         { value: '-', text: 'Dash ( - )' },
         { value: '.', text: 'Dot ( . )' },

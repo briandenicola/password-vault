@@ -1,6 +1,7 @@
 import PasswordService from '@/components/api/Password.Service.js';
 import Moment from 'moment';
 import Authentication from '@/components/azuread/AzureAD.Authentication.js';
+import { loadSettings } from '@/components/settings/settings.store.js';
 
 export default {
   name: 'PasswordList',
@@ -10,14 +11,15 @@ export default {
     }
   },
   data() {
+    const settings = loadSettings(Authentication.getUserProfile());
     return {
       passwords:    [],
       currentPage:  1,
-      perPage:      10,
+      perPage:      settings.list.perPage,
       totalRows:    0,
       filter:       null,
-      sortBy:       "siteName",
-      sortDesc:     false,
+      sortBy:       settings.list.sortBy,
+      sortDesc:     settings.list.sortDesc,
       fields: [ 
         { key: 'accountName',       label: 'Account',       sortable: true},
         { key: 'siteName',          label: 'Site',          sortable: true}, 

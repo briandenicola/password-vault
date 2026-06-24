@@ -16,7 +16,8 @@ Legend — Priority: **P0** do first / **P1** soon / **P2** nice-to-have / **P3*
 > ✅ `CR-2`/`CR-3`/`CR-4`/`CR-5`/`CR-6` (AES-GCM `v2` writes + HKDF key separation + instance-state fix),
 > ✅ `MIG-2`/`MIG-3` (`vault-migrate` tool: backup, verify, dry-run/apply re-encryption v1→v2),
 > ✅ `FE-13` (password history UI), ✅ `AC-1` (server-side Entra token validation, flag-gated; `AC-2` staged),
-> ✅ `GE-1`/`GE-2`/`GE-3`/`GE-4`/`UI-5` (generator overhaul: options, exclude-ambiguous, passphrase mode, unbiased sampling + Vitest).
+> ✅ `GE-1`/`GE-2`/`GE-3`/`GE-4`/`UI-5` (generator overhaul: options, exclude-ambiguous, passphrase mode, unbiased sampling + Vitest),
+> ✅ `FE-15` (per-user settings page: generator + vault-list defaults, localStorage store).
 > New writes are now AES-GCM; legacy `v1` still reads, and existing data can be migrated with `vault-migrate`.
 > Design for `OFF-4` in [`design/e2ee.md`](design/e2ee.md); PRF spike validated on devices.
 
@@ -148,7 +149,7 @@ a few (marked) are easier *after* end-to-end encryption (see Theme 8).
 | FE-12 | P3 | S | **Backup/restore UI.** A `scripts/decrypt-backup.py` exists as a CLI; expose backup/export from the UI. |
 | FE-13 | P2 | S | ✅ **Done.** **Password history view (UI).** Added `getHistory(id)` to `Password.Service.js` (calls `passwords/{id}/history`) and a history modal in `home.vue`/`home.js`: a per-account table of every password (current + prior) with timestamps, a **Current** badge on the newest, and a per-row copy button. Reachable from a new clock action in the account row. (Built on bootstrap-vue for now; will carry over in the UI-4 PrimeVue migration.) |
 | FE-14 | P3 | M | **Better sorting / filtering / searching.** Builds on `FE-2`. Today the home list uses bootstrap-vue's `b-table` with sort on Account/Site only (`lastModifiedDate` is `sortable: false`) and a single substring filter (`home.js:19-24`). Improvements: make every column sortable (incl. last-modified/age), add scoped filters (by site/account/tag/folder once `FE-2` lands), and a faster global search. **Couples to `UI-4`:** the PrimeVue migration replaces `b-table` with PrimeVue `DataTable`, which provides column sort, per-column filters, and global search out of the box — so do this as part of / after `UI-4`. |
-| FE-15 | P2 | M | **User settings / preferences page.** A dedicated settings view to set per-user defaults instead of hard-coded values: **generator defaults** (length, character classes, exclude-ambiguous, password-vs-passphrase mode, word count/separator — feeds `GE-1`/`UI-5`), **default sort/filter** for the home list (couples to `FE-14`), **auto-lock timeout** (`UI-2`) and **clipboard auto-clear delay** (`UI-1`), plus future toggles (theme, breach-check opt-in `FE-3`). Persist client-side first (e.g. `localStorage`, keyed per signed-in user); consider a server-stored profile later once `AC-3` user-scoping lands. The generator/options components should read their defaults from this store so the settings page is the single source of truth. |
+| FE-15 | P2 | M | ✅ **Done (v1).** **User settings / preferences page.** New `/settings` route + page (linked from the vault nav) backed by a per-user `localStorage` store (`components/settings/settings.store.js`) with deep-merge defaults, forward-compat backfill, type-checking, and corrupt-JSON fallback. Today it controls **generator defaults** (password/passphrase mode + all options — the `PasswordGenerator` seeds from it) and **vault list defaults** (sort field/direction, rows per page — `home.js` seeds from it). The store schema is the single source of truth and is ready to grow into `UI-1` (clipboard auto-clear), `UI-2` (auto-lock), theme, and a server-stored profile after `AC-3`. Vitest-covered (10 tests). |
 
 ---
 
