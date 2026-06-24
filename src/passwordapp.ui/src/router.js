@@ -4,6 +4,7 @@ import NotFound from '@/components/notfound/pagenotfound.vue'
 import Home from '@/components/home/home.vue'
 import Create from '@/components/create/create.vue'
 import Update from '@/components/update/update.vue'
+import Settings from '@/components/settings/settings.vue'
 import Authentication from './components/azuread/AzureAD.Authentication.js'
 
 let requiresAuthentication = process.env.VUE_APP_REQUIRES_AUTHENTICATION  == 'true' ? true : false;
@@ -31,6 +32,14 @@ var router = createRouter({
       path: '/password/create',
       name: 'Create',
       component: Create,
+      meta: {
+        requiresAuthentication: requiresAuthentication
+      },
+    },
+    {
+      path: '/settings',
+      name: 'Settings',
+      component: Settings,
       meta: {
         requiresAuthentication: requiresAuthentication
       },
