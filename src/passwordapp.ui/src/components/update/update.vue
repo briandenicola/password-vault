@@ -20,6 +20,7 @@
           <label class="col-2 col-form-label" for="currentPassword">Password:</label>
           <div class="col">
             <InputText id="currentPassword" v-model="formData.currentPassword" maxlength="100" required class="w-100" />
+            <password-strength :password="formData.currentPassword" />
             <password-generator class="mt-2" @generated="onGenerated" />
           </div>
         </div>
