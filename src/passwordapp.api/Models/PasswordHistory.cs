@@ -6,13 +6,11 @@
         public DateTime CreatedDate { get; set; }
 
         public string DecryptPassword( Encryptor e ) {
-            if(Password?.EncryptedPassword == null || Password.HmacHash == null) {
+            if(Password?.EncryptedPassword == null) {
                 return string.Empty;
             }
-            else {
-                e.Decrypt(Password.EncryptedPassword, Password.HmacHash, out string? decryptedPassword);
-                return decryptedPassword ?? string.Empty;
-            }
+            // Reconstruct the stored blob (v1 or v2) and let the encryptor route by version.
+            return e.DecryptStored(Password.ToString()) ?? string.Empty;
         }   
     }
 
