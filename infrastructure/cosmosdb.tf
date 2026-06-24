@@ -40,3 +40,18 @@ resource "azurerm_cosmosdb_sql_container" "this" {
   partition_key_paths = ["/PartitionKey"]
   throughput          = 400
 }
+
+# OFF-4 §5B: the per-vault key record (PRF salt + wrapped DEKs) lives in its own
+# container so it never shows up in the passwords list. The server stores it
+# opaquely and can never unwrap it.
+resource "azurerm_cosmosdb_sql_container" "vaultkeys" {
+  depends_on = [
+    azurerm_cosmosdb_sql_database.this
+  ]
+  name                = local.cosmosdb_vaultkeys_name
+  resource_group_name = azurerm_resource_group.this.name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = azurerm_cosmosdb_sql_database.this.name
+  partition_key_paths = ["/PartitionKey"]
+  throughput          = 400
+}

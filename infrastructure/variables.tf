@@ -40,6 +40,11 @@ variable "app_requires_authentication" {
   default     = true
 }
 
+variable "app_e2ee_enabled" {
+  description = "OFF-4 Phase 2: enable the client-side-encryption (E2EE) vault-key endpoints. Default off until passkey enrollment/unlock ships; mirrors the UI VUE_APP_E2EE flag."
+  default     = false
+}
+
 variable "aad_tenant_id" {
   description = "Entra (Azure AD) tenant id used to validate API bearer tokens (AC-1)"
   default     = ""

@@ -184,6 +184,14 @@ server-side.
 
 ## 8. Impact / blast radius
 
+> **Implementation status:** *Phase 1* (client crypto foundation,
+> `ui/src/components/crypto/*`) and *Phase 2a* (server vault-key store) are
+> shipped behind feature flags (UI `VUE_APP_E2EE`, API `E2EE_ENABLED`, both
+> default off). The vault-key record (§5B) is served by `GET`/`PUT
+> /api/vault-key` and stored opaquely in an isolated Cosmos container
+> (`VaultKeys`) — the server cannot unwrap it. Still to do: Phase 2b in-memory
+> DEK + auto-lock, Phase 2c passkey enrollment/unlock UI, then MIG-2/MIG-3.
+
 | Layer | Change |
 |-------|--------|
 | API (`passwordapp.api`) | Stop decrypting on read; return ciphertext. Keep a temporary server-side decrypt path *only* for the migration pass, then remove. Add a vault-key record store (PRF salt + wrapped DEKs, §5B). |
