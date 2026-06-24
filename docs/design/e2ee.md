@@ -3,6 +3,11 @@
 Status: **Proposal** · Backlog ref: `OFF-4` (enabler for `OFF-2`/`OFF-3`, `FE-3`/`FE-4`) ·
 Related: `CR-2` (AES-GCM), `MIG-1` (versioned format), `MIG-2` (re-encrypt), `UI-2` (auto-lock)
 
+**Decisions (2026-06-24):** unlock is **password-free**. The vault key is derived from a
+**WebAuthn passkey via the PRF extension** (no master password to type, biometric unlock,
+truly zero-knowledge). Entra ID continues to handle sign-in/identity; the *encryption*
+passkey is treated as a synced platform passkey or security key (see §4 for why).
+
 ## 1. Goal & motivation
 
 Move encryption/decryption of vault secrets from the **server** to the **browser** so
@@ -38,24 +43,14 @@ primary residual risk and must be controlled with CSP + dependency hygiene.
 
 Use the **browser-native Web Crypto API** — not a third-party JS crypto library and not
 hand-rolled code. It is native, audited, and constant-time, and supports everything we
-need (AES-GCM, PBKDF2, HKDF). A validated proof-of-concept round-trip (encrypt, decrypt,
-tamper-rejection, wrong-password-rejection, non-ASCII) is ~40 lines:
+need (AES-GCM, HKDF, AES-KW key-wrapping). The **symmetric layer** (AES-GCM encrypt /
+decrypt of each secret) is validated by a proof-of-concept round-trip (encrypt, decrypt,
+tamper-rejection, wrong-key-rejection, non-ASCII) and is independent of how the key is
+obtained:
 
 ```js
 const subtle = globalThis.crypto.subtle;
 const enc = new TextEncoder(), dec = new TextDecoder();
-
-// Derive a NON-EXTRACTABLE AES-GCM key from the family master password.
-async function deriveKey(masterPassword, salt, iterations = 600_000) {
-  const baseKey = await subtle.importKey(
-    'raw', enc.encode(masterPassword), 'PBKDF2', false, ['deriveKey']);
-  return subtle.deriveKey(
-    { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
-    baseKey,
-    { name: 'AES-GCM', length: 256 },
-    false,                       // extractable:false — script can never read raw key
-    ['encrypt', 'decrypt']);
-}
 
 // Encrypt one secret: random 96-bit IV per entry; GCM provides integrity.
 async function encryptSecret(key, plaintext) {
@@ -70,64 +65,100 @@ async function decryptSecret(key, iv, ct) {
 }
 ```
 
-PBKDF2 at 600k iterations derived a key in ~117 ms on a dev machine — fast enough that
-unlock feels instant while still being expensive to brute-force.
+What changes vs. a master-password design is **only the source of the key**: instead of
+deriving it from a typed password via PBKDF2, we obtain key material from a passkey's PRF
+output (§4). The AES-GCM layer above is unchanged.
 
-## 4. Key management
+## 4. Key management — WebAuthn PRF + envelope (DEK/KEK)
 
-- **Source of the key:** a **master password** set by the family (the classic
-  Bitwarden/1Password model). It is *not* the Entra password and is never sent anywhere.
-- **Derivation:** PBKDF2-SHA-256, ≥ 600,000 iterations (OWASP 2023 floor).
-  Optionally upgrade to **Argon2id** (via a vetted WASM build) for stronger
-  memory-hardness; the format carries the algorithm + parameters so this can change later.
-- **Salt:** a random 16-byte salt generated once per vault/user, stored server-side
-  alongside the data (salts are not secret). Returned to the client at unlock so it can
-  re-derive the same key.
-- **Storage of the derived key:** **in memory only**, as a non-extractable `CryptoKey`.
-  Never `localStorage`/`sessionStorage`, never a cookie.
-- **Auto-lock (`UI-2`):** clear the key on idle timeout, tab close, and explicit lock.
-  Re-derivation requires re-entering the master password.
-- **Verification:** store a small encrypted "verifier" token (e.g. a known constant) so
-  a wrong master password is detected immediately on unlock rather than on first decrypt.
+We use an **envelope encryption** model so the vault works across multiple devices and
+family members and supports recovery, without ever putting a key on the server.
 
-### Master-password recovery
-Zero-knowledge means **if the master password is lost, the data is unrecoverable.** For a
-family tool this must be addressed explicitly. Options (pick one, document it):
-1. **Printed recovery key** kept offline (recommended; simplest).
-2. **Encrypt the vault key to a second recovery key/passphrase** held by a trusted family member.
-3. Accept the risk + maintain the existing backup/export path (`FE-12`).
+- **Data Encryption Key (DEK):** one random 256-bit AES-GCM key that actually encrypts the
+  vault entries. It is generated once, in the browser, and **never leaves the client in
+  plaintext** and is **never sent to the server**.
+- **Key Encryption Key (KEK) from passkey PRF:** during a WebAuthn assertion we request the
+  `prf` extension with a fixed per-vault salt; the authenticator returns a deterministic
+  32-byte secret (`same passkey + same salt ⇒ same secret`). We `HKDF` that into an
+  AES-KW/AES-GCM **KEK** (non-extractable `CryptoKey`).
+- **Wrapped DEK stored server-side:** for each enrolled passkey we store
+  `wrap(KEK, DEK)` (an opaque blob). The server holds only **wrapped** DEKs and never the
+  KEK or the plaintext DEK — this is what keeps the model zero-knowledge.
+- **Unlock flow:** sign in with Entra → `navigator.credentials.get({ publicKey: { extensions: { prf: { eval: { first: vaultSalt } } } } })` → PRF secret → HKDF → KEK → unwrap the DEK → DEK lives in memory as a non-extractable key.
+- **Storage of the DEK:** **in memory only**, non-extractable. Never `localStorage`/
+  `sessionStorage`/cookie.
+- **Auto-lock (`UI-2`):** drop the in-memory DEK on idle timeout, tab close, and explicit
+  lock; re-unlock requires another passkey assertion (a quick biometric tap).
+- **Salt:** the PRF input salt is per-vault, random, stored server-side (it is not secret).
+
+### Why the encryption passkey is a platform passkey, not strictly "the Entra passkey"
+PRF support depends on the authenticator + OS + browser. As of mid-2026:
+- ✅ Strong: Chrome/Edge 128+, Safari 18+ with **iCloud Keychain**, Android with **Google
+  Password Manager**, and modern FIDO2 security keys (YubiKey 5/Bio, etc.).
+- ⚠️ New/uneven: **Windows Hello PRF only arrives in Windows 11 25H2+**; older Windows
+  installs won't return PRF.
+- ⚠️ **Entra-issued passkey + PRF is still maturing** and not guaranteed end-to-end.
+
+Therefore: keep **Entra for sign-in/identity**, but enroll a **synced platform passkey or
+security key** as the *encryption* credential so PRF is reliable. Feature-detect PRF at
+enrollment and refuse to enable E2EE on a device that can't do it (fall back to read via
+the transitional server path until the user enrolls a capable passkey).
+
+### Multi-device & multi-family-member
+Because only the **DEK** encrypts data and each passkey just **wraps** its own copy of the
+DEK, onboarding a new device or family member = authenticate an already-enrolled device,
+unwrap the DEK, then `wrap(newKEK, DEK)` and store the new blob. No re-encryption of the
+vault is needed. (Per-member access scoping is a separate concern — `AC-3`.)
+
+### Recovery (critical — zero-knowledge means lost key = lost data)
+Mitigations, layered:
+1. **Multiple enrolled passkeys** (each family member's phone + laptop) — losing one device
+   is survivable because another can still unwrap the DEK.
+2. **Printed/offline recovery key:** generate a high-entropy recovery secret at setup, use it
+   to `wrap(DEK)` as well, and have the family store it offline. Recommended belt-and-suspenders.
+3. Keep the existing encrypted backup/export path (`FE-12`) as a last resort.
 
 ## 5. Storage format (versioned)
 
-Ciphertext blobs are self-describing so legacy and new entries coexist during migration
-(this is `MIG-1`). Proposed string layout:
+Two kinds of records, both versioned so legacy and new data coexist during migration
+(`MIG-1`):
+
+**A) Per-entry secret blob** — encrypted under the DEK (AES-GCM, no password KDF needed):
 
 ```
-v2.gcm.<kdf>.<iterations>.<saltB64>.<ivB64>.<ciphertext+tagB64>
-   |    |     |            |          |        ciphertext = AES-GCM output (includes auth tag)
-   |    |     |            |          random 96-bit IV, per entry
-   |    |     |            KDF iteration count (lets us raise cost later)
-   |    |     kdf id: "pbkdf2" | "argon2id"
-   |    cipher: "gcm"
-   format version
+v2.gcm.<ivB64>.<ciphertext+tagB64>
+   |    |       ciphertext = AES-GCM output (includes auth tag)
+   |    random 96-bit IV, per entry
+   cipher: "gcm"  (format version "v2")
+```
+
+**B) Vault key record** (one per vault) — holds the material needed to unlock:
+
+```
+{
+  "prfSalt":  "<base64>",              // PRF input salt (not secret)
+  "wrappedDeks": [                      // one per enrolled passkey / recovery key
+    { "credentialId": "<id>", "label": "Brian-iPhone", "wrapped": "<base64>" },
+    { "credentialId": "<id>", "label": "recovery-key",  "wrapped": "<base64>" }
+  ]
+}
 ```
 
 - **`v1`** = the legacy `hmac:ciphertext` (server-side AES-CBC) format. The decrypt path
-  picks the handler by prefix.
-- The salt can be stored once per vault rather than per entry; it is included in the
-  per-entry layout above for clarity — final placement is an implementation choice.
+  picks the handler by prefix, so migration is incremental.
+- The server stores only wrapped DEKs and the (non-secret) PRF salt — never the DEK or KEK.
 
 ## 6. Migration from the current vault (`MIG-2`)
 
 The server cannot re-encrypt under a client-only key, so migration is a **client-driven,
 one-time transitional pass**:
 
-1. User upgrades and sets a master password → client derives the key, stores the salt +
-   verifier server-side.
+1. User signs in (Entra) and **enrolls a PRF-capable passkey** → client generates the random
+   DEK, derives the KEK from the passkey's PRF output, and stores `wrap(KEK, DEK)` + the PRF
+   salt server-side (the vault key record, §5B).
 2. For each legacy (`v1`) entry: the server decrypts it as it does today and returns the
    plaintext over TLS (same exposure as the current app).
-3. The **client** re-encrypts the plaintext under the master-password key and writes back a
-   `v2` blob.
+3. The **client** re-encrypts the plaintext under the **DEK** and writes back a `v2` blob.
 4. Once every entry is `v2`, retire the server-side AES key from Key Vault. From then on the
    server holds nothing decryptable.
 
@@ -138,14 +169,15 @@ decrypt (e.g. `CR-1`-corrupted non-ASCII) for manual re-entry rather than carryi
 ## 7. Residual risk: XSS (must-read)
 
 Client-side E2EE is only as strong as the page's XSS posture: an attacker who can run
-script in the SPA while it is **unlocked** can read the in-memory key or plaintext. No
-cryptography prevents this. Required mitigations shipped *with* this feature:
+script in the SPA while it is **unlocked** can read the in-memory DEK or plaintext. No
+cryptography prevents this (the passkey makes key *theft at rest* irrelevant, but not
+runtime exfiltration of an unlocked key). Required mitigations shipped *with* this feature:
 
 - A strict **Content-Security-Policy** (no inline scripts, locked-down `connect-src`).
 - **Dependency hygiene** — this matters more now; finishing the Vue 3 migration and pruning
   legacy deps (`UI-4`) reduces the supply-chain surface.
 - No `innerHTML`/`v-html` with untrusted data; avoid rendering secrets into the DOM longer
-  than necessary; clear clipboard (`UI-1`) and auto-lock (`UI-2`).
+  than necessary; clear clipboard (`UI-1`) and auto-lock (`UI-2`) to shrink the unlocked window.
 
 This is still strictly better than today, where a single key decrypts the entire vault
 server-side.
@@ -154,26 +186,29 @@ server-side.
 
 | Layer | Change |
 |-------|--------|
-| API (`passwordapp.api`) | Stop decrypting on read; return ciphertext. Keep a temporary server-side decrypt path *only* for the migration pass, then remove. Add storage for per-vault salt + verifier. |
+| API (`passwordapp.api`) | Stop decrypting on read; return ciphertext. Keep a temporary server-side decrypt path *only* for the migration pass, then remove. Add a vault-key record store (PRF salt + wrapped DEKs, §5B). |
 | Crypto (`Encryption.cs`) | Legacy `v1` decrypt retained for migration; new writes are client-side. Server-side `Encryptor` eventually deleted. |
-| Data format | New `v2` versioned blob; `MIG-1` versioning is a prerequisite. |
-| UI (`passwordapp.ui`) | New crypto module (Web Crypto), master-password **unlock screen**, in-memory key state, auto-lock, client-side encrypt on create/update and decrypt on read. |
+| Data format | New `v2` entry blob + vault-key record; `MIG-1` versioning is a prerequisite. |
+| UI (`passwordapp.ui`) | New crypto module (Web Crypto), **passkey enrollment + PRF unlock** flow with feature-detection, in-memory DEK state, auto-lock, client-side encrypt on create/update and decrypt on read. |
 | Infra (`infrastructure`) | After migration, remove the AES key/IV Key Vault secrets and the Function App's access to them. |
-| Docs / ops | Document master-password + recovery model; update `entra.md`/`deploy.md`. |
+| Docs / ops | Document passkey enrollment + recovery model and the PRF device-support matrix; update `entra.md`/`deploy.md`. |
 
 ## 9. Open questions for regroup
 
-1. **Master password** vs. deriving a key from the Entra session — master password is more
-   standard and truly zero-knowledge; confirm the family is OK entering one to unlock.
-2. **Recovery strategy** (§4) — which option?
-3. **KDF** — PBKDF2 (zero-dependency, built in) now, with a path to Argon2id later?
-4. **Scope** — ship E2EE for the whole vault at once, or behind a feature flag for a single
-   test user first?
+1. ~~Master password vs. Entra-derived~~ — **decided:** WebAuthn passkey PRF (zero-knowledge,
+   password-free).
+2. **Recovery strategy** (§4) — multiple enrolled passkeys is assumed; do we *also* want a
+   printed/offline recovery key from day one? (Recommended.)
+3. **Device fallback** — for a device without PRF support (e.g. older Windows Hello), do we
+   (a) require enrolling a synced platform passkey / security key, or (b) allow read-only via
+   the transitional server path until a capable passkey is enrolled?
+4. **Scope** — ship E2EE for the whole vault at once, or behind a feature flag for one test
+   user/device first? (Feature flag recommended given PRF support variance.)
 5. **Offline** — is `OFF-2` (offline read) actually wanted, or is E2EE valuable on its own?
 
 ## 10. Recommended sequence
 
 `MIG-1` (versioned format) → `CR-2` (AES-GCM server-side, shared format) →
-client crypto module + unlock UI (`OFF-4`) → `MIG-2`/`MIG-3` (migrate + verify) →
-retire server key → optional `OFF-2` (offline read), `UI-1`/`UI-2` (clipboard/auto-lock),
-`FE-3`/`FE-4` (now-safe breach/reuse checks).
+PRF feature-detection spike → client crypto module + passkey enrollment/unlock UI (`OFF-4`) →
+`MIG-2`/`MIG-3` (migrate + verify) → retire server key → optional `OFF-2` (offline read),
+`UI-1`/`UI-2` (clipboard/auto-lock), `FE-3`/`FE-4` (now-safe breach/reuse checks).
