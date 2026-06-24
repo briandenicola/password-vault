@@ -40,7 +40,7 @@ weaken data" bugs, so they come first.
 
 | ID | Pri | Effort | Item |
 |----|-----|--------|------|
-| CR-1 | **P0** | S | **Fix ASCII vs UTF-8 mismatch.** `Encryption.cs:29` encrypts with `Encoding.ASCII` but `:85` decrypts with UTF-8. Any password with `é`, `£`, emoji, etc. is silently corrupted to `?` and **unrecoverable**. Switch both sides to UTF-8. *Note: existing entries with non-ASCII chars are already lost — see MIG-1.* |
+| CR-1 | **P0** | S | ✅ **Done (via CR-2 rewrite).** **ASCII vs UTF-8 mismatch fixed.** `Encryption.cs` now uses `Encoding.UTF8` on both the encrypt and decrypt paths (legacy v1 and v2), so `é`, `£`, emoji, etc. round-trip correctly. *Note: entries written before this fix with non-ASCII chars were already corrupted to `?` and are unrecoverable — see `MIG-1`.* |
 | CR-2 | **P1** | M | ✅ **Done.** **Authenticated encryption (AES-GCM).** New writes use `AesGcm` (random 96-bit nonce/entry, tag verified before decrypt → returns null on tamper). Stored as `v2.gcm.<iv>.<ct+tag>` via `SecretEnvelope`. `Encryptor.DecryptStored` routes v1/v2 so legacy data still reads. Encrypt now goes through `EncryptGcm`. |
 | CR-3 | **P1** | S | ✅ **Done (via CR-2).** v2 no longer MACs the plaintext, so identical passwords no longer produce identical stored output (random nonce). Legacy v1 retains the flaw until `MIG-2` re-encrypts. |
 | CR-4 | P2 | S | ✅ **Done (via CR-2).** AES-GCM uses a fresh random 96-bit nonce per entry; the static env `AesIV` is now only used by the legacy v1 decrypt path. |
@@ -56,8 +56,8 @@ shipped to the browser.
 |----|-----|--------|------|
 | AC-1 | **P0** | M | ✅ **Done.** **Validate the Entra ID token in the API.** Added isolated-worker JWT middleware (`Common/JwtAuthenticationMiddleware.cs`) that validates issuer/audience/signature/lifetime against Entra's OIDC metadata, with an optional `oid` allowlist. Security-critical logic is in the pure, unit-tested `Common/EntraTokenAuth.cs` (`EntraTokenValidator`, 23 tests incl. wrong-key/issuer/audience/expired/allowlist). Gated by `AUTH_ENABLED` (**default off**, driven by the `app_requires_authentication` TF var) so it rolls out per environment without breaking the function-key path. Health check stays anonymous. Env/runbook in [`entra.md`](entra.md). |
 | AC-2 | **P0** | S | ✅ **Done (code; live cutover is operator-run).** **Stop shipping the function key to the browser.** All HTTP triggers flipped `Function`→`Anonymous`, so the AC-1 JWT middleware is the sole guard — and it's now **fail-closed**: `AUTH_ENABLED` defaults ON and only the explicit string `false` disables it (local/offline dev), so a misconfigured deploy denies (401) rather than exposing the API. The SPA no longer sends `x-functions-key` (`main.js`), the leaked key was removed from `ui/.env`, and `task deploy-ui` no longer writes `VUE_APP_API_KEY`. Terraform `app_requires_authentication` now defaults `true`. Regression coverage: fail-closed option tests (unset/empty/`true`→enabled; only `false`→disabled) + headless smoke proving no function-key header is sent. **Operator still runs the live cutover** (configure AAD → deploy → **rotate the old host key**) per the [`entra.md`](entra.md) runbook. |
-| AC-3 | P2 | M | **Scope data to the authenticated user.** All records share one env partition key, so "family member" = "all-or-nothing". Optionally partition per user (or per shared-vault) once tokens are validated. Decide if shared-vault is actually desired (it may be!). |
-| AC-4 | P1 | S | **Remove sensitive log line.** `PostPassword.cs:40` logs the encrypted blob + plaintext-HMAC fingerprint into App Insights. Log only `id`. |
+| AC-3 | P2 | M | 🚫 **Not planned.** **Scope data to the authenticated user.** All records share one env partition key. Owner decision: the vault is a single shared family vault by design — nothing is hidden between family members — so per-user partitioning isn't wanted. (If selective *sharing* is ever desired, see `FE-10`.) |
+| AC-4 | P1 | S | ✅ **Done.** **Removed sensitive log line.** `PostPassword` no longer logs the stored password blob — it logs only `id`. A source-scanning regression guard (`SensitiveLoggingTests`) fails CI if any HTTP trigger logs a password/secret field, so this can't silently come back. |
 
 ## Theme 3 — Migration from the existing vault (explicitly requested)
 
@@ -196,7 +196,7 @@ secrets) while keeping the Taskfile usable for local dev.
 
 | ID | Pri | Effort | Item |
 |----|-----|--------|------|
-| CD-1 | **P1** | M | **CI on every PR.** Actions workflow: `dotnet build` + `dotnet test` (net10, runs the new `passwordapp.api.tests`), `npm ci` + `npm run build` for the UI, and `terraform fmt -check`/`validate`. Supersedes `EN-3`. |
+| CD-1 | **P1** | M | ✅ **Done.** **CI on every PR.** `.github/workflows/ci.yml` runs on every PR + push to `main`: API `dotnet build` + `dotnet test` (net10, `passwordapp.api.tests`), migration-tool build, UI `npm install` + `lint` + `test:unit` + `build`, and `terraform fmt -check` + `validate`. Supersedes `EN-3`. (`npm ci` pending a committed lockfile.) |
 | CD-3 | **P1** | S | **Azure login via OIDC federated credentials** (`azure/login`), so no service-principal password or publish profile is stored as a secret. Prerequisite for safe CD. |
 | CD-2 | P2 | M | **CD pipelines.** Deploy API (publish → storage, run-from-package), UI (`Azure/static-web-apps-deploy`), and the Python maintenance function — triggered on merge to `main` (or tags). |
 | CD-4 | P2 | M | **Terraform in CI with remote state.** Move state to an `azurerm` backend (currently local — `providers.tf`), run `terraform plan` on PR and `apply` on `main` behind a **GitHub Environment** approval. Ties `IN-4`. |

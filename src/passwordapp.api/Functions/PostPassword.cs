@@ -38,7 +38,7 @@ namespace PasswordService.API
                 return new BadRequestObjectResult("Invalid request body");
             }   
             accountPassword.SavePassword(_encryptor, postedPassword.CurrentPassword);
-            _logger.LogInformation($"PostPassword request for {accountPassword.id} with a password of {accountPassword.CurrentPassword}");
+            _logger.LogInformation($"PostPassword request for {accountPassword.id}");
             return accountPassword;
         }
     }
