@@ -196,3 +196,38 @@ tasks:
     cmds:
     - az group list --tag Application="{{.TAG}}" --query "[].name" -o tsv | xargs -ot -n 1 az group delete -y --verbose --no-wait -n || true
     - rm -rf terraform.tfstate.d .terraform.lock.hcl .terraform terraform.tfstate terraform.tfstate.backup .terraform.tfstate.lock.info || true
+
+  # --- MIG-2 / MIG-3: legacy v1 -> v2 (AES-GCM) data migration ---
+  # Requires COSMOSDB (Cosmos connection string) exported in your shell or added to
+  # infrastructure/.env. AesKey/AesIV are sourced from infrastructure/.env (ENCRYPTION_*).
+  migrate:backup:
+    desc: Snapshot every vault document to a timestamped JSON file
+    dir: ./src/passwordapp.tools
+    cmds:
+    - dotnet run -- backup
+    env: &migrate_env
+      AesKey: '{{.ENCRYPTION_KEY}}'
+      AesIV: '{{.ENCRYPTION_IV}}'
+      COSMOS_DATABASE_NAME: AccountPasswords
+      COSMOS_COLLECTION_NAME: Passwords
+
+  migrate:verify:
+    desc: MIG-3 — decrypt every secret and report undecryptable entries (read-only)
+    dir: ./src/passwordapp.tools
+    cmds:
+    - dotnet run -- verify
+    env: *migrate_env
+
+  migrate:dryrun:
+    desc: MIG-2 — show what would be re-encrypted to v2 (writes a backup, no changes)
+    dir: ./src/passwordapp.tools
+    cmds:
+    - dotnet run -- migrate
+    env: *migrate_env
+
+  migrate:apply:
+    desc: MIG-2 — re-encrypt legacy v1 secrets to v2 and write them back (backs up first)
+    dir: ./src/passwordapp.tools
+    cmds:
+    - dotnet run -- migrate --apply
+    env: *migrate_env
