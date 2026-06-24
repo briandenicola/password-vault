@@ -6,8 +6,8 @@ var builder = FunctionsApplication.CreateBuilder(args);
 
 builder.ConfigureFunctionsWebApplication();
 
-// AC-1: server-side Entra token validation. Gated by AUTH_ENABLED (default off) so it can be
-// rolled out per environment without breaking the existing function-key path.
+// AC-1/AC-2: server-side Entra token validation. HTTP triggers are Anonymous, so this middleware
+// is the only guard — it is fail-closed (enabled unless AUTH_ENABLED is explicitly "false").
 var authOptions = EntraAuthOptions.FromConfiguration(Environment.GetEnvironmentVariable);
 builder.Services.AddSingleton(authOptions);
 builder.Services.AddSingleton<JwtAuthenticationMiddleware>();

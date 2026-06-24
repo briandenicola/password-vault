@@ -4,7 +4,7 @@ namespace PasswordService.API
     {
         [Function(nameof(GetDeletedPasswords))]
         public IActionResult GetDeletedPasswords(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "passwords/deleted")] HttpRequestData req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "passwords/deleted")] HttpRequestData req,
             [CosmosDBInput(
                 "%COSMOS_DATABASE_NAME%",
                 "%COSMOS_COLLECTION_NAME%",

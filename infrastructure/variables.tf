@@ -34,8 +34,8 @@ variable "production_ui_url" {
 }
 
 variable "app_requires_authentication" {
-  description = "Enable Authentication for the Azure Functions APIs"
-  default     = false
+  description = "Enable Entra token validation on the Azure Functions APIs (AC-2: triggers are Anonymous, so this is fail-closed and defaults ON; set false only for a dev environment)"
+  default     = true
 }
 
 variable "aad_tenant_id" {

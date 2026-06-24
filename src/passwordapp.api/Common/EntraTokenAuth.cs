@@ -10,8 +10,13 @@ namespace PasswordService.Common
     /// </summary>
     public sealed class EntraAuthOptions
     {
-        /// <summary>Master switch. When false the API does not validate bearer tokens.</summary>
-        public bool Enabled { get; init; }
+        /// <summary>
+        /// Master switch. <strong>Fail-closed: defaults to ON.</strong> The API's HTTP triggers are
+        /// <c>Anonymous</c> (AC-2), so token validation is the only thing protecting them — a missing
+        /// or unset <c>AUTH_ENABLED</c> must therefore <em>enable</em> auth, never disable it. Auth is
+        /// only skipped when <c>AUTH_ENABLED</c> is explicitly the string <c>"false"</c> (local/offline dev).
+        /// </summary>
+        public bool Enabled { get; init; } = true;
 
         /// <summary>Entra tenant (directory) id. Used to build the issuer + metadata address.</summary>
         public string? TenantId { get; init; }
@@ -36,7 +41,10 @@ namespace PasswordService.Common
         {
             return new EntraAuthOptions
             {
-                Enabled = string.Equals(get("AUTH_ENABLED"), "true", StringComparison.OrdinalIgnoreCase),
+                // Fail-closed: only the explicit string "false" disables validation. Anything else
+                // (including unset/missing) leaves auth ON, so a misconfigured deploy denies rather
+                // than exposes the now-Anonymous HTTP triggers.
+                Enabled = !string.Equals(get("AUTH_ENABLED"), "false", StringComparison.OrdinalIgnoreCase),
                 TenantId = get("AAD_TENANT_ID"),
                 Audiences = Split(get("AAD_AUDIENCE")),
                 AllowedObjectIds = Split(get("AAD_ALLOWED_OIDS")),

@@ -8,7 +8,7 @@ namespace PasswordService.API
         [Function(nameof(PostPassword))]
         [CosmosDBOutput( "%COSMOS_DATABASE_NAME%", "%COSMOS_COLLECTION_NAME%", PartitionKey = "%COSMOS_PARTITION_KEY%", Connection = "COSMOSDB")] 
         public async Task<object> PostPassword(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "passwords")] HttpRequestData  req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "passwords")] HttpRequestData  req)
         {
             var accountPassword = new AccountPassword();
             accountPassword.GenerateId();

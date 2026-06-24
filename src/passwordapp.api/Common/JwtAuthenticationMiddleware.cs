@@ -14,9 +14,10 @@ namespace PasswordService.Common
     /// <see cref="EntraTokenValidator"/>; this class is only the glue that wires in Entra's OIDC
     /// signing keys and short-circuits the pipeline with 401 on failure.
     ///
-    /// Behaviour is gated by <see cref="EntraAuthOptions.Enabled"/> (AUTH_ENABLED). When disabled
-    /// the middleware is a no-op, so existing function-key auth keeps working until an operator
-    /// turns validation on per-environment.
+    /// Behaviour is gated by <see cref="EntraAuthOptions.Enabled"/> (AUTH_ENABLED), which is
+    /// <strong>fail-closed</strong>: enabled unless AUTH_ENABLED is explicitly "false". Since the HTTP
+    /// triggers are Anonymous (AC-2), this middleware is the only credential check; disabling it is a
+    /// deliberate local/offline-dev choice.
     /// </summary>
     public sealed class JwtAuthenticationMiddleware : IFunctionsWorkerMiddleware
     {

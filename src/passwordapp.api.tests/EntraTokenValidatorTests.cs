@@ -226,13 +226,39 @@ namespace PasswordService.Tests
         }
 
         [Fact]
-        public void Options_default_to_disabled_with_empty_lists()
+        public void Options_are_fail_closed_when_nothing_is_configured()
         {
+            // AC-2: HTTP triggers are Anonymous, so a missing/unset AUTH_ENABLED must leave
+            // validation ON (fail-closed) — never expose the API by default.
             var options = EntraAuthOptions.FromConfiguration(_ => null);
 
-            Assert.False(options.Enabled);
+            Assert.True(options.Enabled);
             Assert.Empty(options.Audiences);
             Assert.Empty(options.AllowedObjectIds);
+        }
+
+        [Theory]
+        [InlineData("true")]
+        [InlineData("TRUE")]
+        [InlineData("anything-else")]
+        [InlineData("")]
+        public void Options_stay_enabled_unless_flag_is_explicitly_false(string value)
+        {
+            var settings = new Dictionary<string, string?> { ["AUTH_ENABLED"] = value };
+            var options = EntraAuthOptions.FromConfiguration(k => settings.GetValueOrDefault(k));
+            Assert.True(options.Enabled);
+        }
+
+        [Theory]
+        [InlineData("false")]
+        [InlineData("False")]
+        [InlineData("FALSE")]
+        public void Options_only_disable_on_explicit_false(string value)
+        {
+            // The single deliberate escape hatch for local/offline dev.
+            var settings = new Dictionary<string, string?> { ["AUTH_ENABLED"] = value };
+            var options = EntraAuthOptions.FromConfiguration(k => settings.GetValueOrDefault(k));
+            Assert.False(options.Enabled);
         }
     }
 }

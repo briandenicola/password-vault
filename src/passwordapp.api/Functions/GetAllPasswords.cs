@@ -4,7 +4,7 @@ namespace PasswordService.API
     {
         [Function(nameof(GetAllPasswords))]
         public IActionResult GetAllPasswords(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "passwords")] HttpRequestData req, 
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "passwords")] HttpRequestData req, 
             [CosmosDBInput(
                 "%COSMOS_DATABASE_NAME%", 
                 "%COSMOS_COLLECTION_NAME%", 

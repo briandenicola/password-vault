@@ -179,8 +179,6 @@ tasks:
       silent: true
     - cmd: echo VUE_APP_API_ENDPOINT=\"{{.FUNCTION_URL}}\" >> .env
       silent: true
-    - cmd: echo VUE_APP_API_KEY=\"{{.AZURE_FUNCTION_HOST_KEY}}\" >> .env
-      silent: true
     - cmd: echo VUE_APP_AAD_REDIRECT_URL=\"{{.AAD_REDIRECT_URL}}\" >> .env
       silent: true
     - cmd: echo VUE_APP_AAD_CLIENT_ID=\"{{.AAD_CLIENT_ID}}\" >> .env
@@ -196,8 +194,6 @@ tasks:
     vars:
       FUNCTION_URL:
         sh: terraform -chdir=../../infrastructure output -raw FUNCTION_URL
-      AZURE_FUNCTION_HOST_KEY:
-        sh: terraform -chdir=../../infrastructure output -raw AZURE_FUNCTION_HOST_KEY
       APP_INSIGHTS_CONNECTION_STRING:
         sh: terraform -chdir=../../infrastructure output -raw APP_INSIGHTS_CONNECTION_STRING 
       SWA: 

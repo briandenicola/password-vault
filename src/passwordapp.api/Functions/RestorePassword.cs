@@ -6,7 +6,7 @@ namespace PasswordService.API
         [Function(nameof(RestorePassword))]
         [CosmosDBOutput( "%COSMOS_DATABASE_NAME%", "%COSMOS_COLLECTION_NAME%", PartitionKey = "%COSMOS_PARTITION_KEY%", Connection = "COSMOSDB")]
         public object? RestorePassword(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "passwords/{id}/restore")] HttpRequestData req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "passwords/{id}/restore")] HttpRequestData req,
             [CosmosDBInput(
                 "%COSMOS_DATABASE_NAME%",
                 "%COSMOS_COLLECTION_NAME%",
