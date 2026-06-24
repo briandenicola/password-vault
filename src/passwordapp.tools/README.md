@@ -38,7 +38,10 @@ dotnet run --project src/passwordapp.tools -- migrate           # MIG-2 dry run 
 dotnet run --project src/passwordapp.tools -- migrate --apply   # MIG-2 apply
 ```
 
-Or via Taskfile (sources `AesKey`/`AesIV` from `infrastructure/.env`; export `COSMOSDB` first):
+Or via Taskfile (sources `AesKey`/`AesIV` from `infrastructure/.env`; `COSMOSDB` is
+auto-derived from the Terraform output `COSMOSDB_CONNECTION_STRING`). To run against a
+backup or an environment you haven't `terraform init`-ed, override it by exporting
+`COSMOSDB` or adding it to `infrastructure/.env`:
 
 ```bash
 task migrate:verify
