@@ -15,7 +15,8 @@ Legend — Priority: **P0** do first / **P1** soon / **P2** nice-to-have / **P3*
 > ✅ `EN-3`/`CD-1` (CI workflow), ✅ `MIG-1` (versioned ciphertext format),
 > ✅ `CR-2`/`CR-3`/`CR-4`/`CR-5`/`CR-6` (AES-GCM `v2` writes + HKDF key separation + instance-state fix),
 > ✅ `MIG-2`/`MIG-3` (`vault-migrate` tool: backup, verify, dry-run/apply re-encryption v1→v2),
-> ✅ `FE-13` (password history UI), ✅ `AC-1` (server-side Entra token validation, flag-gated; `AC-2` staged).
+> ✅ `FE-13` (password history UI), ✅ `AC-1` (server-side Entra token validation, flag-gated; `AC-2` staged),
+> ✅ `GE-1`/`GE-2`/`GE-3`/`GE-4`/`UI-5` (generator overhaul: options, exclude-ambiguous, passphrase mode, unbiased sampling + Vitest).
 > New writes are now AES-GCM; legacy `v1` still reads, and existing data can be migrated with `vault-migrate`.
 > Design for `OFF-4` in [`design/e2ee.md`](design/e2ee.md); PRF spike validated on devices.
 
@@ -68,7 +69,7 @@ Quality-of-life and "don't leave secrets lying around" items for a family tool.
 | UI-3 | P2 | M | **Fix MSAL bootstrap + token storage.** `AzureAD.Authentication.js` admits it "does not handle initial page load properly" and caches tokens in `localStorage` (XSS-reachable). Fix the redirect-promise flow; consider `sessionStorage`. |
 | UI-4 | P2 | M | **Migrate UI library to PrimeVue v4 + exit Vue 2 compat.** Vue 3 is the current major (no Vue 4), so the *core* is fine — but the app runs through `@vue/compat` (temporary migration build) and **`bootstrap-vue@2`**, which is Vue 2-only and drags **EOL `vue@2.7.16`** into the tree (via `portal-vue`). **Decision (2026-06-24): replace bootstrap-vue with [PrimeVue v4](https://primevue.org/).** Rationale: actively maintained (90+ components, weekly releases), modern non-Bootstrap look via design tokens (and optional unstyled/Tailwind mode), and a built-in `Password` component with strength meter + toggle-mask that gives us **FE-1 nearly for free**. Remove `@vue/compat` and `bootstrap-vue`; confirm `npm ls vue` shows only `vue@3`. Migration surface is small (home/create/update/notfound + forms, buttons, one modal). See migration steps below. |
 | UI-6 | P2 | M | **Upgrade `@azure/msal-browser` v2 → v5.** Currently `^2.39.0`; current major is v5.x. Security-relevant (it's the auth library) and increasingly important as passkey/E2EE flows land. Review breaking changes across v2→v3→v4→v5. |
-| UI-5 | P3 | S | **Improve the existing generator.** A generator already exists (`utils.js:generatePassword`, CSPRNG + class guarantee + shuffle). Improvements only — see Theme 7 `GE-*`. |
+| UI-5 | P3 | S | ✅ **Done.** **Improve the existing generator.** Rewrote the generator as a pure, unit-tested module (`utils/generator.js`) backing a reusable `PasswordGenerator` component, delivering `GE-1`/`GE-2`/`GE-3`/`GE-4` (configurable options, exclude-ambiguous, passphrase mode, unbiased sampling) plus a live strength/entropy readout. `utils.js` keeps a backward-compatible `generatePassword()`. Vitest added; tests run in CI. (Generator defaults will later be driven by `FE-15` settings.) |
 
 ### UI-4 migration steps (bootstrap-vue@2 → PrimeVue v4)
 
@@ -124,10 +125,10 @@ a few (marked) are easier *after* end-to-end encryption (see Theme 8).
 
 | ID | Pri | Effort | Item |
 |----|-----|--------|------|
-| GE-1 | P2 | S | **Configurable options in the UI.** Length slider + toggles (upper/lower/digits/symbols). Today length is hardcoded to 13 (`utils.js:2`) with no UI controls. |
-| GE-2 | P3 | S | **Exclude-ambiguous mode.** Optional removal of `l/I/1/O/0` etc. for hand-typed passwords. |
-| GE-3 | P3 | S | **Passphrase / diceware mode.** Word-list passphrases for memorable master-style secrets. |
-| GE-4 | P3 | S | **Remove modulo bias.** `% charset.length` (`utils.js:11,29`) is slightly biased; use rejection sampling. Cosmetic for a family tool, but trivial to fix. |
+| GE-1 | P2 | S | ✅ **Done.** **Configurable options in the UI.** New reusable `PasswordGenerator` component (`components/generator/`) with a length slider (8–64) and upper/lower/digit/symbol toggles, embedded on create + update. Live entropy/strength readout. |
+| GE-2 | P3 | S | ✅ **Done.** **Exclude-ambiguous mode.** Toggle removes visually confusable chars (`O/0/o/i/I/l/L/1/|` and quotes) from the pool; entropy estimate accounts for the smaller pool. |
+| GE-3 | P3 | S | ✅ **Done.** **Passphrase / diceware mode.** Mode toggle generates word-list passphrases from the bundled **EFF large wordlist** (7776 words, CC-BY, `utils/wordlist.js`) with configurable word count, separator, capitalize, and optional number (~12.9 bits/word). |
+| GE-4 | P3 | S | ✅ **Done.** **Remove modulo bias.** Replaced `% charset.length` with `secureRandomBelow()` rejection sampling (used for both char selection and the Fisher-Yates shuffle). Unit-tested incl. the rejection path + statistical uniformity. |
 
 ### Vault features
 
@@ -147,6 +148,7 @@ a few (marked) are easier *after* end-to-end encryption (see Theme 8).
 | FE-12 | P3 | S | **Backup/restore UI.** A `scripts/decrypt-backup.py` exists as a CLI; expose backup/export from the UI. |
 | FE-13 | P2 | S | ✅ **Done.** **Password history view (UI).** Added `getHistory(id)` to `Password.Service.js` (calls `passwords/{id}/history`) and a history modal in `home.vue`/`home.js`: a per-account table of every password (current + prior) with timestamps, a **Current** badge on the newest, and a per-row copy button. Reachable from a new clock action in the account row. (Built on bootstrap-vue for now; will carry over in the UI-4 PrimeVue migration.) |
 | FE-14 | P3 | M | **Better sorting / filtering / searching.** Builds on `FE-2`. Today the home list uses bootstrap-vue's `b-table` with sort on Account/Site only (`lastModifiedDate` is `sortable: false`) and a single substring filter (`home.js:19-24`). Improvements: make every column sortable (incl. last-modified/age), add scoped filters (by site/account/tag/folder once `FE-2` lands), and a faster global search. **Couples to `UI-4`:** the PrimeVue migration replaces `b-table` with PrimeVue `DataTable`, which provides column sort, per-column filters, and global search out of the box — so do this as part of / after `UI-4`. |
+| FE-15 | P2 | M | **User settings / preferences page.** A dedicated settings view to set per-user defaults instead of hard-coded values: **generator defaults** (length, character classes, exclude-ambiguous, password-vs-passphrase mode, word count/separator — feeds `GE-1`/`UI-5`), **default sort/filter** for the home list (couples to `FE-14`), **auto-lock timeout** (`UI-2`) and **clipboard auto-clear delay** (`UI-1`), plus future toggles (theme, breach-check opt-in `FE-3`). Persist client-side first (e.g. `localStorage`, keyed per signed-in user); consider a server-stored profile later once `AC-3` user-scoping lands. The generator/options components should read their defaults from this store so the settings page is the single source of truth. |
 
 ---
 
