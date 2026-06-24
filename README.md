@@ -51,6 +51,10 @@ The [TaskFile](../TaskFile.yaml) is located in the root of the repository and in
 * An account with owner permissions on the Azure subscription and Global Admin on the Azure AD tenant
 * **Warning:** Follow this [guide](https://learn.microsoft.com/en-us/azure/developer/terraform/get-started-cloud-shell-powershell?tabs=bash) to configure Terraform with a Service Principal.
 
+## Project Governance
+* [Constitution](./docs/constitution.md) — durable principles and working agreements.
+* [Architecture Decision Records](./docs/adr/README.md) — why key choices were made.
+
 ## Navigation
 [Return to Main Index 🏠](../README.md) ‖
 [Next Section ⏩](./docs/entra.md)
