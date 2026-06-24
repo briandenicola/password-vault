@@ -42,9 +42,13 @@ let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? 
   Axios.defaults.baseURL = process.env.VUE_APP_API_ENDPOINT;
   Axios.defaults.headers.common['x-functions-key'] = process.env.VUE_APP_API_KEY;
 
-  Authentication.initialize();
-  var token = await Authentication.getBearerToken();
-  Axios.defaults.headers.common['Authorization'] = "Bearer ".concat(token);
+  await Authentication.initialize();
+  if (Authentication.isAuthenticated()) {
+    const token = await Authentication.getBearerToken();
+    if (token) {
+      Axios.defaults.headers.common['Authorization'] = "Bearer ".concat(token);
+    }
+  }
 
   if(requiresAppInsights ) {
     const clickPluginInstance = new ClickAnalyticsPlugin();
