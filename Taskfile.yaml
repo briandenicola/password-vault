@@ -162,6 +162,13 @@ tasks:
     desc: Deploy application to Azure Static Web Apps
     dir: ./src/passwordapp.ui
     cmds:
+    - cmd: |
+        if [ "{{.APP_REQUIRES_AUTHENTICATION}}" = "true" ] && [ -z "{{.AAD_CLIENT_ID}}" ]; then
+          echo "ERROR: AAD_CLIENT_ID is empty. Add it to infrastructure/.env (see docs/entra.md)," >&2
+          echo "       or set APP_REQUIRES_AUTHENTICATION=false to deploy without Entra auth." >&2
+          exit 1
+        fi
+      silent: true
     - cmd: echo VUE_APP_TITLE=\"Password Vault\" > .env
       silent: true
     - cmd: echo VUE_APP_REQUIRES_AUTHENTICATION={{.APP_REQUIRES_AUTHENTICATION}} >> .env
@@ -173,6 +180,14 @@ tasks:
     - cmd: echo VUE_APP_API_ENDPOINT=\"{{.FUNCTION_URL}}\" >> .env
       silent: true
     - cmd: echo VUE_APP_API_KEY=\"{{.AZURE_FUNCTION_HOST_KEY}}\" >> .env
+      silent: true
+    - cmd: echo VUE_APP_AAD_REDIRECT_URL=\"{{.AAD_REDIRECT_URL}}\" >> .env
+      silent: true
+    - cmd: echo VUE_APP_AAD_CLIENT_ID=\"{{.AAD_CLIENT_ID}}\" >> .env
+      silent: true
+    - cmd: echo VUE_APP_AAD_TENANT_ID=\"{{.AAD_TENANT_ID}}\" >> .env
+      silent: true
+    - cmd: echo VUE_APP_AAD_SCOPE=\"{{.AAD_SCOPE}}\" >> .env
       silent: true
     - npm install
     - npm run build
@@ -189,6 +204,22 @@ tasks:
         sh: terraform -chdir=../../infrastructure output -raw SWA_NAME 
       DEPLOY_TOKEN:
         sh: az staticwebapp secrets list --name {{.SWA}} --query "properties.apiKey" -o tsv
+      # --- Entra/AAD values: no manual .env.production needed ---
+      # Redirect URL: a custom-domain/override in VUE_APP_AAD_REDIRECT_URL (any
+      # loaded .env) wins; otherwise use the Static Web App's default URL.
+      AAD_REDIRECT_URL:
+        sh: echo "${VUE_APP_AAD_REDIRECT_URL:-$(terraform -chdir=../../infrastructure output -raw SWA_DEFAULT_URL)}"
+      # Client id of the app registration (created manually per docs/entra.md).
+      # Must be provided via infrastructure/.env (AAD_CLIENT_ID) — there is no
+      # Terraform/az source for it.
+      AAD_CLIENT_ID:
+        sh: echo "${VUE_APP_AAD_CLIENT_ID:-${AAD_CLIENT_ID:-}}"
+      # Tenant id: override via env, else the signed-in az tenant.
+      AAD_TENANT_ID:
+        sh: echo "${VUE_APP_AAD_TENANT_ID:-${AAD_TENANT_ID:-$(az account show --query tenantId -o tsv)}}"
+      # API scope/audience == the Function App URL (App ID URI).
+      AAD_SCOPE:
+        sh: echo "${VUE_APP_AAD_SCOPE:-$(terraform -chdir=../../infrastructure output -raw FUNCTION_URL)}"
 
   down:
     desc: Destroys all Azure resources and cleans up Terraform
