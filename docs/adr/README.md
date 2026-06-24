@@ -20,3 +20,6 @@ One decision per file. Keep each to a page. Format follows
 | [0003](0003-versioned-aes-gcm-envelope.md) | Versioned AES-GCM secret envelope | Accepted |
 | [0004](0004-primevue-ui.md) | PrimeVue v4 for the UI (exit Vue 2 compat) | Accepted |
 | [0005](0005-entra-server-side-auth.md) | Server-side Entra token validation (flag-gated) | Accepted |
+| [0006](0006-single-shared-family-vault.md) | Single shared family vault (no per-user scoping) | Accepted |
+| [0007](0007-oidc-cd-remote-state.md) | OIDC-only CD with remote Terraform state | Accepted |
+| [0008](0008-client-side-e2ee-passkey-prf.md) | Client-side E2EE via WebAuthn passkey PRF | Accepted (design) |

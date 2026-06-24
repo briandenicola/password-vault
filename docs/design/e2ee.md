@@ -1,6 +1,7 @@
 # Design: Client-Side (Zero-Knowledge) Encryption
 
-Status: **Proposal** · Backlog ref: `OFF-4` (enabler for `OFF-2`/`OFF-3`, `FE-3`/`FE-4`) ·
+Status: **Accepted — implementation in progress** ([ADR-0008](../adr/0008-client-side-e2ee-passkey-prf.md)) ·
+Backlog ref: `OFF-4` (enabler for `OFF-2`/`OFF-3`, `FE-3`/`FE-4`) ·
 Related: `CR-2` (AES-GCM), `MIG-1` (versioned format), `MIG-2` (re-encrypt), `UI-2` (auto-lock)
 
 **Decisions (2026-06-24):** unlock is **password-free**. The vault key is derived from a
