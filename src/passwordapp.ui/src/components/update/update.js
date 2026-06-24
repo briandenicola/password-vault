@@ -1,9 +1,10 @@
 import PasswordService from '@/components/api/Password.Service.js';
 import Authentication from '@/components/azuread/AzureAD.Authentication.js';
-import PasswordUtils from '@/components/utils/utils.js';
+import PasswordGenerator from '@/components/generator/generator.vue';
 
 export default {
   name: 'Update',
+  components: { PasswordGenerator },
   data() {
     return {
       formData:           PasswordService.newPassword(),
@@ -21,8 +22,8 @@ export default {
     });
   },
   methods: {
-    genPass() {
-      this.formData.currentPassword = PasswordUtils.generatePassword();
+    onGenerated(password) {
+      this.formData.currentPassword = password;
     },
     updatePassword() {
       this.formData.lastModifiedBy = Authentication.getUserProfile();
