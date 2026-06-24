@@ -1,0 +1,80 @@
+name: CI
+
+# Build & test gate for pull requests and pushes to main.
+# No deployment here — see Theme 9 (CD-2/CD-3/CD-4) in docs/BACKLOG.md.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API — build & test (.NET 10)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build API
+        run: dotnet build src/passwordapp.api/PasswordService.csproj -c Release --nologo
+
+      - name: Run tests
+        run: dotnet test src/passwordapp.api.tests/passwordapp.api.tests.csproj -c Release --nologo
+
+  ui:
+    name: UI — build (Vue 3)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/passwordapp.ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # package-lock.json is gitignored in this repo, so `npm ci` is not usable yet.
+      # If the lockfile is committed later, switch this to `npm ci`.
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build
+        run: npm run build
+
+  terraform:
+    name: Terraform — fmt & validate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infrastructure
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '~> 1.7'
+
+      - name: Format check
+        run: terraform fmt -check -recursive
+
+      - name: Validate
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
