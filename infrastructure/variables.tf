@@ -37,3 +37,18 @@ variable "app_requires_authentication" {
   description = "Enable Authentication for the Azure Functions APIs"
   default     = false
 }
+
+variable "aad_tenant_id" {
+  description = "Entra (Azure AD) tenant id used to validate API bearer tokens (AC-1)"
+  default     = ""
+}
+
+variable "aad_audience" {
+  description = "Accepted audience(s) for API bearer tokens, comma-separated (e.g. api://password-vault)"
+  default     = ""
+}
+
+variable "aad_allowed_oids" {
+  description = "Optional comma-separated allowlist of caller object-ids. Empty relies on Enterprise App group assignment."
+  default     = ""
+}

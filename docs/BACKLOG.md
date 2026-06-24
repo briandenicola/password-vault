@@ -14,7 +14,8 @@ Legend — Priority: **P0** do first / **P1** soon / **P2** nice-to-have / **P3*
 > ✅ `EN-2` (xUnit test project), ✅ **.NET 10 upgrade** (API + devcontainer + docs),
 > ✅ `EN-3`/`CD-1` (CI workflow), ✅ `MIG-1` (versioned ciphertext format),
 > ✅ `CR-2`/`CR-3`/`CR-4`/`CR-5`/`CR-6` (AES-GCM `v2` writes + HKDF key separation + instance-state fix),
-> ✅ `MIG-2`/`MIG-3` (`vault-migrate` tool: backup, verify, dry-run/apply re-encryption v1→v2).
+> ✅ `MIG-2`/`MIG-3` (`vault-migrate` tool: backup, verify, dry-run/apply re-encryption v1→v2),
+> ✅ `FE-13` (password history UI), ✅ `AC-1` (server-side Entra token validation, flag-gated; `AC-2` staged).
 > New writes are now AES-GCM; legacy `v1` still reads, and existing data can be migrated with `vault-migrate`.
 > Design for `OFF-4` in [`design/e2ee.md`](design/e2ee.md); PRF spike validated on devices.
 
@@ -41,8 +42,8 @@ shipped to the browser.
 
 | ID | Pri | Effort | Item |
 |----|-----|--------|------|
-| AC-1 | **P0** | M | **Validate the Entra ID token in the API.** Every endpoint is `AuthorizationLevel.Function` only; the SPA's login is cosmetic to the backend. Anyone with the function key has full read/decrypt access. Validate the bearer token (issuer/audience/`oid`) in each function and reject unauthenticated calls. |
-| AC-2 | **P0** | S | **Stop shipping the function key to the browser.** `ui/.env` `VUE_APP_API_KEY` is injected as `x-functions-key` (`main.js:40-45`), so every user has the master key. Once AC-1 is in place, remove it and rely on the user's token. |
+| AC-1 | **P0** | M | ✅ **Done.** **Validate the Entra ID token in the API.** Added isolated-worker JWT middleware (`Common/JwtAuthenticationMiddleware.cs`) that validates issuer/audience/signature/lifetime against Entra's OIDC metadata, with an optional `oid` allowlist. Security-critical logic is in the pure, unit-tested `Common/EntraTokenAuth.cs` (`EntraTokenValidator`, 23 tests incl. wrong-key/issuer/audience/expired/allowlist). Gated by `AUTH_ENABLED` (**default off**, driven by the `app_requires_authentication` TF var) so it rolls out per environment without breaking the function-key path. Health check stays anonymous. Env/runbook in [`entra.md`](entra.md). |
+| AC-2 | **P0** | S | 🟡 **Staged (code ready; needs flag enablement first).** **Stop shipping the function key to the browser.** The SPA already sends the bearer token, and AC-1 enforces it. Safe sequence (see [`entra.md`](entra.md) cutover runbook): (1) enable `AUTH_ENABLED` in the live env and verify, (2) flip HTTP triggers `Function`→`Anonymous` and remove `VUE_APP_API_KEY`/`x-functions-key` from `main.js`, (3) **rotate** the old key (it was committed in `ui/.env` + git history). Not flipped automatically because with the flag still off that would leave the API open. |
 | AC-3 | P2 | M | **Scope data to the authenticated user.** All records share one env partition key, so "family member" = "all-or-nothing". Optionally partition per user (or per shared-vault) once tokens are validated. Decide if shared-vault is actually desired (it may be!). |
 | AC-4 | P1 | S | **Remove sensitive log line.** `PostPassword.cs:40` logs the encrypted blob + plaintext-HMAC fingerprint into App Insights. Log only `id`. |
 
