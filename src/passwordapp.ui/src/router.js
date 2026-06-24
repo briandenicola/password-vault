@@ -1,4 +1,3 @@
-import Vue from 'vue'
 import {createRouter, createMemoryHistory} from 'vue-router'
 import NotFound from '@/components/notfound/pagenotfound.vue'
 import Home from '@/components/home/home.vue'
