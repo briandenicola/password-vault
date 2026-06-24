@@ -9,6 +9,11 @@
 
 Legend — Priority: **P0** do first / **P1** soon / **P2** nice-to-have / **P3** polish.
 
+> **Progress (branch `improvements/security-and-features-backlog`):** Phase 0 started —
+> ✅ `CR-1` (UTF-8 crypto fix + regression tests), ✅ `EN-1` (gitignore conflict),
+> ✅ `EN-2` (xUnit test project), ✅ **.NET 10 upgrade** (API + devcontainer + docs).
+> Design for `OFF-4` in [`design/e2ee.md`](design/e2ee.md); PRF spike validated on devices.
+
 ---
 
 ## Theme 1 — Cryptography correctness (data integrity)
@@ -137,7 +142,7 @@ access to secrets requires moving decryption to the client first.
 | OFF-1 | P3 | **S — mostly done** | **App-shell offline.** Already a PWA: `registerServiceWorker.js` + `vue.config.js` `pwa{}` cache the UI shell. The app *loads* offline today; it just can't fetch data. Task is only to verify/upgrade the Workbox config and add an "offline" UI state. |
 | OFF-2 | P2 | **M–L** | **Read-only offline vault.** Cache entries in IndexedDB so the family can *view* passwords with no signal. **The blocker:** today `GetPasswordById` decrypts server-side and returns plaintext, so caching would mean storing plaintext (or the function key) in the browser — unacceptable. The clean path is to cache **encrypted** blobs and decrypt in the browser, which requires E2EE (OFF-4). Effort is M if you accept caching encrypted blobs + client decrypt; L if done carefully with key handling and auto-lock. |
 | OFF-3 | P3 | **L** | **Offline edits + sync.** Queue create/update/delete while offline and replay on reconnect, with conflict resolution (last-write-wins is simplest given low family concurrency). Genuinely the hardest piece; only worth it if OFF-2 proves valuable. |
-| OFF-4 | P2 | **L (enabler)** | **End-to-end / zero-knowledge encryption.** Derive the vault key in the browser from the user's Entra identity / a master password (e.g. via WebCrypto + PBKDF2/Argon2) and encrypt/decrypt entirely client-side. This is the *right* long-term shape for a password manager (the server never sees plaintext or the key), and it's what unlocks OFF-2/OFF-3 and FE-3/FE-4 safely. Big change; pairs with Theme 1's AES-GCM and Theme 3's versioned/migration format. |
+| OFF-4 | P2 | **L (enabler)** | **End-to-end / zero-knowledge encryption.** ✅ *Design decided* — see [`design/e2ee.md`](design/e2ee.md). Password-free unlock via **WebAuthn passkey PRF**; envelope model (random vault DEK wrapped per passkey via a PRF-derived KEK, all in Web Crypto); Entra for sign-in only. The server never sees plaintext or the key. Unlocks OFF-2/OFF-3 and FE-3/FE-4. Pairs with Theme 1 AES-GCM + Theme 3 versioned/migration format. PRF feasibility validated via `scripts/spikes/webauthn-prf`. |
 
 **Recommended offline path:** OFF-1 is essentially free (tidy it up). Don't chase
 OFF-2/OFF-3 directly — they're a trap without OFF-4. If offline access matters to
@@ -145,3 +150,24 @@ the family, treat **OFF-4 (client-side E2EE)** as the real project; OFF-2 then
 becomes a straightforward IndexedDB cache of encrypted blobs, and OFF-3 an
 optional follow-up. If offline *isn't* a real need, skip the whole theme and keep
 decryption server-side — simpler and arguably safer for a small shared vault.
+
+---
+
+## Theme 9 — Deployment & CI/CD
+
+Today everything deploys from a developer's laptop via `Taskfile.yaml`: local
+`terraform apply` (encryption key/IV passed as `-var` from `infrastructure/.env`),
+`dotnet publish` → zip → `az storage copy` (run-from-package), and `swa deploy` with a
+deployment token. It works, but it's manual, secret-on-laptop, and has no automated
+build/test gate. The goal: move to **GitHub Actions** with **OIDC** (no stored cloud
+secrets) while keeping the Taskfile usable for local dev.
+
+| ID | Pri | Effort | Item |
+|----|-----|--------|------|
+| CD-1 | **P1** | M | **CI on every PR.** Actions workflow: `dotnet build` + `dotnet test` (net10, runs the new `passwordapp.api.tests`), `npm ci` + `npm run build` for the UI, and `terraform fmt -check`/`validate`. Supersedes `EN-3`. |
+| CD-3 | **P1** | S | **Azure login via OIDC federated credentials** (`azure/login`), so no service-principal password or publish profile is stored as a secret. Prerequisite for safe CD. |
+| CD-2 | P2 | M | **CD pipelines.** Deploy API (publish → storage, run-from-package), UI (`Azure/static-web-apps-deploy`), and the Python maintenance function — triggered on merge to `main` (or tags). |
+| CD-4 | P2 | M | **Terraform in CI with remote state.** Move state to an `azurerm` backend (currently local — `providers.tf`), run `terraform plan` on PR and `apply` on `main` behind a **GitHub Environment** approval. Ties `IN-4`. |
+| CD-5 | P2 | S | **Stop passing the encryption key/IV as Terraform `-var`s from a local `.env`.** Mark them `sensitive`, source from Key Vault / CI secret, and keep them off the command line. (Removed entirely once `OFF-4` lands and the server no longer holds a key.) |
+| CD-6 | P2 | S | **Dependabot config** for nuget, npm, terraform, and github-actions (a `dependabot/nuget` branch exists but there's no config on `main`). |
+| CD-7 | P3 | S | **Keep `Taskfile.yaml` as a thin wrapper** over the same scripts CI uses, so local and pipeline deploys don't drift. |
