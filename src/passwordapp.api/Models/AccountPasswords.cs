@@ -68,32 +68,13 @@
         public string DecryptPassword( Encryptor e ) 
         {
             if (CurrentPassword == null) return string.Empty;
-            
-            var p = new PasswordEntity(CurrentPassword);
-            if(p.EncryptedPassword == null || p.HmacHash == null) {
-                return string.Empty;
-            }
-
-            e.Decrypt(p.EncryptedPassword, p.HmacHash, out string? decryptedPassword);
-            return decryptedPassword ?? string.Empty;
+            return e.DecryptStored(CurrentPassword) ?? string.Empty;
         }   
-
-        public string EncryptPassword( Encryptor e ) 
-        {
-            if (CurrentPassword == null) return string.Empty;
-            var hash = e.Encrypt(CurrentPassword, out string? encryptedPassword);
-
-            if(encryptedPassword == null) return string.Empty;
-            return new PasswordEntity(hash,encryptedPassword).ToString();
-        } 
 
         public string EncryptPassword( Encryptor e, string newPassword ) 
         {
             if (newPassword == null) return string.Empty;   
-            var hash = e.Encrypt(newPassword, out string? encryptedPassword);
-
-            if(encryptedPassword == null) return string.Empty;
-            return new PasswordEntity(hash,encryptedPassword).ToString();
+            return e.EncryptGcm(newPassword);
         }   
 
     }

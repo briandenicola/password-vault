@@ -12,7 +12,9 @@ Legend — Priority: **P0** do first / **P1** soon / **P2** nice-to-have / **P3*
 > **Progress (branch `improvements/security-and-features-backlog`):** Phase 0 started —
 > ✅ `CR-1` (UTF-8 crypto fix + regression tests), ✅ `EN-1` (gitignore conflict),
 > ✅ `EN-2` (xUnit test project), ✅ **.NET 10 upgrade** (API + devcontainer + docs),
-> ✅ `EN-3`/`CD-1` (CI workflow), ✅ `MIG-1` (versioned ciphertext format).
+> ✅ `EN-3`/`CD-1` (CI workflow), ✅ `MIG-1` (versioned ciphertext format),
+> ✅ `CR-2`/`CR-3`/`CR-4`/`CR-5`/`CR-6` (AES-GCM `v2` writes + HKDF key separation + instance-state fix).
+> New writes are now AES-GCM; legacy `v1` still reads, pending `MIG-3`/`MIG-2` re-encryption.
 > Design for `OFF-4` in [`design/e2ee.md`](design/e2ee.md); PRF spike validated on devices.
 
 ---
@@ -25,11 +27,11 @@ weaken data" bugs, so they come first.
 | ID | Pri | Effort | Item |
 |----|-----|--------|------|
 | CR-1 | **P0** | S | **Fix ASCII vs UTF-8 mismatch.** `Encryption.cs:29` encrypts with `Encoding.ASCII` but `:85` decrypts with UTF-8. Any password with `é`, `£`, emoji, etc. is silently corrupted to `?` and **unrecoverable**. Switch both sides to UTF-8. *Note: existing entries with non-ASCII chars are already lost — see MIG-1.* |
-| CR-2 | **P1** | M | **Adopt authenticated encryption (AES-GCM).** Replace the hand-rolled AES-CBC + Encrypt-and-MAC with `AesGcm` (random 96-bit nonce per entry, auth tag verified before decrypt). Removes the padding-oracle shape and the plaintext-equality fingerprint in one move. |
-| CR-3 | **P1** | S | **Stop MAC-ing the plaintext.** `Encryption.cs:30,81` computes `HMAC(key, plaintext)` and stores it, so identical passwords get identical tags (leaks "these two accounts share a password"). Folded into CR-2 if AES-GCM is adopted; otherwise switch to Encrypt-then-MAC over ciphertext. |
-| CR-4 | P2 | S | **Per-entry random IV/nonce.** Today a single static IV from env is reused (mostly mitigated by the random salt block, hence not P0). AES-GCM (CR-2) makes this automatic. |
-| CR-5 | P2 | S | **Key separation / KDF.** The same raw key feeds both AES and HMAC. Derive subkeys via HKDF from one master secret (moot if CR-2 lands, since GCM uses one key). |
-| CR-6 | P3 | S | **Tidy `Encryptor`.** Drop `static` fields (`_key/_iv/_size`), make it instance state, and treat key bytes carefully. Correctness/clarity only. |
+| CR-2 | **P1** | M | ✅ **Done.** **Authenticated encryption (AES-GCM).** New writes use `AesGcm` (random 96-bit nonce/entry, tag verified before decrypt → returns null on tamper). Stored as `v2.gcm.<iv>.<ct+tag>` via `SecretEnvelope`. `Encryptor.DecryptStored` routes v1/v2 so legacy data still reads. Encrypt now goes through `EncryptGcm`. |
+| CR-3 | **P1** | S | ✅ **Done (via CR-2).** v2 no longer MACs the plaintext, so identical passwords no longer produce identical stored output (random nonce). Legacy v1 retains the flaw until `MIG-2` re-encrypts. |
+| CR-4 | P2 | S | ✅ **Done (via CR-2).** AES-GCM uses a fresh random 96-bit nonce per entry; the static env `AesIV` is now only used by the legacy v1 decrypt path. |
+| CR-5 | P2 | S | ✅ **Done for v2.** The GCM key is HKDF-SHA256-derived from the configured key (`info="passwordvault:v2:gcm"`), so it never shares material with the legacy AES/HMAC usage. |
+| CR-6 | P3 | S | ✅ **Done.** `Encryptor`'s `_key`/`_iv` were `static` — the last-constructed instance overwrote the key process-wide (a real DI bug; surfaced as a parallel-test race). Now instance fields. |
 
 ## Theme 2 — Access control & secrets
 
@@ -141,6 +143,8 @@ a few (marked) are easier *after* end-to-end encryption (see Theme 8).
 | FE-10 | P3 | L | **Per-item / shared-folder sharing.** Selective sharing instead of one shared vault (depends on AC-3 user scoping). |
 | FE-11 | P3 | M | **Biometric / WebAuthn app unlock.** Use platform authenticator to unlock the app locally. |
 | FE-12 | P3 | S | **Backup/restore UI.** A `scripts/decrypt-backup.py` exists as a CLI; expose backup/export from the UI. |
+| FE-13 | P2 | S | **Password history view (UI).** The API already returns per-account history (`GetPasswordHistoryById` → `passwords/{id}/history`, `PasswordTrail`), but there's no client for it: `Password.Service.js` has no `getHistory(id)` and no view renders it. Add the service call + a history modal/route (timeline of old passwords with timestamps). Backend is done, so this is mostly front-end. |
+| FE-14 | P3 | M | **Better sorting / filtering / searching.** Builds on `FE-2`. Today the home list uses bootstrap-vue's `b-table` with sort on Account/Site only (`lastModifiedDate` is `sortable: false`) and a single substring filter (`home.js:19-24`). Improvements: make every column sortable (incl. last-modified/age), add scoped filters (by site/account/tag/folder once `FE-2` lands), and a faster global search. **Couples to `UI-4`:** the PrimeVue migration replaces `b-table` with PrimeVue `DataTable`, which provides column sort, per-column filters, and global search out of the box — so do this as part of / after `UI-4`. |
 
 ---
 
