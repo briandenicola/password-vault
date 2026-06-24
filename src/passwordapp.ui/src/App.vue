@@ -5,16 +5,16 @@
         <font-awesome-icon icon="moon" />
       </button>
     </nav>
-  <b-container fluid id="app">
-    <b-row>
-      <b-col />
-    </b-row>
-    <b-row>
-      <b-col>
+  <div id="app" class="container-fluid">
+    <div class="row">
+      <div class="col"></div>
+    </div>
+    <div class="row">
+      <div class="col">
         <router-view/>
-      </b-col>
-    </b-row>
-  </b-container>
+      </div>
+    </div>
+  </div>
     <UpdatePrompt />
   </div> 
 </template>
