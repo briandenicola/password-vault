@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WebAuthn PRF Spike — Password Vault</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, sans-serif; max-width: 820px; margin: 2rem auto; padding: 0 1rem; line-height: 1.45; }
+  h1 { font-size: 1.4rem; }
+  button { font-size: 1rem; padding: .55rem .9rem; margin: .25rem .35rem .25rem 0; border-radius: 8px; border: 1px solid #8888; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .step { border: 1px solid #8884; border-radius: 10px; padding: .8rem 1rem; margin: 1rem 0; }
+  .ok { color: #1a7f37; font-weight: 600; }
+  .bad { color: #cf222e; font-weight: 600; }
+  .muted { opacity: .7; }
+  code, pre { font-family: ui-monospace, monospace; }
+  pre { background: #8881; padding: .6rem; border-radius: 8px; white-space: pre-wrap; word-break: break-word; font-size: .82rem; }
+  #log { min-height: 4rem; }
+  table { border-collapse: collapse; font-size: .9rem; }
+  td { padding: .15rem .6rem; border-bottom: 1px solid #8883; }
+</style>
+</head>
+<body>
+<h1>🔐 WebAuthn PRF Spike</h1>
+<p class="muted">
+  Throwaway validation for the <code>OFF-4</code> zero-knowledge design
+  (<code>docs/design/e2ee.md</code>). Proves on <em>this device</em> that a passkey can
+  derive an encryption key via the PRF extension and that the envelope flow
+  (PRF → HKDF → KEK → wrap/unwrap a random DEK → AES-GCM encrypt/decrypt) works.
+  <strong>Nothing here talks to a server or stores real secrets.</strong>
+</p>
+
+<div class="step">
+  <strong>Environment</strong>
+  <table id="env"></table>
+</div>
+
+<div class="step">
+  <strong>Step 1 — Enroll a passkey</strong> (enables the PRF extension)
+  <p class="muted">Use a platform passkey (Face ID / Windows Hello / Touch ID) or a security key.</p>
+  <button id="btnEnroll">Enroll passkey</button>
+  <div id="enrollResult"></div>
+</div>
+
+<div class="step">
+  <strong>Step 2 — Set up the vault key</strong> (PRF → HKDF → KEK → wrap a random DEK; encrypt a sample)
+  <button id="btnSetup" disabled>Set up &amp; encrypt sample</button>
+  <div id="setupResult"></div>
+</div>
+
+<div class="step">
+  <strong>Step 3 — Lock &amp; unlock</strong> (re-derive KEK from the passkey, unwrap the DEK, decrypt the sample)
+  <button id="btnUnlock" disabled>Lock &amp; unlock</button>
+  <div id="unlockResult"></div>
+</div>
+
+<div class="step">
+  <strong>Verdict</strong>
+  <div id="verdict" class="muted">Run steps 1–3.</div>
+  <button id="btnReset">Reset spike state</button>
+</div>
+
+<div class="step">
+  <strong>Log</strong>
+  <pre id="log"></pre>
+</div>
+
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const logEl = $('log');
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+const subtle = globalThis.crypto?.subtle;
+
+const SAMPLE_SECRET = "P@ssw0rd-with-üñïçødé-🔐";
+// Fixed, NON-secret per-vault PRF salt. In production this lives in the vault key record.
+const PRF_SALT = enc.encode("password-vault::prf::v1");
+const LS_CRED = "prf-spike-credentialId";
+const LS_WRAP = "prf-spike-wrappedDek";
+const LS_CT   = "prf-spike-sampleCipher";
+
+const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+const rand = (n) => crypto.getRandomValues(new Uint8Array(n));
+
+function log(msg, cls) {
+  const line = document.createElement('span');
+  if (cls) line.className = cls;
+  line.textContent = msg + "\n";
+  logEl.appendChild(line);
+  // eslint-disable-next-line no-console
+  console.log(msg);
+}
+
+function setVerdict(text, cls) { const v = $('verdict'); v.textContent = text; v.className = cls || 'muted'; }
+
+// ---- Environment probe -------------------------------------------------
+function probeEnv() {
+  const rows = [
+    ["Secure context (required)", window.isSecureContext ? "yes ✅" : "NO ❌ (use https or localhost)"],
+    ["WebAuthn (PublicKeyCredential)", "PublicKeyCredential" in window ? "yes ✅" : "no ❌"],
+    ["Web Crypto (crypto.subtle)", subtle ? "yes ✅" : "no ❌"],
+    ["Origin (rpId derives from this)", location.origin],
+    ["User agent", navigator.userAgent],
+  ];
+  $('env').innerHTML = rows.map(([k, v]) => `<tr><td><strong>${k}</strong></td><td>${v}</td></tr>`).join("");
+  if (!window.isSecureContext || !("PublicKeyCredential" in window) || !subtle) {
+    setVerdict("Environment cannot run the spike — see the table above.", "bad");
+    return false;
+  }
+  return true;
+}
+
+// ---- Step 1: enroll ----------------------------------------------------
+async function enroll() {
+  $('btnEnroll').disabled = true;
+  try {
+    const cred = await navigator.credentials.create({
+      publicKey: {
+        rp: { name: "Password Vault PRF Spike" },              // rpId defaults to current domain
+        user: { id: rand(16), name: "spike@local", displayName: "PRF Spike User" },
+        challenge: rand(32),
+        pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+        authenticatorSelection: { residentKey: "required", userVerification: "required" },
+        timeout: 60000,
+        extensions: { prf: {} },                               // <-- ask for PRF support
+      },
+    });
+    const ext = cred.getClientExtensionResults();
+    const prfEnabled = ext?.prf?.enabled === true;
+    localStorage.setItem(LS_CRED, b64(cred.rawId));
+    log(`Enrolled credential id=${b64(cred.rawId).slice(0, 16)}…`);
+    log(`PRF extension enabled by authenticator: ${prfEnabled}`, prfEnabled ? 'ok' : 'bad');
+    if (!prfEnabled) {
+      $('enrollResult').innerHTML = `<span class="bad">⚠ This authenticator did NOT report PRF support.</span> ` +
+        `It may still return PRF on assertion (some platforms only report it in Step 2) — continue and check.`;
+    } else {
+      $('enrollResult').innerHTML = `<span class="ok">✅ Passkey enrolled with PRF.</span>`;
+    }
+    $('btnSetup').disabled = false;
+  } catch (e) {
+    log("Enroll failed: " + e, 'bad');
+    $('enrollResult').innerHTML = `<span class="bad">❌ Enroll failed: ${e.message || e}</span>`;
+    $('btnEnroll').disabled = false;
+  }
+}
+
+// ---- PRF assertion: returns 32-byte secret from the passkey -------------
+async function getPrfSecret() {
+  const credId = localStorage.getItem(LS_CRED);
+  if (!credId) throw new Error("No enrolled credential — run Step 1.");
+  const assertion = await navigator.credentials.get({
+    publicKey: {
+      challenge: rand(32),
+      allowCredentials: [{ type: "public-key", id: unb64(credId) }],
+      userVerification: "required",
+      timeout: 60000,
+      extensions: { prf: { eval: { first: PRF_SALT } } },      // <-- evaluate PRF at our salt
+    },
+  });
+  const res = assertion.getClientExtensionResults()?.prf?.results?.first;
+  if (!res) throw new Error("Authenticator returned no PRF result (PRF unsupported here).");
+  return new Uint8Array(res);   // deterministic: same passkey + same salt => same bytes
+}
+
+// ---- Derive a KEK (AES-KW) from the PRF secret via HKDF -----------------
+async function deriveKek(prfSecret) {
+  const base = await subtle.importKey("raw", prfSecret, "HKDF", false, ["deriveKey"]);
+  return subtle.deriveKey(
+    { name: "HKDF", hash: "SHA-256", salt: new Uint8Array(0), info: enc.encode("vault-kek") },
+    base,
+    { name: "AES-KW", length: 256 },
+    false,                                                     // KEK is non-extractable
+    ["wrapKey", "unwrapKey"],
+  );
+}
+
+// ---- Step 2: setup -----------------------------------------------------
+async function setup() {
+  $('btnSetup').disabled = true;
+  try {
+    log("Requesting PRF secret for setup…");
+    const prf1 = await getPrfSecret();
+    log(`PRF secret obtained (${prf1.length} bytes).`, 'ok');
+    const kek = await deriveKek(prf1);
+
+    // Generate the random Data Encryption Key (extractable only so we can wrap it).
+    const dek = await subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
+    const wrapped = await subtle.wrapKey("raw", dek, kek, "AES-KW");
+    localStorage.setItem(LS_WRAP, b64(wrapped));
+
+    // Encrypt the sample secret under the DEK.
+    const iv = rand(12);
+    const ct = await subtle.encrypt({ name: "AES-GCM", iv }, dek, enc.encode(SAMPLE_SECRET));
+    const blob = `v2.gcm.${b64(iv)}.${b64(ct)}`;
+    localStorage.setItem(LS_CT, blob);
+
+    log(`Wrapped DEK stored (${b64(wrapped).length} b64 chars). Sample encrypted.`, 'ok');
+    $('setupResult').innerHTML =
+      `<span class="ok">✅ Vault key set up.</span><br>` +
+      `<span class="muted">wrapped DEK:</span><pre>${b64(wrapped)}</pre>` +
+      `<span class="muted">sample ciphertext:</span><pre>${blob}</pre>`;
+    $('btnUnlock').disabled = false;
+  } catch (e) {
+    log("Setup failed: " + e, 'bad');
+    $('setupResult').innerHTML = `<span class="bad">❌ Setup failed: ${e.message || e}</span>`;
+    $('btnSetup').disabled = false;
+  }
+}
+
+// ---- Step 3: lock & unlock --------------------------------------------
+async function unlock() {
+  $('btnUnlock').disabled = true;
+  try {
+    log("Locked (in-memory DEK dropped). Requesting PRF secret again to unlock…");
+    const prf2 = await getPrfSecret();           // fresh assertion — same passkey, same salt
+    const kek = await deriveKek(prf2);
+    const wrapped = unb64(localStorage.getItem(LS_WRAP));
+    const dek = await subtle.unwrapKey(
+      "raw", wrapped, kek, "AES-KW", { name: "AES-GCM" }, false, ["decrypt"],
+    );
+    const [, , ivB64, ctB64] = localStorage.getItem(LS_CT).split(".");
+    const pt = dec.decode(await subtle.decrypt({ name: "AES-GCM", iv: unb64(ivB64) }, dek, unb64(ctB64)));
+    const match = pt === SAMPLE_SECRET;
+    log(`Decrypted sample: "${pt}" — match: ${match}`, match ? 'ok' : 'bad');
+    if (match) {
+      $('unlockResult').innerHTML = `<span class="ok">✅ Unlocked and decrypted correctly (incl. non-ASCII).</span>`;
+      setVerdict("PASS ✅ — passkey PRF + envelope encryption works on this device.", "ok");
+    } else {
+      $('unlockResult').innerHTML = `<span class="bad">❌ Decryption mismatch.</span>`;
+      setVerdict("FAIL ❌ — decrypt mismatch; see log.", "bad");
+    }
+  } catch (e) {
+    log("Unlock failed: " + e, 'bad');
+    $('unlockResult').innerHTML = `<span class="bad">❌ Unlock failed: ${e.message || e}</span>`;
+    setVerdict("FAIL ❌ — PRF unlock did not work on this device; see log.", "bad");
+    $('btnUnlock').disabled = false;
+  }
+}
+
+function reset() {
+  [LS_CRED, LS_WRAP, LS_CT].forEach((k) => localStorage.removeItem(k));
+  logEl.textContent = "";
+  $('enrollResult').textContent = $('setupResult').textContent = $('unlockResult').textContent = "";
+  $('btnEnroll').disabled = false;
+  $('btnSetup').disabled = $('btnUnlock').disabled = true;
+  setVerdict("State cleared. Run steps 1–3.", "muted");
+  log("Spike state reset.");
+}
+
+$('btnEnroll').addEventListener('click', enroll);
+$('btnSetup').addEventListener('click', setup);
+$('btnUnlock').addEventListener('click', unlock);
+$('btnReset').addEventListener('click', reset);
+
+if (probeEnv()) {
+  log("Environment OK. Start with Step 1.");
+  if (localStorage.getItem(LS_CRED)) { $('btnSetup').disabled = false; log("Found an enrolled credential from a previous run."); }
+  if (localStorage.getItem(LS_WRAP)) { $('btnUnlock').disabled = false; }
+}
+</script>
+</body>
+</html>
