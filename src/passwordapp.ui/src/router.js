@@ -7,6 +7,7 @@ import Update from '@/components/update/update.vue'
 import Settings from '@/components/settings/settings.vue'
 import Audit from '@/components/audit/audit.vue'
 import Trash from '@/components/trash/trash.vue'
+import Transfer from '@/components/transfer/transfer.vue'
 import Authentication from './components/azuread/AzureAD.Authentication.js'
 
 let requiresAuthentication = process.env.VUE_APP_REQUIRES_AUTHENTICATION  == 'true' ? true : false;
@@ -58,6 +59,14 @@ var router = createRouter({
       path: '/trash',
       name: 'Trash',
       component: Trash,
+      meta: {
+        requiresAuthentication: requiresAuthentication
+      },
+    },
+    {
+      path: '/transfer',
+      name: 'Transfer',
+      component: Transfer,
       meta: {
         requiresAuthentication: requiresAuthentication
       },
