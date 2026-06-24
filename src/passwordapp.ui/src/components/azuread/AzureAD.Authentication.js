@@ -40,9 +40,19 @@ function applyActiveAccount(redirectResponse) {
 function ensureInitialized() {
   if (!initialization) {
     initialization = (async () => {
-      await authService.initialize();
-      const redirectResponse = await authService.handleRedirectPromise();
-      applyActiveAccount(redirectResponse);
+      try {
+        await authService.initialize();
+        let redirectResponse = null;
+        try {
+          redirectResponse = await authService.handleRedirectPromise();
+        } catch (error) {
+          // A failed or stale redirect response must never block app bootstrap.
+          console.error('MSAL handleRedirectPromise failed:', error);
+        }
+        applyActiveAccount(redirectResponse);
+      } catch (error) {
+        console.error('MSAL initialization failed:', error);
+      }
     })();
   }
   return initialization;

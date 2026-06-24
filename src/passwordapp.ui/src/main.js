@@ -1,9 +1,26 @@
-import Vue, { createApp } from 'vue'
+import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
-import BootstrapVue from 'bootstrap-vue'
+
+import PrimeVue from 'primevue/config'
+import Aura from '@primevue/themes/aura'
+import 'primeicons/primeicons.css'
+
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
+import Checkbox from 'primevue/checkbox'
+import RadioButton from 'primevue/radiobutton'
+import Select from 'primevue/select'
+import Dialog from 'primevue/dialog'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import Tag from 'primevue/tag'
+import Message from 'primevue/message'
+import Tooltip from 'primevue/tooltip'
+
 import 'bootstrap/dist/css/bootstrap.css'
-import 'bootstrap-vue/dist/bootstrap-vue.css'
+
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faKey } from '@fortawesome/free-solid-svg-icons'
 import { faUserEdit } from '@fortawesome/free-solid-svg-icons'
@@ -20,11 +37,10 @@ import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import Axios from 'axios'
 import './registerServiceWorker'
 import './css/main.css';
-import { ref } from 'vue';
 
 let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? true : false;
 
-(async () => 
+(async () =>
 {
   library.add(faKey)
   library.add(faUserEdit)
@@ -35,10 +51,6 @@ let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? 
   library.add(faClockRotateLeft)
   library.add(faMoon)
 
-  Vue.component('font-awesome-icon', FontAwesomeIcon)
-  Vue.config.productionTip = false
-  Vue.use(BootstrapVue);
-  
   Axios.defaults.baseURL = process.env.VUE_APP_API_ENDPOINT;
   Axios.defaults.headers.common['x-functions-key'] = process.env.VUE_APP_API_KEY;
 
@@ -66,6 +78,32 @@ let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? 
     appInsights.loadAppInsights();
     appInsights.trackPageView();
   }
-  createApp(App).use(router).mount('#app');
-  
+
+  const app = createApp(App);
+  app.use(router);
+  app.use(PrimeVue, {
+    theme: {
+      preset: Aura,
+      options: {
+        // Keep PrimeVue's dark theme off the .dark-mode class collision; use a custom selector.
+        darkModeSelector: '.p-dark',
+      },
+    },
+  });
+
+  app.component('font-awesome-icon', FontAwesomeIcon);
+  app.component('Button', Button);
+  app.component('InputText', InputText);
+  app.component('Textarea', Textarea);
+  app.component('Checkbox', Checkbox);
+  app.component('RadioButton', RadioButton);
+  app.component('Select', Select);
+  app.component('Dialog', Dialog);
+  app.component('DataTable', DataTable);
+  app.component('Column', Column);
+  app.component('Tag', Tag);
+  app.component('Message', Message);
+  app.directive('tooltip', Tooltip);
+
+  app.mount('#app');
 })();

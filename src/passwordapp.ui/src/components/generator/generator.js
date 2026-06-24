@@ -45,7 +45,7 @@ export default {
     strengthVariant() {
       const bits = this.entropyBits;
       if (bits < 40) return 'danger';
-      if (bits < 60) return 'warning';
+      if (bits < 60) return 'warn';
       if (bits < 80) return 'info';
       return 'success';
     },

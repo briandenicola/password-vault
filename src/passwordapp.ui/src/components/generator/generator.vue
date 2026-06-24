@@ -1,72 +1,81 @@
 <template>
   <div class="password-generator">
-    <b-row class="mb-1">
-      <b-col sm="auto">
-        <b-button size="sm" variant="success" @click.stop="generate()">Generate</b-button>
-        <b-button size="sm" variant="outline-secondary" @click.stop="showOptions = !showOptions">
-          {{ showOptions ? 'Hide options' : 'Options' }}
-        </b-button>
-      </b-col>
-      <b-col sm="auto" class="pt-1">
-        <small>
-          Strength:
-          <b-badge :variant="strengthVariant">{{ strengthLabel }}</b-badge>
-          <span class="text-muted"> (~{{ entropyBits }} bits)</span>
-        </small>
-      </b-col>
-    </b-row>
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+      <Button label="Generate" severity="success" size="small" @click.stop="generate()" />
+      <Button
+        :label="showOptions ? 'Hide options' : 'Options'"
+        severity="secondary"
+        outlined
+        size="small"
+        @click.stop="showOptions = !showOptions" />
+      <small class="ms-2">
+        Strength:
+        <Tag :severity="strengthVariant" :value="strengthLabel" />
+        <span class="text-muted"> (~{{ entropyBits }} bits)</span>
+      </small>
+    </div>
 
-    <b-collapse v-model="showOptions">
-      <b-card class="mb-2" body-class="py-2">
-        <b-form-group label="Type:" class="mb-2">
-          <b-form-radio-group v-model="mode" size="sm">
-            <b-form-radio value="password">Password</b-form-radio>
-            <b-form-radio value="passphrase">Passphrase</b-form-radio>
-          </b-form-radio-group>
-        </b-form-group>
+    <div v-show="showOptions" class="card mb-2">
+      <div class="card-body py-2">
+        <div class="mb-2">
+          <label class="d-block mb-1">Type:</label>
+          <span class="me-3">
+            <RadioButton v-model="mode" value="password" inputId="gen-mode-password" />
+            <label for="gen-mode-password" class="ms-1">Password</label>
+          </span>
+          <span>
+            <RadioButton v-model="mode" value="passphrase" inputId="gen-mode-passphrase" />
+            <label for="gen-mode-passphrase" class="ms-1">Passphrase</label>
+          </span>
+        </div>
 
         <div v-if="mode === 'password'">
-          <b-form-group :label="`Length: ${passwordOptions.length}`" class="mb-2">
-            <b-form-input
-              v-model.number="passwordOptions.length"
+          <div class="mb-2">
+            <label class="d-block mb-1">Length: {{ passwordOptions.length }}</label>
+            <input
               type="range"
+              class="form-range"
               min="8"
               max="64"
-              step="1" />
-          </b-form-group>
-          <b-form-checkbox v-model="passwordOptions.uppercase" inline>A-Z</b-form-checkbox>
-          <b-form-checkbox v-model="passwordOptions.lowercase" inline>a-z</b-form-checkbox>
-          <b-form-checkbox v-model="passwordOptions.digits" inline>0-9</b-form-checkbox>
-          <b-form-checkbox v-model="passwordOptions.symbols" inline>!@#</b-form-checkbox>
-          <b-form-checkbox v-model="passwordOptions.excludeAmbiguous" inline>
-            Exclude ambiguous (O/0, l/1…)
-          </b-form-checkbox>
+              step="1"
+              v-model.number="passwordOptions.length" />
+          </div>
+          <span class="me-3"><Checkbox v-model="passwordOptions.uppercase" :binary="true" inputId="gen-up" /> <label for="gen-up" class="ms-1">A-Z</label></span>
+          <span class="me-3"><Checkbox v-model="passwordOptions.lowercase" :binary="true" inputId="gen-low" /> <label for="gen-low" class="ms-1">a-z</label></span>
+          <span class="me-3"><Checkbox v-model="passwordOptions.digits" :binary="true" inputId="gen-dig" /> <label for="gen-dig" class="ms-1">0-9</label></span>
+          <span class="me-3"><Checkbox v-model="passwordOptions.symbols" :binary="true" inputId="gen-sym" /> <label for="gen-sym" class="ms-1">!@#</label></span>
+          <span class="me-3"><Checkbox v-model="passwordOptions.excludeAmbiguous" :binary="true" inputId="gen-amb" /> <label for="gen-amb" class="ms-1">Exclude ambiguous (O/0, l/1…)</label></span>
         </div>
 
         <div v-else>
-          <b-form-group :label="`Words: ${passphraseOptions.words}`" class="mb-2">
-            <b-form-input
-              v-model.number="passphraseOptions.words"
+          <div class="mb-2">
+            <label class="d-block mb-1">Words: {{ passphraseOptions.words }}</label>
+            <input
               type="range"
+              class="form-range"
               min="3"
               max="10"
-              step="1" />
-          </b-form-group>
-          <b-form-group label="Separator:" class="mb-2">
-            <b-form-select
+              step="1"
+              v-model.number="passphraseOptions.words" />
+          </div>
+          <div class="mb-2">
+            <label class="d-block mb-1">Separator:</label>
+            <Select
               v-model="passphraseOptions.separator"
               :options="separatorChoices"
-              size="sm" />
-          </b-form-group>
-          <b-form-checkbox v-model="passphraseOptions.capitalize" inline>Capitalize</b-form-checkbox>
-          <b-form-checkbox v-model="passphraseOptions.includeNumber" inline>Add a number</b-form-checkbox>
+              optionLabel="text"
+              optionValue="value"
+              size="small" />
+          </div>
+          <span class="me-3"><Checkbox v-model="passphraseOptions.capitalize" :binary="true" inputId="gen-cap" /> <label for="gen-cap" class="ms-1">Capitalize</label></span>
+          <span class="me-3"><Checkbox v-model="passphraseOptions.includeNumber" :binary="true" inputId="gen-num" /> <label for="gen-num" class="ms-1">Add a number</label></span>
         </div>
-      </b-card>
-    </b-collapse>
+      </div>
+    </div>
 
-    <b-alert :show="!!errorMessage" variant="danger" class="py-1 my-1">
+    <Message v-if="errorMessage" severity="error" class="py-1 my-1">
       <small>{{ errorMessage }}</small>
-    </b-alert>
+    </Message>
   </div>
 </template>
 
