@@ -16,6 +16,7 @@ locals {
   cosmosdb_name             = "${local.resource_name}-cosmosdb"
   cosmosdb_database_name    = "AccountPasswords"
   cosmosdb_collections_name = "Passwords"
+  cosmosdb_vaultkeys_name   = "VaultKeys"
   la_name                   = "${local.resource_name}-logs"
   ai_name                   = "${local.resource_name}-insights"
   functions_host_plan_name  = "${local.resource_name}-linux-hosting"

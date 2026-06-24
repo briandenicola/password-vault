@@ -61,6 +61,9 @@ resource "azurerm_linux_function_app" "this" {
     COSMOS_DATABASE_NAME                   = "AccountPasswords"
     COSMOS_COLLECTION_NAME                 = "Passwords"
     COSMOS_PARTITION_KEY                   = "Passwords"
+    COSMOS_KEY_COLLECTION_NAME             = local.cosmosdb_vaultkeys_name
+    COSMOS_KEY_PARTITION_KEY               = "VaultKeys"
+    E2EE_ENABLED                           = var.app_e2ee_enabled ? "true" : "false"
     AUTH_ENABLED                           = var.app_requires_authentication ? "true" : "false"
     AAD_TENANT_ID                          = var.aad_tenant_id
     AAD_AUDIENCE                           = var.aad_audience
