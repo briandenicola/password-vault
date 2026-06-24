@@ -61,9 +61,20 @@ Quality-of-life and "don't leave secrets lying around" items for a family tool.
 | UI-1 | P1 | S | **Auto-clear clipboard.** `home.js:86-103` copies passwords with no timed clear. Clear after ~30s. |
 | UI-2 | P2 | S | **Auto-lock / re-auth timeout.** No idle lockout after revealing secrets. Add a session timeout that clears in-memory plaintext and requires re-auth. |
 | UI-3 | P2 | M | **Fix MSAL bootstrap + token storage.** `AzureAD.Authentication.js` admits it "does not handle initial page load properly" and caches tokens in `localStorage` (XSS-reachable). Fix the redirect-promise flow; consider `sessionStorage`. |
-| UI-4 | P2 | M | **Exit Vue 2 compat mode + drop EOL deps.** Vue 3 is the current major (no Vue 4), so the app is on the right *core* — but it runs through `@vue/compat` (temporary migration build) and **`bootstrap-vue@2`**, which is Vue 2-only and drags **EOL `vue@2.7.16`** into the tree (via `portal-vue`). Replace bootstrap-vue with the Vue 3-native **`bootstrap-vue-next`** (or another Vue 3 UI lib), remove `@vue/compat`, and confirm `npm ls vue` shows only `vue@3`. Raised to P2 because it removes an EOL transitive dependency. |
+| UI-4 | P2 | M | **Migrate UI library to PrimeVue v4 + exit Vue 2 compat.** Vue 3 is the current major (no Vue 4), so the *core* is fine — but the app runs through `@vue/compat` (temporary migration build) and **`bootstrap-vue@2`**, which is Vue 2-only and drags **EOL `vue@2.7.16`** into the tree (via `portal-vue`). **Decision (2026-06-24): replace bootstrap-vue with [PrimeVue v4](https://primevue.org/).** Rationale: actively maintained (90+ components, weekly releases), modern non-Bootstrap look via design tokens (and optional unstyled/Tailwind mode), and a built-in `Password` component with strength meter + toggle-mask that gives us **FE-1 nearly for free**. Remove `@vue/compat` and `bootstrap-vue`; confirm `npm ls vue` shows only `vue@3`. Migration surface is small (home/create/update/notfound + forms, buttons, one modal). See migration steps below. |
 | UI-6 | P2 | M | **Upgrade `@azure/msal-browser` v2 → v5.** Currently `^2.39.0`; current major is v5.x. Security-relevant (it's the auth library) and increasingly important as passkey/E2EE flows land. Review breaking changes across v2→v3→v4→v5. |
 | UI-5 | P3 | S | **Improve the existing generator.** A generator already exists (`utils.js:generatePassword`, CSPRNG + class guarantee + shuffle). Improvements only — see Theme 7 `GE-*`. |
+
+### UI-4 migration steps (bootstrap-vue@2 → PrimeVue v4)
+
+1. **Inventory current usage.** Grep the UI for `b-*` components/directives (`b-form*`, `b-button`, `b-modal`, `b-table`, `b-nav*`, etc.) and `v-b-*` directives to size the surface and build a component map.
+2. **Add PrimeVue, stage the swap.** `npm install primevue` (+ an icon set, e.g. `primeicons`); register it in `main.js` (`app.use(PrimeVue, { theme: ... })`) and import a theme/preset. Keep bootstrap-vue installed during the transition so the app stays runnable.
+3. **Port screen-by-screen.** Replace components per the map — e.g. `b-form-input`→`InputText`, `b-form-group`→label + `<small>`, `b-button`→`Button`, `b-modal`→`Dialog`, `b-form-select`→`Select`, nav→`Menubar`. Do one route at a time (home → create → update → notfound) and smoke-test each.
+4. **Adopt the built-in `Password` component.** Use `<Password feedback toggleMask>` on the create/update password fields to deliver the FE-1 strength meter; wire the existing generator into its input.
+5. **Drop Bootstrap + compat.** Remove `bootstrap-vue`, `bootstrap`, `portal-vue`, and `@vue/compat`; delete Bootstrap CSS imports and the `compat` Vite/alias config; replace residual layout/grid utilities (PrimeFlex or plain CSS).
+6. **Verify.** `npm ls vue` shows only `vue@3` (no `2.7.16`); `npm run build` is clean; manual pass over all four screens + copy/reveal/generate flows. CI (`ui` job) gates the build.
+
+> Sequence note: do UI-4 **before** UI-6 (MSAL) so you're testing one big dependency change at a time; both are P2/Theme 4.
 
 ## Theme 5 — Infrastructure hardening
 
