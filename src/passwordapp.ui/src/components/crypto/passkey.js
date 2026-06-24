@@ -7,6 +7,8 @@
 // NOT unit-tested and NOT yet wired into the app (Phase 1). Treat them as
 // scaffolding pending on-device validation.
 
+import { createCredential, getCredential } from './webauthn-credentials.js';
+
 // --- base64url (WebAuthn ids are raw ArrayBuffers) ---
 
 export function bufferToBase64Url(buffer) {
@@ -110,18 +112,18 @@ export function extractPrfSecret(credential) {
   return new Uint8Array(first);
 }
 
-// --- ceremony wrappers (NOT unit-tested; need real hardware; not yet wired) ---
+// --- ceremony wrappers ---
 
-export async function enrollPasskey(options) {
-  const credential = await globalThis.navigator.credentials.create(options);
+export async function enrollPasskey(options, createFn = createCredential) {
+  const credential = await createFn(options);
   return {
     credentialId: bufferToBase64Url(credential.rawId),
     prfSecret: extractPrfSecret(credential),
   };
 }
 
-export async function unlockPasskey(options) {
-  const credential = await globalThis.navigator.credentials.get(options);
+export async function unlockPasskey(options, getFn = getCredential) {
+  const credential = await getFn(options);
   return {
     credentialId: bufferToBase64Url(credential.rawId),
     prfSecret: extractPrfSecret(credential),
