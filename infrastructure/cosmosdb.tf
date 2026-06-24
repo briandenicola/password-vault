@@ -8,7 +8,7 @@ resource "azurerm_cosmosdb_account" "this" {
   automatic_failover_enabled = true
 
   identity {
-    type         = "SystemAssigned"
+    type = "SystemAssigned"
   }
 
   consistency_policy {
@@ -16,7 +16,7 @@ resource "azurerm_cosmosdb_account" "this" {
   }
 
   geo_location {
-    location          =  azurerm_resource_group.this.location
+    location          = azurerm_resource_group.this.location
     failover_priority = 0
   }
 }
@@ -30,7 +30,7 @@ resource "azurerm_cosmosdb_sql_database" "this" {
 }
 
 resource "azurerm_cosmosdb_sql_container" "this" {
-  depends_on          = [
+  depends_on = [
     azurerm_cosmosdb_sql_database.this
   ]
   name                = local.cosmosdb_collections_name
