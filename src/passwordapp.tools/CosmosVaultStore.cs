@@ -8,7 +8,13 @@ namespace PasswordService.Tools
     /// document and upsert documents back. All non-trivial logic (crypto, migration, verification)
     /// lives in the unit-tested PasswordService.Common types.
     /// </summary>
-    public sealed class CosmosVaultStore : IAsyncDisposable
+    public interface IVaultStore : IAsyncDisposable
+    {
+        Task<List<JObject>> ReadAllAsync();
+        Task UpsertAsync(JObject doc);
+    }
+
+    public sealed class CosmosVaultStore : IVaultStore
     {
         private const string PartitionKeyField = "PartitionKey";
 

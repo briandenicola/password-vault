@@ -1,7 +1,8 @@
 # vault-migrate
 
-Operator tool for **MIG-3** (backup + verify) and **MIG-2** (one-time re-encryption of
-legacy `v1` AES-CBC secrets to `v2` AES-GCM). See [`docs/BACKLOG.md`](../../docs/BACKLOG.md)
+Operator tool for **MIG-3** (backup + verify), **MIG-2** (one-time re-encryption of
+legacy `v1` AES-CBC secrets to `v2` AES-GCM), and the blue-green **MIG-4/MIG-5**
+import/parity flow. See [`docs/BACKLOG.md`](../../docs/BACKLOG.md)
 Theme 3 and [`docs/design/e2ee.md`](../../docs/design/e2ee.md) §5–6.
 
 It reuses the **exact** production crypto and migration logic (`Encryptor`,
@@ -27,6 +28,8 @@ written.
 | `COSMOS_COLLECTION_NAME` | e.g. `Passwords` |
 | `AesKey` | base64 AES key (same value the Functions app uses) |
 | `AesIV` | base64 AES IV (legacy v1 decrypt only) |
+| `VAULT_DEK_BASE64` | base64 raw vault DEK for `import` / `verify-parity` (or pass `--dek-base64`) |
+| `NEW_COSMOSDB`, `NEW_COSMOS_DATABASE_NAME`, `NEW_COSMOS_COLLECTION_NAME` | optional target store overrides for blue-green import/parity |
 
 ## Usage
 
@@ -36,6 +39,10 @@ dotnet run --project src/passwordapp.tools -- backup            # snapshot to va
 dotnet run --project src/passwordapp.tools -- verify            # MIG-3: decrypt-check every secret
 dotnet run --project src/passwordapp.tools -- migrate           # MIG-2 dry run (writes a backup)
 dotnet run --project src/passwordapp.tools -- migrate --apply   # MIG-2 apply
+dotnet run --project src/passwordapp.tools -- import vault-backup.json
+dotnet run --project src/passwordapp.tools -- import vault-backup.json --apply
+dotnet run --project src/passwordapp.tools -- verify-parity old.json new.json
+dotnet run --project src/passwordapp.tools -- verify-parity old.json --new-store
 ```
 
 Or via Taskfile (sources `AesKey`/`AesIV` from `infrastructure/.env`; `COSMOSDB` is
@@ -47,6 +54,8 @@ backup or an environment you haven't `terraform init`-ed, override it by exporti
 task migrate:verify
 task migrate:dryrun
 task migrate:apply
+task migrate:import -- vault-backup.json
+task migrate:verify-parity -- old.json new.json
 ```
 
 ## Recommended runbook

@@ -272,3 +272,29 @@ tasks:
     - dotnet run -- migrate --apply
     vars: *migrate_vars
     env: *migrate_env
+
+  migrate:import:
+    desc: MIG-4 — import/transform a backup into the new E2EE store (dry run unless --apply is passed)
+    dir: ./src/passwordapp.tools
+    cmds:
+    - dotnet run -- import {{.CLI_ARGS}}
+    vars: *migrate_vars
+    env:
+      <<: *migrate_env
+      VAULT_DEK_BASE64: '{{.VAULT_DEK_BASE64}}'
+      NEW_COSMOSDB: '{{.NEW_COSMOSDB}}'
+      NEW_COSMOS_DATABASE_NAME: '{{default .COSMOS_DATABASE_NAME .NEW_COSMOS_DATABASE_NAME}}'
+      NEW_COSMOS_COLLECTION_NAME: '{{default .COSMOS_COLLECTION_NAME .NEW_COSMOS_COLLECTION_NAME}}'
+
+  migrate:verify-parity:
+    desc: MIG-5 — verify count/value parity between old snapshot and new snapshot/store
+    dir: ./src/passwordapp.tools
+    cmds:
+    - dotnet run -- verify-parity {{.CLI_ARGS}}
+    vars: *migrate_vars
+    env:
+      <<: *migrate_env
+      VAULT_DEK_BASE64: '{{.VAULT_DEK_BASE64}}'
+      NEW_COSMOSDB: '{{.NEW_COSMOSDB}}'
+      NEW_COSMOS_DATABASE_NAME: '{{default .COSMOS_DATABASE_NAME .NEW_COSMOS_DATABASE_NAME}}'
+      NEW_COSMOS_COLLECTION_NAME: '{{default .COSMOS_COLLECTION_NAME .NEW_COSMOS_COLLECTION_NAME}}'
