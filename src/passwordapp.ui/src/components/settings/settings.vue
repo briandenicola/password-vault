@@ -70,6 +70,26 @@
       </b-form-group>
     </b-card>
 
+    <!-- Security -->
+    <b-card class="mb-3" header="Security">
+      <b-form-group label="Auto-clear clipboard:" :label-cols="4" class="mb-2">
+        <b-form-select
+          v-model.number="settings.security.clipboardClearSeconds"
+          :options="clipboardClearChoices"
+          size="sm" />
+      </b-form-group>
+      <b-form-group label="Auto-lock after idle:" :label-cols="4" class="mb-2">
+        <b-form-select
+          v-model.number="settings.security.autoLockMinutes"
+          :options="autoLockChoices"
+          size="sm" />
+      </b-form-group>
+      <small class="text-muted d-block">
+        Copied passwords are wiped from the clipboard after the selected delay. Auto-lock signs you out
+        after a period of inactivity. Changes to auto-lock take effect after reloading the app.
+      </small>
+    </b-card>
+
     <b-row>
       <b-col>
         <b-button size="sm" variant="info" @click.stop="save()">Save</b-button> |
