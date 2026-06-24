@@ -13,8 +13,9 @@ Legend — Priority: **P0** do first / **P1** soon / **P2** nice-to-have / **P3*
 > ✅ `CR-1` (UTF-8 crypto fix + regression tests), ✅ `EN-1` (gitignore conflict),
 > ✅ `EN-2` (xUnit test project), ✅ **.NET 10 upgrade** (API + devcontainer + docs),
 > ✅ `EN-3`/`CD-1` (CI workflow), ✅ `MIG-1` (versioned ciphertext format),
-> ✅ `CR-2`/`CR-3`/`CR-4`/`CR-5`/`CR-6` (AES-GCM `v2` writes + HKDF key separation + instance-state fix).
-> New writes are now AES-GCM; legacy `v1` still reads, pending `MIG-3`/`MIG-2` re-encryption.
+> ✅ `CR-2`/`CR-3`/`CR-4`/`CR-5`/`CR-6` (AES-GCM `v2` writes + HKDF key separation + instance-state fix),
+> ✅ `MIG-2`/`MIG-3` (`vault-migrate` tool: backup, verify, dry-run/apply re-encryption v1→v2).
+> New writes are now AES-GCM; legacy `v1` still reads, and existing data can be migrated with `vault-migrate`.
 > Design for `OFF-4` in [`design/e2ee.md`](design/e2ee.md); PRF spike validated on devices.
 
 ---
@@ -52,8 +53,8 @@ You want to move existing data onto the improved scheme without losing it.
 | ID | Pri | Effort | Item |
 |----|-----|--------|------|
 | MIG-1 | **P0** | M | ✅ **Done.** **Versioned ciphertext format.** Introduced `Common/SecretEnvelope.cs`: a version-aware parse/serialize for stored blobs. Legacy `hmac:ciphertext` is recognized as `v1` (no rewrite of existing data needed); the `v2.gcm.<iv>.<ct+tag>` format is parsed/serialized and ready for `CR-2`. Discriminator: legacy base64 never contains `.`, versioned blobs always do. `PasswordEntity` now delegates to the envelope and exposes `Format`. 14 regression tests (incl. real-Encryptor v1 round-trip, non-ASCII/emoji, malformed→`FormatException`). No crypto changed yet. |
-| MIG-2 | **P0** | M | **One-time re-encryption migration.** Write a small idempotent job (reuse `scripts/decrypt-backup.py` patterns) that reads each Cosmos record, decrypts with the legacy path, re-encrypts with AES-GCM, and writes back tagged `v2`. Dry-run + backup first. |
-| MIG-3 | P1 | S | **Pre-migration backup + verify.** Snapshot the Cosmos container and verify a round-trip decrypt of every entry *before* migrating, so CR-1's already-corrupted entries are identified (not silently re-saved). |
+| MIG-2 | **P0** | M | ✅ **Done.** **One-time re-encryption migration.** `src/passwordapp.tools` (`vault-migrate`): reuses the production `Encryptor`/`DocumentMigrator` (no second crypto impl) to read each Cosmos doc, decrypt legacy `v1`, re-encrypt to `v2` (AES-GCM), **verify the round-trip**, and upsert. Dry-run by default; `--apply` to write; idempotent (skips `v2`); refuses to write any doc whose secrets didn't all migrate+verify. Backs up first. Tasks: `migrate:dryrun`/`migrate:apply`. Core covered by unit tests (`VaultMigrationTests`, `DocumentMigratorTests`). |
+| MIG-3 | P1 | S | ✅ **Done.** **Pre-migration backup + verify.** `vault-migrate backup` snapshots every doc to JSON; `vault-migrate verify` decrypt-checks every secret (current + history) and reports undecryptable entries (`migrate:backup`/`migrate:verify`). Also hardened the legacy `Decrypt` to fail safe (return null) instead of throwing on corrupt input, so a bad entry can't crash a bulk pass. *Caveat documented: CR-1-mangled non-ASCII still decrypts and can't be auto-detected — review known accented/emoji accounts manually.* |
 
 ## Theme 4 — Front-end UX & safety
 

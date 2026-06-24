@@ -62,44 +62,50 @@ namespace PasswordService.Common
 
         public void Decrypt(string cipherText, string hmacText, out string? plainText)
         {
-            if (cipherText == null || cipherText.Length <= 0)
+            plainText = default;
+            if (string.IsNullOrEmpty(cipherText) || string.IsNullOrEmpty(hmacText))
             {
-                plainText = default;
+                return;
             }
 
-            using (HMACSHA512 hmac = new HMACSHA512(_key))
+            try
             {
+                using (HMACSHA512 hmac = new HMACSHA512(_key))
                 using (Aes aes = Aes.Create())
                 {
                     aes.Key = _key;
                     aes.IV = _iv;
 
                     var hmacArray = Convert.FromBase64String(hmacText);
-                    var cipherArray = Convert.FromBase64String(cipherText ?? string.Empty);
+                    var cipherArray = Convert.FromBase64String(cipherText);
+
+                    // Must be at least the prepended salt block; otherwise it is not our format.
+                    if (cipherArray.Length <= size)
+                    {
+                        return;
+                    }
 
                     ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
                     using (MemoryStream memoryStream = new MemoryStream(cipherArray))
+                    using (CryptoStream cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read))
+                    using (BinaryReader streamReader = new BinaryReader(cryptoStream))
                     {
-                        using (CryptoStream cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read))
-                        {
-                            using (BinaryReader streamReader = new BinaryReader(cryptoStream))
-                            {
-                                streamReader.ReadBytes(size); //Read and dump salt value 
-                                var plainTextArray = streamReader.ReadBytes(cipherArray.Length - size);
-                                var computedHashArray = hmac.ComputeHash(plainTextArray);
+                        streamReader.ReadBytes(size); //Read and dump salt value 
+                        var plainTextArray = streamReader.ReadBytes(cipherArray.Length - size);
+                        var computedHashArray = hmac.ComputeHash(plainTextArray);
 
-                                if (hmacArray.SequenceEqual(computedHashArray))
-                                {
-                                    plainText = Encoding.UTF8.GetString(plainTextArray);
-                                }
-                                else
-                                {
-                                    plainText = default(string);
-                                }
-                            }
+                        if (hmacArray.SequenceEqual(computedHashArray))
+                        {
+                            plainText = Encoding.UTF8.GetString(plainTextArray);
                         }
                     }
                 }
+            }
+            catch (Exception ex) when (ex is CryptographicException or FormatException)
+            {
+                // Corrupt/tampered/foreign data: fail safe so a bad entry never crashes a bulk
+                // operation (e.g. MIG-2 migration) and never yields unauthenticated plaintext.
+                plainText = default;
             }
         }
 
