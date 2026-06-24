@@ -6,6 +6,8 @@ import {
   buildEnrollOptions,
   buildUnlockOptions,
   extractPrfSecret,
+  enrollPasskey,
+  unlockPasskey,
 } from '@/components/crypto/passkey.js';
 
 describe('base64url', () => {
@@ -77,5 +79,34 @@ describe('extractPrfSecret', () => {
 
   it('throws when the credential has no extension results accessor', () => {
     expect(() => extractPrfSecret({})).toThrow(/PRF/);
+  });
+});
+
+describe('passkey ceremony wrappers', () => {
+  function credential(id, secret) {
+    return {
+      rawId: new Uint8Array(id),
+      getClientExtensionResults: () => ({ prf: { results: { first: new Uint8Array(secret).buffer } } }),
+    };
+  }
+
+  it('enrollPasskey uses an injected create function', async () => {
+    const options = { publicKey: { challenge: new Uint8Array([1]) } };
+    const result = await enrollPasskey(options, async (actual) => {
+      expect(actual).toBe(options);
+      return credential([1, 2, 3], [7, 8, 9]);
+    });
+    expect(result.credentialId).toBe('AQID');
+    expect([...result.prfSecret]).toEqual([7, 8, 9]);
+  });
+
+  it('unlockPasskey uses an injected get function', async () => {
+    const options = { publicKey: { challenge: new Uint8Array([2]) } };
+    const result = await unlockPasskey(options, async (actual) => {
+      expect(actual).toBe(options);
+      return credential([4, 5, 6], [10, 11, 12]);
+    });
+    expect(result.credentialId).toBe('BAUG');
+    expect([...result.prfSecret]).toEqual([10, 11, 12]);
   });
 });

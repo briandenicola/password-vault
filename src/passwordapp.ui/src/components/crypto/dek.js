@@ -13,6 +13,8 @@ import {
   importAesGcmKey,
   encryptBytes,
   decryptBytes,
+  toBase64,
+  fromBase64,
 } from './vault-crypto.js';
 
 const subtle = () => globalThis.crypto.subtle;
@@ -54,15 +56,19 @@ export async function deriveKek(secretBytes, saltBytes, info = 'password-vault:k
 
 // --- wrap / unwrap ---
 
-// Wrap raw DEK bytes under a KEK; returns a v2 envelope string for storage.
+// Wrap raw DEK bytes under a KEK; returns a base64-encoded v2 envelope for storage.
 export async function wrapDek(kek, dekBytes) {
-  return encryptBytes(kek, dekBytes);
+  const envelope = await encryptBytes(kek, dekBytes);
+  return toBase64(new TextEncoder().encode(envelope));
 }
 
-// Unwrap a stored DEK envelope under a KEK; returns raw DEK bytes. Throws (auth
-// tag failure) if the KEK is wrong or the blob was tampered with.
+// Unwrap a stored DEK envelope under a KEK; accepts current base64 storage and
+// legacy in-memory v2 envelope strings. Throws if the KEK is wrong or tampered.
 export async function unwrapDek(kek, wrapped) {
-  return decryptBytes(kek, wrapped);
+  const envelope = String(wrapped).startsWith('v2.gcm.')
+    ? wrapped
+    : new TextDecoder().decode(fromBase64(wrapped));
+  return decryptBytes(kek, envelope);
 }
 
 // --- recovery key ---

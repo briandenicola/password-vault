@@ -34,6 +34,7 @@ describe('KEK derivation + DEK wrap/unwrap', () => {
     const kek = await deriveKek(secret, salt);
     const { bytes } = await generateDek();
     const wrapped = await wrapDek(kek, bytes);
+    expect(wrapped).toMatch(/^[A-Za-z0-9+/]+={0,2}$/);
     const unwrapped = await unwrapDek(kek, wrapped);
     expect([...unwrapped]).toEqual([...bytes]);
   });
