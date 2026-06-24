@@ -22,6 +22,7 @@
 <script>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { IdleTimer } from '@/components/utils/idle-timer.js';
+import { vaultSession } from '@/components/crypto/vault-session.js';
 import { loadSettings } from '@/components/settings/settings.store.js';
 import Authentication from '@/components/azuread/AzureAD.Authentication.js';
 import UpdatePrompt from '@/components/pwa/update-prompt.vue';
@@ -54,6 +55,9 @@ export default {
     let lastActivity = 0;
 
     const lock = () => {
+      // Drop any in-memory E2EE key first (no-op when the vault was never unlocked),
+      // then re-authenticate. Re-auth wipes the rest of the in-memory state.
+      vaultSession.lock();
       try {
         if (Authentication.isAuthenticated && Authentication.isAuthenticated()) {
           Authentication.signOut();
