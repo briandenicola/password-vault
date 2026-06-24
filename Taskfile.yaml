@@ -73,14 +73,17 @@ tasks:
   apply:
     dir: ./infrastructure
     desc: Applies a Terraform plan
+    env:
+      # CD-5: keep encryption secrets off the command line (out of ps / shell
+      # history). Terraform reads them from TF_VAR_* env instead of -var.
+      TF_VAR_password_encryption_key: '{{.ENCRYPTION_KEY}}'
+      TF_VAR_password_encryption_initialization_vector: '{{.ENCRYPTION_IV}}'
     cmds:
     - silent: true
       cmd: terraform apply -auto-approve -var "region={{.REGION}}" 
         -var "tags={{.TAG}}"
         -var "enable_cosmosdb_free_tier={{.COSMOSDB_FREE_TIER}}"
         -var "deploy_maintenance_infrastructure={{.DEPLOY_MAINTENANCE}}"
-        -var "password_encryption_key={{.ENCRYPTION_KEY}}"
-        -var "password_encryption_initialization_vector={{.ENCRYPTION_IV}}"
         -var "add_custom_domain={{.ADD_CUSTOM_DOMAIN}}"
         -var "production_ui_url={{.VUE_APP_AAD_REDIRECT_URL}}"
         -var "app_requires_authentication={{.APP_REQUIRES_AUTHENTICATION}}"
@@ -91,14 +94,15 @@ tasks:
   refresh:
     dir: ./infrastructure
     desc: Refresh a Terraform output values
+    env:
+      TF_VAR_password_encryption_key: '{{.ENCRYPTION_KEY}}'
+      TF_VAR_password_encryption_initialization_vector: '{{.ENCRYPTION_IV}}'
     cmds:
     - silent: true
       cmd: terraform refresh -var "region={{.REGION}}" 
         -var "tags={{.TAG}}"
         -var "enable_cosmosdb_free_tier={{.COSMOSDB_FREE_TIER}}"
         -var "deploy_maintenance_infrastructure={{.DEPLOY_MAINTENANCE}}"
-        -var "password_encryption_key={{.ENCRYPTION_KEY}}"
-        -var "password_encryption_initialization_vector={{.ENCRYPTION_IV}}"
         -var "add_custom_domain={{.ADD_CUSTOM_DOMAIN}}"
         -var "production_ui_url={{.VUE_APP_AAD_REDIRECT_URL}}"
         -var "app_requires_authentication={{.APP_REQUIRES_AUTHENTICATION}}"
@@ -109,14 +113,15 @@ tasks:
   plan:
     dir: ./infrastructure
     desc: Creates a Terraform plan for review
+    env:
+      TF_VAR_password_encryption_key: '{{.ENCRYPTION_KEY}}'
+      TF_VAR_password_encryption_initialization_vector: '{{.ENCRYPTION_IV}}'
     cmds:
     - silent: true
       cmd: terraform plan -var "region={{.REGION}}" 
         -var "tags={{.TAG}}"
         -var "enable_cosmosdb_free_tier={{.COSMOSDB_FREE_TIER}}"
         -var "deploy_maintenance_infrastructure={{.DEPLOY_MAINTENANCE}}"
-        -var "password_encryption_key={{.ENCRYPTION_KEY}}"
-        -var "password_encryption_initialization_vector={{.ENCRYPTION_IV}}"
         -var "production_ui_url={{.VUE_APP_AAD_REDIRECT_URL}}"
         -compact-warnings
     vars: 

@@ -1,0 +1,82 @@
+name: Infrastructure (Terraform)
+
+# CD-4: remote-state Terraform with plan on PR and apply on main behind a
+# GitHub Environment approval. CD-3: Azure auth via OIDC federated credentials
+# (no stored service-principal secret). CD-7: runs the same `task` targets used
+# locally so pipeline and local deploys don't drift.
+#
+# Required repo configuration before this can run (see docs/deploy.md):
+#   Secrets:  AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
+#             TF_ENCRYPTION_KEY, TF_ENCRYPTION_IV
+#   The federated credential must trust this repo's `pull_request` and the
+#   `production` environment. The `production` Environment should require a
+#   reviewer so every apply is approved.
+
+on:
+  pull_request:
+    branches: [main]
+    paths: ['infrastructure/**']
+  push:
+    branches: [main]
+    paths: ['infrastructure/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: infra-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  ARM_USE_OIDC: 'true'
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  TF_VAR_password_encryption_key: ${{ secrets.TF_ENCRYPTION_KEY }}
+  TF_VAR_password_encryption_initialization_vector: ${{ secrets.TF_ENCRYPTION_IV }}
+
+jobs:
+  plan:
+    name: Terraform plan
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '~> 1.7'
+      - uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Terraform plan
+        run: task plan
+
+  apply:
+    name: Terraform apply
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '~> 1.7'
+      - uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Terraform apply
+        run: task apply

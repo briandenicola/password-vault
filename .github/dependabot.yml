@@ -1,0 +1,52 @@
+version: 2
+
+updates:
+  # GitHub Actions used by CI / deploy workflows
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # .NET API, migration tool, and tests
+  - package-ecosystem: nuget
+    directories:
+      - /src/passwordapp.api
+      - /src/passwordapp.api.tests
+      - /src/passwordapp.tools
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      dotnet:
+        patterns: ["*"]
+
+  # Vue 3 UI
+  - package-ecosystem: npm
+    directory: /src/passwordapp.ui
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Keep noisy patch/minor bumps batched into one PR.
+      ui-minor:
+        update-types: ["minor", "patch"]
+
+  # Python maintenance / keepalive function
+  - package-ecosystem: pip
+    directory: /src/passwordapp.maintenance
+    schedule:
+      interval: weekly
+
+  # Terraform infrastructure
+  - package-ecosystem: terraform
+    directories:
+      - /infrastructure
+      - /infrastructure/maintenance
+    schedule:
+      interval: weekly
+    groups:
+      terraform:
+        patterns: ["*"]

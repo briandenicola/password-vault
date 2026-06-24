@@ -17,11 +17,13 @@ variable "deploy_maintenance_infrastructure" {
 }
 
 variable "password_encryption_key" {
-  description = "Password Encryption Key"
+  description = "Password Encryption Key (legacy v1 + HKDF root for v2; pass via TF_VAR_password_encryption_key, never on the CLI)"
+  sensitive   = true
 }
 
 variable "password_encryption_initialization_vector" {
-  description = "Password Encryption Initialization Vector"
+  description = "Password Encryption Initialization Vector (legacy v1 only; pass via TF_VAR_password_encryption_initialization_vector, never on the CLI)"
+  sensitive   = true
 }
 
 variable "add_custom_domain" {
