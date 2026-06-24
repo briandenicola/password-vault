@@ -55,6 +55,7 @@ export function charPoolSize(password) {
   if (/[0-9]/.test(password)) pool += 10;
   if (/[^a-zA-Z0-9\s\x80-\uffff]/.test(password)) pool += 33; // ASCII punctuation/symbols
   if (/\s/.test(password)) pool += 1;              // whitespace
+  // eslint-disable-next-line no-control-regex -- intentional: detect any non-ASCII (incl. control) char
   if (/[^\x00-\x7F]/.test(password)) pool += 40;   // non-ASCII / unicode
   return pool;
 }

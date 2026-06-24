@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { InteractionRequiredAuthError } from '@azure/msal-browser';
 import Authentication from '@/components/azuread/AzureAD.Authentication.js';
 
