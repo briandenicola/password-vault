@@ -138,6 +138,16 @@
           {{ backupSettings.lastStatus || 'Not configured' }}
           <span v-if="backupSettings.lastBackupBlobName">({{ backupSettings.lastBackupBlobName }})</span>
         </small>
+        <div class="mt-3">
+          <Button
+            size="small"
+            severity="info"
+            label="Run Now"
+            icon="pi pi-play"
+            :loading="backupRunningNow"
+            :disabled="backupSettingsLoading || backupRunningNow"
+            @click.stop="runBackupNow()" />
+        </div>
         <Message v-if="backupSettingsError" severity="error" class="mt-2 py-2">{{ backupSettingsError }}</Message>
         <Message v-else-if="backupSettingsLoading" severity="info" class="mt-2 py-2">Loading backup schedule...</Message>
       </div>

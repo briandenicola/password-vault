@@ -61,3 +61,8 @@ export async function putBackupSettings(settings, http = Axios) {
   const response = await http.put(API_ENDPOINT, toServerRecord(settings));
   return normalizeBackupSettings(response.data);
 }
+
+export async function runBackupNow(http = Axios) {
+  const response = await http.post(`${API_ENDPOINT}/run-now`);
+  return normalizeBackupSettings(response.data);
+}

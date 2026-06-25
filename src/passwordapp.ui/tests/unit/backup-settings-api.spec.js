@@ -4,6 +4,7 @@ import {
   normalizeBackupSettings,
   getBackupSettings,
   putBackupSettings,
+  runBackupNow,
 } from '@/components/api/BackupSettings.Api.js';
 
 describe('backup settings API helper', () => {
@@ -67,5 +68,18 @@ describe('backup settings API helper', () => {
         RetentionCount: 20,
       },
     }]);
+  });
+
+  it('POSTs run-now backup requests', async () => {
+    const sent = [];
+    const http = {
+      async post(url) {
+        sent.push(url);
+        return { data: { LastStatus: 'Backed up 2 document(s).' } };
+      },
+    };
+
+    await expect(runBackupNow(http)).resolves.toMatchObject({ lastStatus: 'Backed up 2 document(s).' });
+    expect(sent).toEqual(['/api/backup-settings/run-now']);
   });
 });
