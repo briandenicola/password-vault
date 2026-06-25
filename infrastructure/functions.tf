@@ -74,9 +74,3 @@ resource "azurerm_linux_function_app" "this" {
     APPINSIGHTS_INSTRUMENTATIONKEY         = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.appinsights_key.id})"
   }
 }
-
-data "azurerm_function_app_host_keys" "host_key" {
-  depends_on          = [azurerm_linux_function_app.this]
-  name                = local.functions_name
-  resource_group_name = azurerm_resource_group.this.name
-}

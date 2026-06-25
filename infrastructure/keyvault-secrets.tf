@@ -16,15 +16,6 @@ resource "azurerm_key_vault_secret" "aes_encryption_iv" {
   key_vault_id = azurerm_key_vault.this.id
 }
 
-resource "azurerm_key_vault_secret" "host_key" {
-  depends_on = [
-    azurerm_role_assignment.deployer_kv_access
-  ]
-  name         = "host-key"
-  value        = data.azurerm_function_app_host_keys.host_key.primary_key
-  key_vault_id = azurerm_key_vault.this.id
-}
-
 resource "azurerm_key_vault_secret" "cosmosdb_connection_string" {
   depends_on = [
     azurerm_role_assignment.deployer_kv_access

@@ -9,8 +9,8 @@ dotenv:
   - infrastructure/.env
 
 vars:
-  TAG: "Password Vault on Azure Functions"
-  DEFAULT_REGION: canadacentral
+  TAG: "Password Vault on Azure Functions (New)"
+  DEFAULT_REGION: southcentralus
   COSMOSDB_FREE_TIER: false
   DEPLOY_MAINTENANCE: false
   ADD_CUSTOM_DOMAIN: false 
@@ -60,15 +60,10 @@ tasks:
       SWA:
         sh: terraform output -raw SWA_DEFAULT_URL
 
-  host-key:
-    desc: Displays Azure Functions Host Key
-    dir: ./infrastructure
+  entra:configure:
+    desc: Creates or updates Entra app registrations for the API and UI
     cmds:
-    - cmd: echo -e '\t➡️\033[1m\e[38;5;45mAzure Function Host Key == {{.HOST_KEY}}'
-      silent: true
-    vars: 
-      HOST_KEY: 
-        sh: terraform output -raw AZURE_FUNCTION_HOST_KEY
+    - pwsh -NoProfile -ExecutionPolicy Bypass -File "{{.TASKFILE_DIR}}\scripts\configure-entra.ps1" {{.CLI_ARGS}}
 
   apply:
     dir: ./infrastructure
@@ -142,13 +137,22 @@ tasks:
         sh: terraform -chdir=../../infrastructure output -raw MAINTENANCE_STORAGE_ACCOUNT_NAME
 
   deploy-api:
-    desc: Deploy application to Azure Static Web Apps
+    desc: Deploy application to Azure Functions
     dir: ./src/passwordapp.api
     cmds:
-    - rm -rf publish
+    - cmd: rm -rf publish
+      platforms: [linux, darwin]
+    - cmd: pwsh -NoProfile -ExecutionPolicy Bypass -Command "Remove-Item -Recurse -Force publish -ErrorAction SilentlyContinue"
+      platforms: [windows]
     - dotnet publish -c Release --nologo -o publish/linux 
-    - cd publish/linux && zip -r vault.zip .
-    - az storage copy --only-show-errors -s publish/linux/vault.zip --account-name {{.STORAGE_ACCOUNT_NAME}} --destination-container app
+    - cmd: cd publish/linux && zip -r vault.zip .
+      platforms: [linux, darwin]
+    - cmd: pwsh -NoProfile -ExecutionPolicy Bypass -Command "Compress-Archive -Path .\publish\linux\* -DestinationPath .\publish\vault.zip -Force"
+      platforms: [windows]
+    - cmd: az storage copy --only-show-errors -s publish/linux/vault.zip --account-name {{.STORAGE_ACCOUNT_NAME}} --destination-container app
+      platforms: [linux, darwin]
+    - cmd: az storage copy --only-show-errors -s publish/vault.zip --account-name {{.STORAGE_ACCOUNT_NAME}} --destination-container app
+      platforms: [windows]
     vars:
       FUNCTION_NAME:
         sh: terraform -chdir=../../infrastructure output -raw FUNCTION_NAME
@@ -218,9 +222,9 @@ tasks:
       # Tenant id: override via env, else the signed-in az tenant.
       AAD_TENANT_ID:
         sh: echo "${VUE_APP_AAD_TENANT_ID:-${AAD_TENANT_ID:-$(az account show --query tenantId -o tsv)}}"
-      # API scope/audience == the Function App URL (App ID URI).
+      # API scope == the Function App URL (App ID URI) plus the delegated scope value.
       AAD_SCOPE:
-        sh: echo "${VUE_APP_AAD_SCOPE:-$(terraform -chdir=../../infrastructure output -raw FUNCTION_URL)}"
+        sh: echo "${VUE_APP_AAD_SCOPE:-$(terraform -chdir=../../infrastructure output -raw FUNCTION_URL)/Password.All}"
 
   down:
     desc: Destroys all Azure resources and cleans up Terraform
@@ -242,7 +246,7 @@ tasks:
     vars: &migrate_vars
       COSMOSDB:
         sh: echo "${COSMOSDB:-$(terraform -chdir=../../infrastructure output -raw COSMOSDB_CONNECTION_STRING 2>/dev/null)}"
-    env: &migrate_env
+    env:
       AesKey: '{{.ENCRYPTION_KEY}}'
       AesIV: '{{.ENCRYPTION_IV}}'
       COSMOSDB: '{{.COSMOSDB}}'
@@ -255,7 +259,12 @@ tasks:
     cmds:
     - dotnet run -- verify
     vars: *migrate_vars
-    env: *migrate_env
+    env:
+      AesKey: '{{.ENCRYPTION_KEY}}'
+      AesIV: '{{.ENCRYPTION_IV}}'
+      COSMOSDB: '{{.COSMOSDB}}'
+      COSMOS_DATABASE_NAME: AccountPasswords
+      COSMOS_COLLECTION_NAME: Passwords
 
   migrate:dryrun:
     desc: MIG-2 — show what would be re-encrypted to v2 (writes a backup, no changes)
@@ -263,7 +272,12 @@ tasks:
     cmds:
     - dotnet run -- migrate
     vars: *migrate_vars
-    env: *migrate_env
+    env:
+      AesKey: '{{.ENCRYPTION_KEY}}'
+      AesIV: '{{.ENCRYPTION_IV}}'
+      COSMOSDB: '{{.COSMOSDB}}'
+      COSMOS_DATABASE_NAME: AccountPasswords
+      COSMOS_COLLECTION_NAME: Passwords
 
   migrate:apply:
     desc: MIG-2 — re-encrypt legacy v1 secrets to v2 and write them back (backs up first)
@@ -271,7 +285,12 @@ tasks:
     cmds:
     - dotnet run -- migrate --apply
     vars: *migrate_vars
-    env: *migrate_env
+    env:
+      AesKey: '{{.ENCRYPTION_KEY}}'
+      AesIV: '{{.ENCRYPTION_IV}}'
+      COSMOSDB: '{{.COSMOSDB}}'
+      COSMOS_DATABASE_NAME: AccountPasswords
+      COSMOS_COLLECTION_NAME: Passwords
 
   migrate:import:
     desc: MIG-4 — import/transform a backup into the new E2EE store (dry run unless --apply is passed)
@@ -280,7 +299,11 @@ tasks:
     - dotnet run -- import {{.CLI_ARGS}}
     vars: *migrate_vars
     env:
-      <<: *migrate_env
+      AesKey: '{{.ENCRYPTION_KEY}}'
+      AesIV: '{{.ENCRYPTION_IV}}'
+      COSMOSDB: '{{.COSMOSDB}}'
+      COSMOS_DATABASE_NAME: AccountPasswords
+      COSMOS_COLLECTION_NAME: Passwords
       VAULT_DEK_BASE64: '{{.VAULT_DEK_BASE64}}'
       NEW_COSMOSDB: '{{.NEW_COSMOSDB}}'
       NEW_COSMOS_DATABASE_NAME: '{{default .COSMOS_DATABASE_NAME .NEW_COSMOS_DATABASE_NAME}}'
@@ -293,7 +316,11 @@ tasks:
     - dotnet run -- verify-parity {{.CLI_ARGS}}
     vars: *migrate_vars
     env:
-      <<: *migrate_env
+      AesKey: '{{.ENCRYPTION_KEY}}'
+      AesIV: '{{.ENCRYPTION_IV}}'
+      COSMOSDB: '{{.COSMOSDB}}'
+      COSMOS_DATABASE_NAME: AccountPasswords
+      COSMOS_COLLECTION_NAME: Passwords
       VAULT_DEK_BASE64: '{{.VAULT_DEK_BASE64}}'
       NEW_COSMOSDB: '{{.NEW_COSMOSDB}}'
       NEW_COSMOS_DATABASE_NAME: '{{default .COSMOS_DATABASE_NAME .NEW_COSMOS_DATABASE_NAME}}'
