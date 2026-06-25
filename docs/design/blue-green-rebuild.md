@@ -85,8 +85,9 @@ Do **not** trust a hopeful import. Before cutover, prove every secret round-trip
   never emailed, deleted immediately after import.
 - After import re-encrypts under the DEK and the old server AES key is retired, **no
   server-readable secret exists anywhere** — the whole point of `OFF-4`.
-- The new stack's own datastore + identities + infra should be provisioned via Terraform
-  (a parallel workspace/state), not click-ops, so it's reproducible and teardown is clean.
+- The new stack's own datastore + identities + infra are provisioned via Terraform in the
+  single `infrastructure/` directory (owner-managed; e.g. workspaces or a stack toggle),
+  not click-ops, so it's reproducible and teardown is clean.
 
 ## 8. Testing OFF-4 (E2EE) on the parallel stack
 
