@@ -26,7 +26,7 @@ The main resource group hosts the running vault:
 
 | Component | Resource(s) | Notes |
 |-----------|-------------|-------|
-| **Cosmos DB** | `azurerm_cosmosdb_account` + SQL database `AccountPasswords` | Session consistency, system-assigned identity, optional free tier via `COSMOSDB_FREE_TIER=true task apply` for new accounts. |
+| **Cosmos DB** | `azurerm_cosmosdb_account` + SQL database `AccountPasswords` | Session consistency, system-assigned identity, free tier enabled by default for new accounts unless `COSMOSDB_FREE_TIER=false` is set. |
 | → Containers | `Passwords`, `VaultKeys` | Both partitioned on `/PartitionKey`. `VaultKeys` (OFF-4 §5B) holds the opaque vault-key record and is isolated so it never appears in the passwords list. |
 | **Key Vault** | `azurerm_key_vault` + secrets | RBAC-authorized. Secrets: `aes-encryption-key`, `aes-encryption-iv`, `cosmosdb-connection-string`, `appinsights-connection-string`, `appinsights-key`. |
 | **Function App** | `azurerm_function_app_flex_consumption` on a Linux Flex Consumption `azurerm_service_plan` (`FC1`) | .NET 10 isolated worker; code is deployed by GitHub Actions using the Azure Functions deploy action. HTTP triggers are `Anonymous` (guarded by Entra middleware, AC-2). |

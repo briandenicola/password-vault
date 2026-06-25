@@ -11,7 +11,7 @@ dotenv:
 vars:
   TAG: "Password Vault on Azure Functions (New)"
   DEFAULT_REGION: southcentralus
-  COSMOSDB_FREE_TIER: false
+  COSMOSDB_FREE_TIER: true
   DEPLOY_MAINTENANCE: false
   ADD_CUSTOM_DOMAIN: false 
   APP_REQUIRES_AUTHENTICATION: true
