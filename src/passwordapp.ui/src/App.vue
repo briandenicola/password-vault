@@ -1,5 +1,5 @@
 <template>
-  <div class="vault-app" :class="{ 'dark-mode': isDarkMode }">
+  <div class="vault-app" :class="themeClass">
     <header class="vault-header">
       <div class="vault-brand">
         <h1>The Vault</h1>
@@ -16,16 +16,14 @@
       </button>
       <nav id="vault-navigation" class="vault-nav" :class="{ 'is-open': navOpen }" aria-label="Vault navigation" @click="closeNav">
         <template v-if="vaultUnlocked">
+          <router-link class="classic-only" :to="{ name: 'Create' }">New Account</router-link>
           <router-link :to="{ name: 'Home' }"><i class="pi pi-id-card"></i> Accounts</router-link>
           <router-link :to="{ name: 'Settings' }"><i class="pi pi-cog"></i> Settings</router-link>
           <router-link :to="{ name: 'Trash' }"><i class="pi pi-trash"></i> Recycle bin</router-link>
           <router-link :to="{ name: 'Audit' }"><i class="pi pi-shield"></i> Audit</router-link>
           <router-link :to="{ name: 'Transfer' }"><i class="pi pi-sort-alt"></i> Import / Export</router-link>
         </template>
-        <button class="vault-nav-button" type="button" @click="toggleDarkMode">
-          <font-awesome-icon icon="moon" />
-          {{ isDarkMode ? 'Light' : 'Dark' }}
-        </button>
+        <router-link v-if="vaultUnlocked" class="vault-nav-button non-classic-only" :to="{ name: 'Create' }"><i class="pi pi-plus"></i> New</router-link>
         <button class="vault-nav-button" type="button" @click="logOut">Sign out</button>
       </nav>
     </header>
@@ -52,22 +50,21 @@ const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scr
 export default {
   components: { UpdatePrompt, PasskeyVaultGate },
   setup() {
-    const savedDarkMode = localStorage.getItem('darkMode');
-    const isDarkMode = ref(savedDarkMode === null ? true : savedDarkMode === 'true');
+    const currentTheme = ref(loadSettings(Authentication.getUserProfile()).appearance.theme);
     const navOpen = ref(false);
     const e2eeEnabled = isE2eeEnabled();
     const sessionState = ref({ isUnlocked: vaultSession.isUnlocked, unlockedAt: vaultSession.unlockedAt });
     const vaultUnlocked = computed(() => !e2eeEnabled || sessionState.value.isUnlocked);
+    const themeClass = computed(() => `theme-${currentTheme.value}`);
 
-    const toggleDarkMode = () => {
-      isDarkMode.value = !isDarkMode.value;
-      localStorage.setItem('darkMode', isDarkMode.value);
-      if (isDarkMode.value) {
-        document.body.classList.add('dark-mode');
-      } else {
-        document.body.classList.remove('dark-mode');
-      }
+    const applyTheme = (theme) => {
+      const next = ['vault', 'classic', 'roman-bank'].includes(theme) ? theme : 'vault';
+      currentTheme.value = next;
+      document.body.classList.remove('theme-vault', 'theme-classic', 'theme-roman-bank');
+      document.body.classList.add(`theme-${next}`);
     };
+
+    const onThemeChanged = (event) => applyTheme(event.detail && event.detail.theme);
 
     const logOut = () => {
       Authentication.signOut();
@@ -81,9 +78,7 @@ export default {
       navOpen.value = false;
     };
 
-    if (isDarkMode.value) {
-      document.body.classList.add('dark-mode');
-    }
+    applyTheme(currentTheme.value);
 
     // Auto-lock (UI-2): after the configured idle period, drop in-memory plaintext.
     // With E2EE on this is a soft lock; otherwise keep the existing sign-out behavior.
@@ -122,6 +117,7 @@ export default {
     };
 
     onMounted(() => {
+      window.addEventListener('vaultThemeChanged', onThemeChanged);
       unsubscribeSession = vaultSession.subscribe(s => { sessionState.value = s; });
       const settings = loadSettings(Authentication.getUserProfile());
       const minutes = Number(settings.security.autoLockMinutes);
@@ -132,6 +128,7 @@ export default {
     });
 
     onUnmounted(() => {
+      window.removeEventListener('vaultThemeChanged', onThemeChanged);
       if (unsubscribeSession) {
         unsubscribeSession();
       }
@@ -142,12 +139,12 @@ export default {
     });
 
     return {
-      isDarkMode,
+      currentTheme,
+      themeClass,
       navOpen,
       e2eeEnabled,
       sessionState,
       vaultUnlocked,
-      toggleDarkMode,
       toggleNav,
       closeNav,
       logOut,

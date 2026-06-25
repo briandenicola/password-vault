@@ -42,6 +42,19 @@ describe('accounts.store', () => {
     expect(PasswordService.getAll).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps cached accounts when a forced refresh fails', async () => {
+    const store = useAccountsStore();
+    store.accounts = [{ id: 'one', accountName: 'alice' }];
+    store.loadedAt = Date.now();
+    PasswordService.getAll.mockRejectedValue(new Error('network down'));
+
+    await expect(store.refreshAccounts()).rejects.toThrow('network down');
+
+    expect(store.accounts).toEqual([{ id: 'one', accountName: 'alice' }]);
+    expect(store.loadedAt).toBeGreaterThan(0);
+    expect(store.error).toBe('Unable to load accounts: network down');
+  });
+
   it('updates cached rows after delete', async () => {
     const store = useAccountsStore();
     store.accounts = [{ id: 'one' }, { id: 'two' }];

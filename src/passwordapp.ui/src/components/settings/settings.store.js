@@ -24,6 +24,9 @@ export function defaultSettings() {
       clipboardClearSeconds: 30, // 0 = never auto-clear
       autoLockMinutes: 5, // 0 = never auto-lock
     },
+    appearance: {
+      theme: 'vault', // 'vault' | 'classic' | 'roman-bank'
+    },
   };
 }
 

@@ -25,6 +25,7 @@ export const useAccountsStore = defineStore('accounts', {
         return this.pendingFetch;
       }
 
+      const hadLoadedAccounts = this.isLoaded;
       this.loading = true;
       this.error = '';
       this.pendingFetch = PasswordService.getAll()
@@ -34,8 +35,10 @@ export const useAccountsStore = defineStore('accounts', {
           return this.accounts;
         })
         .catch((err) => {
-          this.accounts = [];
-          this.loadedAt = 0;
+          if (!hadLoadedAccounts) {
+            this.accounts = [];
+            this.loadedAt = 0;
+          }
           this.error = this.describeApiError(err, 'Unable to load accounts');
           throw err;
         })

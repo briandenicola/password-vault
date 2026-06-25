@@ -5,6 +5,20 @@
       <p>Arrange the room to your taste.</p>
     </div>
 
+    <!-- Appearance -->
+    <div class="card mb-3">
+      <div class="card-header">Appearance</div>
+      <div class="card-body">
+        <div class="row mb-2">
+          <label class="col-4 col-form-label">Theme:</label>
+          <div class="col"><Select v-model="settings.appearance.theme" :options="themeChoices" optionLabel="text" optionValue="value" size="small" class="vault-select" /></div>
+        </div>
+        <small class="text-muted d-block">
+          Classic restores the older light, table-first layout. Roman/Classical Bank keeps the vault shell with marble-and-bronze styling.
+        </small>
+      </div>
+    </div>
+
     <!-- Password generator defaults -->
     <div class="card mb-3">
       <div class="card-header">Password Generator Defaults</div>
