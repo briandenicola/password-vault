@@ -2,7 +2,7 @@
   <div class="vault-app" :class="themeClass">
     <header class="vault-header">
       <div class="vault-brand">
-        <h1>The Vault</h1>
+        <h1>{{ appTitle }}</h1>
         <span>Members only</span>
       </div>
       <button
@@ -56,6 +56,7 @@ export default {
     const sessionState = ref({ isUnlocked: vaultSession.isUnlocked, unlockedAt: vaultSession.unlockedAt });
     const vaultUnlocked = computed(() => !e2eeEnabled || sessionState.value.isUnlocked);
     const themeClass = computed(() => `theme-${currentTheme.value}`);
+    const appTitle = computed(() => currentTheme.value === 'classic' ? 'Password Vault' : 'The Vault');
 
     const applyTheme = (theme) => {
       const next = ['vault', 'classic', 'roman-bank'].includes(theme) ? theme : 'vault';
@@ -140,6 +141,7 @@ export default {
 
     return {
       currentTheme,
+      appTitle,
       themeClass,
       navOpen,
       e2eeEnabled,

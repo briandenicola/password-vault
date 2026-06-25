@@ -821,7 +821,7 @@ small.text-muted {
   margin-top: 1rem;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 820px) {
   .vault-brand {
     padding: 1rem 1rem 0;
   }
@@ -859,14 +859,97 @@ small.text-muted {
   }
 
   body.theme-classic .vault-nav {
-    display: none;
-    flex-direction: column;
-    margin: 0;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    justify-content: center;
+    margin: 1rem 0 1.5rem;
     padding: 0;
   }
 
-  body.theme-classic .vault-nav.is-open {
-    display: flex;
+  body.theme-classic .vault-menu-toggle,
+  body.theme-classic .vault-nav a:not(.classic-only),
+  body.theme-classic .vault-nav i {
+    display: none !important;
+  }
+
+  body.theme-classic .vault-brand {
+    display: block;
+    padding: 4rem 1rem 0;
+  }
+
+  body.theme-classic .vault-brand h1 {
+    color: #000;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: clamp(2.75rem, 14vw, 4rem);
+    font-weight: 400;
+    letter-spacing: 0;
+    text-shadow: 3px 4px 4px rgba(0, 0, 0, .35);
+  }
+
+  body.theme-classic .vault-brand span {
+    display: none;
+  }
+
+  body.theme-classic .vault-nav a,
+  body.theme-classic .vault-nav-button {
+    width: auto;
+    min-height: auto;
+    padding: 0 .35rem;
+    border: 0;
+    color: #06f;
+    font-size: 1.25rem;
+    text-align: center;
+  }
+
+  body.theme-classic .vault-nav a::before,
+  body.theme-classic .vault-nav-button::before {
+    margin-right: .35rem;
+  }
+
+  body.theme-classic .vault-nav-button::after {
+    margin-left: .35rem;
+  }
+
+  body.theme-classic .vault-page {
+    padding: 0 1rem 2rem;
+  }
+
+  body.theme-classic .vault-toolbar {
+    flex-direction: row;
+    margin-bottom: 1rem;
+  }
+
+  body.theme-classic .vault-search {
+    flex-wrap: wrap !important;
+    gap: 0 !important;
+  }
+
+  body.theme-classic .vault-search > .p-inputtext {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    min-height: 3.75rem;
+    border-radius: .35rem 0 0 .35rem;
+    font-size: 1.35rem !important;
+  }
+
+  body.theme-classic .vault-search > .p-select {
+    flex: 1 0 100%;
+    order: 3;
+    width: 100%;
+    margin-top: .5rem;
+  }
+
+  body.theme-classic .vault-search > .p-button {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 3.75rem;
+    border-radius: 0 .35rem .35rem 0;
+    background: #adb5bd;
+    border-color: #adb5bd;
+    color: #fff;
+    font-size: 1.25rem;
   }
 
   .vault-nav a,

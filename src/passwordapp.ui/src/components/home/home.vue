@@ -74,7 +74,7 @@
                 <Button class="vault-icon-button" size="small" aria-label="Reveal password" @click.stop="displayPassword(data.id)" v-tooltip.top="'Reveal'"><font-awesome-icon icon="info" /></Button>
                 <Button class="vault-icon-button" size="small" severity="info" aria-label="Edit account" @click.stop="updatePassword(data.id)" v-tooltip.top="'Edit'"><font-awesome-icon icon="user-edit" /></Button>
                 <Button class="vault-icon-button" size="small" severity="contrast" aria-label="Account details" @click.stop="toggleDetails(data)" v-tooltip.top="'Details'"><font-awesome-icon icon="bars" /></Button>
-                <Button class="vault-icon-button" size="small" severity="warn" aria-label="Password history" @click.stop="showHistory(data.id)" v-tooltip.top="'History'"><font-awesome-icon :icon="['fas', 'clock-rotate-left']" /></Button>
+                <Button class="vault-icon-button vault-history-action" size="small" severity="warn" aria-label="Password history" @click.stop="showHistory(data.id)" v-tooltip.top="'History'"><font-awesome-icon :icon="['fas', 'clock-rotate-left']" /></Button>
                 <Button class="vault-icon-button" size="small" severity="danger" aria-label="Delete account" @click.stop="deletePassword(data.id)" v-tooltip.top="'Delete'"><font-awesome-icon icon="trash-alt" /></Button>
               </div>
             </template>
@@ -134,7 +134,7 @@
             <Button class="vault-icon-button" size="small" aria-label="Reveal password" @click.stop="displayPassword(password.id)" v-tooltip.top="'Reveal'"><font-awesome-icon icon="info" /></Button>
             <Button class="vault-icon-button" size="small" severity="info" aria-label="Edit account" @click.stop="updatePassword(password.id)" v-tooltip.top="'Edit'"><font-awesome-icon icon="user-edit" /></Button>
             <Button class="vault-icon-button" size="small" severity="contrast" aria-label="Account details" @click.stop="toggleDetails(password)" v-tooltip.top="'Details'"><font-awesome-icon icon="bars" /></Button>
-            <Button class="vault-icon-button" size="small" severity="warn" aria-label="Password history" @click.stop="showHistory(password.id)" v-tooltip.top="'History'"><font-awesome-icon :icon="['fas', 'clock-rotate-left']" /></Button>
+            <Button class="vault-icon-button vault-history-action" size="small" severity="warn" aria-label="Password history" @click.stop="showHistory(password.id)" v-tooltip.top="'History'"><font-awesome-icon :icon="['fas', 'clock-rotate-left']" /></Button>
             <Button class="vault-icon-button" size="small" severity="danger" aria-label="Delete account" @click.stop="deletePassword(password.id)" v-tooltip.top="'Delete'"><font-awesome-icon icon="trash-alt" /></Button>
           </div>
         </div>
