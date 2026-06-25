@@ -28,12 +28,6 @@ output "FUNCTION_URL" {
   sensitive = false
 }
 
-output "AZURE_FUNCTION_HOST_KEY" {
-  value     = data.azurerm_function_app_host_keys.host_key.primary_key
-  sensitive = true
-}
-
-
 output "APP_INSIGHTS_CONNECTION_STRING" {
   value     = azurerm_application_insights.this.connection_string
   sensitive = true

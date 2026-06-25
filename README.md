@@ -32,10 +32,10 @@ Deployment is automated using [Taskfile](https://taskfile.dev/#/), simplifying t
 * `task deploy-maintenance`  : Deploys the maintenance function
 * `task deploy-ui`           : Builds and deploys the UI to Azure Static Web Apps
 * `task cors`                : Adds the UI origins to the Azure Functions CORS allow-list
+* `task entra:configure`     : Creates or updates the Entra app registrations after infrastructure exists
 * `task test-api`            : Hits the API health endpoint to validate a deployment
 * `task migrate:verify`      : Reports any undecryptable vault secrets (read-only)
 * `task migrate:apply`       : Re-encrypts legacy `v1` secrets to `v2` (AES-GCM); backs up first
-* `task host-key`            : Retrieves the host key for the Azure Function
 * `task init`                : Initializes Terraform
 * `task plan`                : Creates a Terraform plan
 
@@ -44,7 +44,7 @@ The [TaskFile](../TaskFile.yaml) is located in the root of the repository and in
 | Name | Usage | Default Value |
 |------|-------|---------------|
 | TAG | Value used in Azure Tags | Password Vault on Azure Functions |
-| DEFAULT_REGION | Default region to deploy to | canadacentral |
+| DEFAULT_REGION | Default region to deploy to | southcentralus |
 | COSMOSDB_FREE_TIER | Use the Cosmos DB free tier | false |
 | DEPLOY_MAINTENANCE | Deploy Azure Functions for Keep Alives | false |
 | ADD_CUSTOM_DOMAIN | Add a custom domain to Azure Static Web Apps | false |

@@ -17,23 +17,17 @@ UI Build & Deployment
 * The build and deploy is part of the same process.
 * The deployment uses the Azure Static Web Apps cli to deploy the application to Azure.
 * `task deploy-ui` generates the full `.env` for the build from Terraform outputs and the Azure CLI — **no manual `.env.production` file is required**:
-    * App Insights, API endpoint, and Function host key come from Terraform outputs.
+    * App Insights and API endpoint come from Terraform outputs.
     * `VUE_APP_AAD_REDIRECT_URL` defaults to the Static Web App URL (`SWA_DEFAULT_URL`).
     * `VUE_APP_AAD_TENANT_ID` defaults to the signed-in `az` tenant.
-    * `VUE_APP_AAD_SCOPE` defaults to the Function App URL (the API App ID URI).
-    * `VUE_APP_AAD_CLIENT_ID` has **no** Terraform/az source (the app registration is created manually — see [entra.md](./entra.md)), so it must be set in `infrastructure/.env`.
+    * `VUE_APP_AAD_SCOPE` is written by `task entra:configure` as the API `Password.All` scope.
+    * `VUE_APP_AAD_CLIENT_ID` is written by `task entra:configure`.
 * Any value can be overridden by exporting the matching `VUE_APP_AAD_*` variable (e.g. in `infrastructure/.env`) — useful for a custom domain redirect URL.
 * If `APP_REQUIRES_AUTHENTICATION=true` and `AAD_CLIENT_ID` is empty, `deploy-ui` fails fast rather than shipping a broken sign-in.
 * For development, you can disable Entra ID authentication by setting `VUE_APP_REQUIRES_AUTHENTICATION` to false in the `.env` file. This is not recommended for production.
 
 # Steps
-- :one: Add the app-registration client id to `infrastructure/.env` (one-time, created per [entra.md](./entra.md)):
-```
-    AAD_CLIENT_ID=<client id of the API app registration>
-    # Optional overrides (otherwise derived automatically):
-    # AAD_TENANT_ID=<entra tenant id>
-    # VUE_APP_AAD_REDIRECT_URL=https://<custom-domain>
-```
+- :one: Run `task entra:configure` after the infrastructure exists, then `task apply` to push the generated API auth settings.
 - :two: `task deploy-ui`          - Builds and deploys the UI to Azure Static Web Apps
 <p align="right">(<a href="#build">back to top</a>)</p>
 

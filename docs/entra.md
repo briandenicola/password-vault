@@ -4,6 +4,25 @@ Entra ID Application Registrations
 * This Password uses Entra ID for authentication and authorization.  The following steps are required to configure the application registrations in Azure AD.
 
 # Application Registrations
+## Automated setup
+After Terraform creates the Function App and Static Web App, run:
+
+```powershell
+task entra:configure
+task apply
+```
+
+`task entra:configure` creates or updates the API and UI app registrations, exposes the API scopes, configures the SPA redirect URIs, declares the UI app's delegated access to the API scope, and writes the generated values to `infrastructure/.env`. The follow-up `task apply` pushes `AAD_TENANT_ID` and `AAD_AUDIENCE` into the Function App settings.
+
+If your account can grant tenant-wide admin consent, run:
+
+```powershell
+task entra:configure -- -GrantAdminConsent
+task apply
+```
+
+Manual setup is still documented below as a fallback for locked-down tenants.
+
 ## Password Vault API
 > __Note:__ This App Registration is used to secure the Azure Functions API.  The API is secured using Azure AD and is restricted to groups/apps assigned to the Default App Role
 
@@ -18,7 +37,7 @@ Entra ID Application Registrations
    | App Roles      | Name - Default Access |
    |                | Allow Member Types - Both (Users + applications) |
    |                | Value - Default.Access |
-   | Expose an API | Set App Id value: https://${appName}-functions.azurewebsites.net |
+   | Expose an API | Set App ID URI value: https://${appName}-functions.azurewebsites.net |
    |               | Scopes: PasswordHistory.Read & Password.All |
    | Enterprise Application Settings |  Visible To Users: false |
    

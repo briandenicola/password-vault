@@ -28,7 +28,7 @@ The main resource group hosts the running vault:
 |-----------|-------------|-------|
 | **Cosmos DB** | `azurerm_cosmosdb_account` + SQL database `AccountPasswords` | Session consistency, system-assigned identity, optional free tier. |
 | → Containers | `Passwords`, `VaultKeys` | Both partitioned on `/PartitionKey`. `VaultKeys` (OFF-4 §5B) holds the opaque vault-key record and is isolated so it never appears in the passwords list. |
-| **Key Vault** | `azurerm_key_vault` + secrets | RBAC-authorized. Secrets: `aes-encryption-key`, `aes-encryption-iv`, `host-key`, `cosmosdb-connection-string`, `appinsights-connection-string`, `appinsights-key`. |
+| **Key Vault** | `azurerm_key_vault` + secrets | RBAC-authorized. Secrets: `aes-encryption-key`, `aes-encryption-iv`, `cosmosdb-connection-string`, `appinsights-connection-string`, `appinsights-key`. |
 | **Function App** | `azurerm_linux_function_app` on a Linux `azurerm_service_plan` | .NET 10 isolated worker; **run-from-package** from the storage `app` container. HTTP triggers are `Anonymous` (guarded by Entra middleware, AC-2). |
 | **Identity & RBAC** | `azurerm_user_assigned_identity.functions_identity` + role assignments | Function reads Key Vault (`Key Vault Secrets User`) and storage (`Blob Owner`/`Contributor`) via managed identity. A deployer KV access assignment supports `task` runs. |
 | **Storage** | `azurerm_storage_account` + `app` container | Holds the published `vault.zip` consumed by `WEBSITE_RUN_FROM_PACKAGE`. |
