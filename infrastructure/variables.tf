@@ -8,8 +8,9 @@ variable "tags" {
 }
 
 variable "enable_cosmosdb_free_tier" {
-  description = "CosmosDB SKU"
-  default     = true
+  description = "Opt in to the Azure Cosmos DB free tier for the account. Azure allows only one free-tier Cosmos account per subscription, and this is only intended for new accounts."
+  type        = bool
+  default     = false
 }
 
 variable "deploy_maintenance_infrastructure" {

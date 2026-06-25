@@ -45,7 +45,7 @@ The [TaskFile](../TaskFile.yaml) is located in the root of the repository and in
 |------|-------|---------------|
 | TAG | Value used in Azure Tags | Password Vault on Azure Functions |
 | DEFAULT_REGION | Default region to deploy to | southcentralus |
-| COSMOSDB_FREE_TIER | Use the Cosmos DB free tier | false |
+| COSMOSDB_FREE_TIER | Opt in to Cosmos DB free tier for new accounts (`COSMOSDB_FREE_TIER=true task apply`). Azure allows only one free-tier Cosmos account per subscription. | false |
 | DEPLOY_MAINTENANCE | Deploy Azure Functions for Keep Alives | false |
 | ADD_CUSTOM_DOMAIN | Add a custom domain to Azure Static Web Apps | false |
 | APP_REQUIRES_AUTHENTICATION | Require authentication for the UI | true |
