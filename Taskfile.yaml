@@ -34,9 +34,9 @@ tasks:
     desc: Initialized Terraform
     dir: ./infrastructure
     cmds:
-    - terraform init #-backend-config="subscription_id={{.CORE_SUBSCRIPTION_ID}}"
     - terraform workspace new {{.REGION}} || true
     - terraform workspace select {{.REGION}}
+    - terraform init #-backend-config="subscription_id={{.CORE_SUBSCRIPTION_ID}}"
     vars: 
       REGION: '{{default .DEFAULT_REGION .CLI_ARGS}}'  
 
