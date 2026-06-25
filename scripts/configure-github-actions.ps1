@@ -95,6 +95,17 @@ function Set-GhSecret {
 
 $accountJson = Invoke-TextCommand "az" @("account", "show", "-o", "json")
 $account = $accountJson | ConvertFrom-Json
+$azureClientId = Get-EnvValue @("AZURE_CLIENT_ID", "ARM_CLIENT_ID")
+$azureTenantId = Get-EnvValue @("AZURE_TENANT_ID", "ARM_TENANT_ID")
+$azureSubscriptionId = Get-EnvValue @("AZURE_SUBSCRIPTION_ID", "ARM_SUBSCRIPTION_ID")
+
+if (-not $azureTenantId) {
+    $azureTenantId = $account.tenantId
+}
+
+if (-not $azureSubscriptionId) {
+    $azureSubscriptionId = $account.id
+}
 
 Set-GhVariable "FUNCTION_NAME" (Get-TerraformOutput "FUNCTION_NAME")
 Set-GhVariable "FUNCTION_URL" (Get-TerraformOutput "FUNCTION_URL")
@@ -104,12 +115,15 @@ Set-GhVariable "MAINTENANCE_FUNCTION_NAME" (Get-TerraformOutput "MAINTENANCE_FUN
 
 Set-GhSecret "APP_INSIGHTS_CONNECTION_STRING" (Get-TerraformOutput "APP_INSIGHTS_CONNECTION_STRING")
 Set-GhSecret "AAD_CLIENT_ID" (Get-EnvValue @("AAD_CLIENT_ID", "VUE_APP_AAD_CLIENT_ID"))
-Set-GhSecret "AZURE_CLIENT_ID" (Get-EnvValue @("AZURE_CLIENT_ID", "ARM_CLIENT_ID"))
-Set-GhSecret "AZURE_TENANT_ID" (Get-EnvValue @("AZURE_TENANT_ID", "ARM_TENANT_ID") ?? $account.tenantId)
-Set-GhSecret "AZURE_SUBSCRIPTION_ID" (Get-EnvValue @("AZURE_SUBSCRIPTION_ID", "ARM_SUBSCRIPTION_ID") ?? $account.id)
+Set-GhSecret "AZURE_CLIENT_ID" $azureClientId
+Set-GhSecret "AZURE_TENANT_ID" $azureTenantId
+Set-GhSecret "AZURE_SUBSCRIPTION_ID" $azureSubscriptionId
 Set-GhSecret "TF_ENCRYPTION_KEY" (Get-EnvValue @("TF_ENCRYPTION_KEY", "TF_VAR_password_encryption_key", "ENCRYPTION_KEY"))
 Set-GhSecret "TF_ENCRYPTION_IV" (Get-EnvValue @("TF_ENCRYPTION_IV", "TF_VAR_password_encryption_initialization_vector", "ENCRYPTION_IV"))
 
 Write-Host ""
 Write-Host "GitHub Actions configuration complete."
 Write-Host "Variables come from Terraform outputs; secrets come from Terraform outputs, Azure CLI account context, and loaded environment values."
+if (-not $azureClientId) {
+    Write-Warning "AZURE_CLIENT_ID was not set. Add the OIDC app/managed identity client id manually or rerun with AZURE_CLIENT_ID/ARM_CLIENT_ID set."
+}
