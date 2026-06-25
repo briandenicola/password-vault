@@ -142,16 +142,16 @@ tasks:
     cmds:
     - cmd: rm -rf publish
       platforms: [linux, darwin]
-    - cmd: pwsh -NoProfile -ExecutionPolicy Bypass -Command "Remove-Item -Recurse -Force publish -ErrorAction SilentlyContinue"
+    - cmd: pwsh -NoProfile -ExecutionPolicy Bypass -Command "& { if (Test-Path -LiteralPath 'publish') { Remove-Item -LiteralPath 'publish' -Recurse -Force } }"
       platforms: [windows]
     - dotnet publish -c Release --nologo -o publish/linux 
     - cmd: cd publish/linux && zip -r vault.zip .
       platforms: [linux, darwin]
     - cmd: pwsh -NoProfile -ExecutionPolicy Bypass -Command "Compress-Archive -Path .\publish\linux\* -DestinationPath .\publish\vault.zip -Force"
       platforms: [windows]
-    - cmd: az storage copy --only-show-errors -s publish/linux/vault.zip --account-name {{.STORAGE_ACCOUNT_NAME}} --destination-container app
+    - cmd: az storage blob upload --only-show-errors --auth-mode login --account-name {{.STORAGE_ACCOUNT_NAME}} --container-name app --name vault.zip --file publish/linux/vault.zip --overwrite true
       platforms: [linux, darwin]
-    - cmd: az storage copy --only-show-errors -s publish/vault.zip --account-name {{.STORAGE_ACCOUNT_NAME}} --destination-container app
+    - cmd: az storage blob upload --only-show-errors --auth-mode login --account-name {{.STORAGE_ACCOUNT_NAME}} --container-name app --name vault.zip --file publish/vault.zip --overwrite true
       platforms: [windows]
     vars:
       FUNCTION_NAME:
