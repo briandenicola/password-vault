@@ -24,6 +24,8 @@ export default {
       hasRun: false,
       error: '',
       groups: [],
+      reusedFirst: 0,
+      reusedRows: 5,
       totalAccounts: 0,
       reusedAccounts: 0,
       failedCount: 0,
@@ -43,6 +45,18 @@ export default {
       }
       return `${this.reusedAccounts} accounts share a password across ${this.groups.length} ` +
         `group${this.groups.length === 1 ? '' : 's'}. Give each its own password.`;
+    },
+    pagedGroups() {
+      return this.groups.slice(this.reusedFirst, this.reusedFirst + this.reusedRows);
+    },
+    reusedRangeStart() {
+      return this.groups.length === 0 ? 0 : this.reusedFirst + 1;
+    },
+    reusedRangeEnd() {
+      return Math.min(this.reusedFirst + this.reusedRows, this.groups.length);
+    },
+    showReusedPaginator() {
+      return this.groups.length > this.reusedRows;
     },
     breachSummary() {
       if (this.breachResults.length === 0) {
@@ -89,6 +103,7 @@ export default {
       this.loading = true;
       this.error = '';
       this.groups = [];
+      this.reusedFirst = 0;
       this.failedCount = 0;
       this.reusedAccounts = 0;
 
@@ -111,6 +126,13 @@ export default {
       }
     },
 
+    onReusedPage(event) {
+      this.reusedFirst = event.first;
+      this.reusedRows = event.rows;
+    },
+    groupKey(group, index) {
+      return `${index}-${group.accounts.map(a => a.id).join('-')}`;
+    },
     async runBreachCheck() {
       this.breachLoading = true;
       this.breachError = '';

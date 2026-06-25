@@ -15,6 +15,7 @@ import Select from 'primevue/select'
 import Dialog from 'primevue/dialog'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import Paginator from 'primevue/paginator'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
 import Tooltip from 'primevue/tooltip'
@@ -96,6 +97,7 @@ let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? 
   app.component('Dialog', Dialog);
   app.component('DataTable', DataTable);
   app.component('Column', Column);
+  app.component('Paginator', Paginator);
   app.component('Tag', Tag);
   app.component('Message', Message);
   app.directive('tooltip', Tooltip);

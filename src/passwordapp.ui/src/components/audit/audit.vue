@@ -34,13 +34,35 @@
         {{ summary }}
       </Message>
 
-      <div v-for="(group, gi) in groups" :key="gi" class="card mb-3">
+      <div v-if="groups.length" class="audit-results-toolbar mb-3">
+        <span>
+          Showing duplicate group {{ reusedRangeStart }}-{{ reusedRangeEnd }} of {{ groups.length }}.
+        </span>
+        <Paginator
+          v-if="showReusedPaginator"
+          :first="reusedFirst"
+          :rows="reusedRows"
+          :totalRecords="groups.length"
+          :rowsPerPageOptions="[5, 10, 20, 50]"
+          @page="onReusedPage" />
+      </div>
+
+      <div v-for="(group, gi) in pagedGroups" :key="groupKey(group, reusedFirst + gi)" class="card mb-3">
         <div class="card-header d-flex align-items-center">
           <Tag severity="warn" :value="`Shared by ${group.count}`" class="me-2" />
           <span class="text-muted">These accounts use the same password.</span>
         </div>
         <div class="card-body">
-          <DataTable :value="group.accounts" stripedRows size="small" responsiveLayout="stack" class="vault-table">
+          <DataTable
+            :value="group.accounts"
+            dataKey="id"
+            stripedRows
+            size="small"
+            responsiveLayout="stack"
+            class="vault-table"
+            paginator
+            :rows="10"
+            :rowsPerPageOptions="[5, 10, 20, 50]">
             <Column field="accountName" header="Account">
               <template #body="{ data }">
                 <span class="text-lowercase">{{ data.accountName }}</span>
@@ -94,7 +116,16 @@
       <div v-if="breachResults.length" class="card mb-3">
         <div class="card-header">Accounts using a breached password</div>
         <div class="card-body">
-          <DataTable :value="breachResults" stripedRows size="small" responsiveLayout="stack" class="vault-table">
+          <DataTable
+            :value="breachResults"
+            dataKey="id"
+            stripedRows
+            size="small"
+            responsiveLayout="stack"
+            class="vault-table"
+            paginator
+            :rows="10"
+            :rowsPerPageOptions="[5, 10, 20, 50]">
             <Column field="accountName" header="Account">
               <template #body="{ data }">
                 <span class="text-lowercase">{{ data.accountName }}</span>
@@ -122,3 +153,4 @@
   </div>
 </template>
 <script src="./audit.js"></script>
+<style src="./audit.css" />
