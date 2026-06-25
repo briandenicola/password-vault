@@ -5,6 +5,7 @@ import { loadSettings } from '@/components/settings/settings.store.js';
 import { copyWithAutoClear } from '@/components/utils/clipboard.js';
 import { parseTags, collectTags, hasTag } from '@/components/utils/tags.js';
 import { isStale, ageLabel } from '@/components/utils/age.js';
+import { useAccountsStore } from '@/stores/accounts.store.js';
 
 export default {
   name: 'PasswordList',
@@ -14,6 +15,9 @@ export default {
     },
     allTags() {
       return collectTags(this.passwords);
+    },
+    passwords() {
+      return this.accountsStore.accounts;
     },
     tagChoices() {
       return [{ label: 'All tags', value: null }]
@@ -47,7 +51,7 @@ export default {
   data() {
     const settings = loadSettings(Authentication.getUserProfile());
     return {
-      passwords:    [],
+      accountsStore: useAccountsStore(),
       perPage:      settings.list.perPage,
       mobileFirst:  0,
       filter:       '',
@@ -149,27 +153,14 @@ export default {
       this.showDeleteModal = true;
     },
     fetchPasswords() {
-      this.apiError = '';
-      PasswordService.getAll()
-      .then((response) => {
-        this.passwords = response.data;
-      })
-      .catch((error) => {
-        this.passwords = [];
-        this.apiError = this.describeApiError(error, 'Unable to load accounts');
-      });
-    },
-    describeApiError(error, fallback) {
-      if (error.response) {
-        const detail = typeof error.response.data === 'string'
-          ? error.response.data
-          : error.response.data?.error || error.response.statusText;
-        return `${fallback}: ${error.response.status}${detail ? ` - ${detail}` : ''}`;
-      }
-      if (error.request) {
-        return `${fallback}: API request failed before a response was received. Check CORS, network access, and the configured API URL.`;
-      }
-      return `${fallback}: ${error.message || error}`;
+      this.apiError = this.accountsStore.error;
+      this.accountsStore.fetchAccounts()
+        .then(() => {
+          this.apiError = '';
+        })
+        .catch(() => {
+          this.apiError = this.accountsStore.error;
+        });
     },
     formatDate(date) {
       if (date) {
@@ -225,10 +216,9 @@ export default {
     },
     onDeleteConfirm() {
       this.showDeleteModal = false;
-      PasswordService.delete(this.selectedPasswordId)
+      this.accountsStore.deleteAccount(this.selectedPasswordId)
       .then(() => {
         this.showAlert('Successfully', 'Successfully deleted Account');
-        this.fetchPasswords();
       })
       .catch((error) => {
         this.showAlert('Error', error.response.data);

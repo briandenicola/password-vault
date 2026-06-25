@@ -1,4 +1,5 @@
 import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 
@@ -78,6 +79,7 @@ let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? 
   }
 
   const app = createApp(App);
+  app.use(createPinia());
   app.use(router);
   app.use(PrimeVue, {
     theme: {
