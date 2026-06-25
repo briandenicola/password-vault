@@ -28,7 +28,7 @@
       {{ apiError }}
     </Message>
 
-    <div class="row">
+    <div class="row vault-desktop-table">
       <div class="col-12">
         <DataTable
           :value="filteredPasswords"
@@ -95,9 +95,71 @@
                 <div class="row mb-2"><div class="col"><b>Notes:</b></div><div class="col">{{ data.notes }}</div></div>
               </div>
             </div>
+
           </template>
         </DataTable>
       </div>
+    </div>
+
+    <div class="vault-mobile-list" aria-label="Accounts">
+      <article v-for="password in mobilePagedPasswords" :key="password.id" class="vault-mobile-account">
+        <div class="vault-mobile-account-row">
+          <div class="vault-mobile-account-label">Account</div>
+          <div class="vault-mobile-account-value">
+            <span class="text-lowercase">{{ password.accountName }}</span>
+            <div v-if="tagsOf(password).length" class="mt-1">
+              <Tag v-for="tag in tagsOf(password)" :key="tag" :value="tag" severity="secondary" class="me-1 mb-1" @click.stop="selectedTag = tag" style="cursor: pointer;" />
+            </div>
+          </div>
+        </div>
+        <div class="vault-mobile-account-row">
+          <div class="vault-mobile-account-label">Site</div>
+          <div class="vault-mobile-account-value text-lowercase">{{ password.siteName }}</div>
+        </div>
+        <div class="vault-mobile-account-row">
+          <div class="vault-mobile-account-label">Last Modified</div>
+          <div class="vault-mobile-account-value">
+            <div>{{ formatDate(password.lastModifiedDate) }}</div>
+            <small
+              class="text-muted"
+              :class="{ 'fst-italic': isStaleRow(password) }">
+              {{ isStaleRow(password) ? staleAgeOf(password) : ageOf(password) }}
+            </small>
+          </div>
+        </div>
+        <div class="vault-mobile-account-row">
+          <div class="vault-mobile-account-label">Edit/Remove</div>
+          <div class="vault-mobile-account-actions">
+            <Button class="vault-icon-button" size="small" severity="success" @click.stop="copyPassword(password.id)" v-tooltip.top="'Copy'"><font-awesome-icon icon="copy" /></Button>
+            <Button class="vault-icon-button" size="small" @click.stop="displayPassword(password.id)" v-tooltip.top="'Reveal'"><font-awesome-icon icon="info" /></Button>
+            <Button class="vault-icon-button" size="small" severity="info" @click.stop="updatePassword(password.id)" v-tooltip.top="'Edit'"><font-awesome-icon icon="user-edit" /></Button>
+            <Button class="vault-icon-button" size="small" severity="contrast" @click.stop="toggleDetails(password)" v-tooltip.top="'Details'"><font-awesome-icon icon="bars" /></Button>
+            <Button class="vault-icon-button" size="small" severity="warn" @click.stop="showHistory(password.id)" v-tooltip.top="'History'"><font-awesome-icon :icon="['fas', 'clock-rotate-left']" /></Button>
+            <Button class="vault-icon-button" size="small" severity="danger" @click.stop="deletePassword(password.id)" v-tooltip.top="'Delete'"><font-awesome-icon icon="trash-alt" /></Button>
+          </div>
+        </div>
+        <div v-if="isDetailsExpanded(password)" class="vault-mobile-details">
+          <div><b>Created By:</b> {{ password.createdBy }}</div>
+          <div><b>Updated By:</b> {{ password.lastModifiedBy }}</div>
+          <div v-if="password.notes"><b>Notes:</b> {{ password.notes }}</div>
+          <div v-if="password.securityQuestions && password.securityQuestions.length">
+            <b>Security Questions:</b>
+            <div v-for="securityQuestion in password.securityQuestions" :key="securityQuestion.question">
+              <span v-if="securityQuestion.question !== '' && securityQuestion.answer !== ''">
+                <i>{{ securityQuestion.question }}</i>: {{ securityQuestion.answer }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </article>
+      <p v-if="filteredPasswords.length === 0" class="vault-mobile-empty">No accounts found.</p>
+      <Paginator
+        v-if="filteredPasswords.length > perPage"
+        :first="mobileFirst"
+        :rows="perPage"
+        :totalRecords="filteredPasswords.length"
+        :rowsPerPageOptions="[5, 10, 20, 50, 100]"
+        @page="onMobilePage" />
     </div>
 
     <Dialog v-model:visible="showDeleteModal" modal header="Confirm your action" :style="{ width: '30rem' }">

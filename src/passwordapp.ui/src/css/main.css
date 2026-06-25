@@ -114,6 +114,23 @@ body {
   overflow-x: auto;
 }
 
+.vault-menu-toggle {
+  display: none;
+  align-items: center;
+  gap: .45rem;
+  min-height: 2.5rem;
+  margin: 1rem auto;
+  padding: .5rem 1rem;
+  border: .5px solid var(--vault-border);
+  border-radius: .5rem;
+  background: var(--vault-surface);
+  color: var(--vault-accent-strong);
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
 .vault-nav a,
 .vault-nav-button {
   display: inline-flex;
@@ -622,7 +639,53 @@ small.text-muted {
 
 @media (max-width: 760px) {
   .vault-brand {
-    padding-top: .8rem;
+    padding: 1rem 1rem 0;
+  }
+
+  .vault-brand h1 {
+    font-size: clamp(2.25rem, 14vw, 3.5rem);
+  }
+
+  .vault-brand span {
+    gap: .65rem;
+    letter-spacing: .24em;
+  }
+
+  .vault-brand span::before,
+  .vault-brand span::after {
+    width: 2.25rem;
+  }
+
+  .vault-menu-toggle {
+    display: inline-flex;
+  }
+
+  .vault-nav {
+    display: none;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 0;
+    padding: 0;
+    overflow-x: visible;
+  }
+
+  .vault-nav.is-open {
+    display: flex;
+  }
+
+  .vault-nav a,
+  .vault-nav-button {
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: .85rem 1.25rem;
+    border-bottom: .5px solid var(--vault-border);
+    text-align: left;
+  }
+
+  .vault-page {
+    padding: 1.25rem 1rem 5rem;
   }
 
   .vault-toolbar {
@@ -631,6 +694,12 @@ small.text-muted {
   }
 
   .vault-search {
+    width: 100%;
+  }
+
+  .vault-search > .p-inputtext,
+  .vault-search > .p-select,
+  .vault-search > .p-button {
     width: 100%;
   }
 
