@@ -36,12 +36,11 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  ARM_USE_OIDC: 'true'
-  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  TF_VAR_password_encryption_key: ${{ secrets.TF_ENCRYPTION_KEY }}
-  TF_VAR_password_encryption_initialization_vector: ${{ secrets.TF_ENCRYPTION_IV }}
+  AZURE_FUNCTIONAPP_NAME: ${{ vars.FUNCTION_NAME }}
+  AZURE_MAINTENANCE_FUNCTIONAPP_NAME: ${{ vars.MAINTENANCE_FUNCTION_NAME }}
+  AZURE_FUNCTIONAPP_URL: ${{ vars.FUNCTION_URL }}
+  AZURE_STATIC_WEB_APP_NAME: ${{ vars.SWA_NAME }}
+  AZURE_STATIC_WEB_APP_URL: ${{ vars.SWA_DEFAULT_URL }}
 
 jobs:
   api:
@@ -58,19 +57,10 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: '~> 1.7'
-      - name: Terraform init
-        run: terraform -chdir=infrastructure init -input=false
-      - name: Read Terraform outputs
-        id: tf
-        run: |
-          echo "function_name=$(terraform -chdir=infrastructure output -raw FUNCTION_NAME)" >> "$GITHUB_OUTPUT"
       - name: Deploy API to Azure Functions Flex Consumption
         uses: Azure/functions-action@v1
         with:
-          app-name: ${{ steps.tf.outputs.function_name }}
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
           package: src/passwordapp.api
           remote-build: true
 
@@ -93,24 +83,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: '~> 1.7'
       - name: Install SWA CLI
         run: npm install -g @azure/static-web-apps-cli
-      - name: Terraform init
-        run: terraform -chdir=infrastructure init -input=false
-      - name: Read Terraform outputs
-        id: tf
-        run: |
-          echo "function_url=$(terraform -chdir=infrastructure output -raw FUNCTION_URL)" >> "$GITHUB_OUTPUT"
-          echo "app_insights_connection_string=$(terraform -chdir=infrastructure output -raw APP_INSIGHTS_CONNECTION_STRING)" >> "$GITHUB_OUTPUT"
-          echo "swa_name=$(terraform -chdir=infrastructure output -raw SWA_NAME)" >> "$GITHUB_OUTPUT"
-          echo "swa_default_url=$(terraform -chdir=infrastructure output -raw SWA_DEFAULT_URL)" >> "$GITHUB_OUTPUT"
       - name: Resolve Static Web App deployment token
         id: swa
         run: |
-          token="$(az staticwebapp secrets list --name "${{ steps.tf.outputs.swa_name }}" --query properties.apiKey -o tsv)"
+          token="$(az staticwebapp secrets list --name "${{ env.AZURE_STATIC_WEB_APP_NAME }}" --query properties.apiKey -o tsv)"
           echo "::add-mask::$token"
           echo "deployment_token=$token" >> "$GITHUB_OUTPUT"
       - name: Build UI
@@ -120,12 +98,12 @@ jobs:
             echo 'VUE_APP_TITLE="Password Vault"'
             echo 'VUE_APP_REQUIRES_AUTHENTICATION=true'
             echo 'VUE_APP_REQUIRES_APP_INSIGHTS=true'
-            echo 'VUE_APP_INSIGHTS_CONNECTION_STRING="${{ steps.tf.outputs.app_insights_connection_string }}"'
-            echo 'VUE_APP_API_ENDPOINT="${{ steps.tf.outputs.function_url }}"'
-            echo 'VUE_APP_AAD_REDIRECT_URL="${{ steps.tf.outputs.swa_default_url }}"'
+            echo 'VUE_APP_INSIGHTS_CONNECTION_STRING="${{ secrets.APP_INSIGHTS_CONNECTION_STRING }}"'
+            echo 'VUE_APP_API_ENDPOINT="${{ env.AZURE_FUNCTIONAPP_URL }}"'
+            echo 'VUE_APP_AAD_REDIRECT_URL="${{ env.AZURE_STATIC_WEB_APP_URL }}"'
             echo 'VUE_APP_AAD_CLIENT_ID="${{ secrets.AAD_CLIENT_ID }}"'
             echo 'VUE_APP_AAD_TENANT_ID="${{ secrets.AZURE_TENANT_ID }}"'
-            echo 'VUE_APP_AAD_SCOPE="${{ steps.tf.outputs.function_url }}/Password.All"'
+            echo 'VUE_APP_AAD_SCOPE="${{ env.AZURE_FUNCTIONAPP_URL }}/Password.All"'
           } > .env
           npm install
           npm run build
@@ -148,18 +126,9 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: '~> 1.7'
-      - name: Terraform init
-        run: terraform -chdir=infrastructure init -input=false
-      - name: Read Terraform outputs
-        id: tf
-        run: |
-          echo "function_name=$(terraform -chdir=infrastructure output -raw MAINTENANCE_FUNCTION_NAME)" >> "$GITHUB_OUTPUT"
       - name: Deploy maintenance function to Azure Functions Flex Consumption
         uses: Azure/functions-action@v1
         with:
-          app-name: ${{ steps.tf.outputs.function_name }}
+          app-name: ${{ env.AZURE_MAINTENANCE_FUNCTIONAPP_NAME }}
           package: src/passwordapp.maintenance
           remote-build: true
