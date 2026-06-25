@@ -54,6 +54,7 @@ export default {
       showDeleteModal:    false,
       showAlertModal:     false,
       showHistoryModal:   false,
+      apiError:           '',
     };
   },
 
@@ -70,9 +71,6 @@ export default {
     },
     isStaleRow(row) {
       return isStale(row && row.lastModifiedDate, this.staleAfterMonths);
-    },
-    logOut() {
-      Authentication.signOut();
     },
     toggleDetails(row) {
       const expanded = { ...this.expandedRows };
@@ -91,10 +89,27 @@ export default {
       this.showDeleteModal = true;
     },
     fetchPasswords() {
+      this.apiError = '';
       PasswordService.getAll()
       .then((response) => {
         this.passwords = response.data;
+      })
+      .catch((error) => {
+        this.passwords = [];
+        this.apiError = this.describeApiError(error, 'Unable to load accounts');
       });
+    },
+    describeApiError(error, fallback) {
+      if (error.response) {
+        const detail = typeof error.response.data === 'string'
+          ? error.response.data
+          : error.response.data?.error || error.response.statusText;
+        return `${fallback}: ${error.response.status}${detail ? ` - ${detail}` : ''}`;
+      }
+      if (error.request) {
+        return `${fallback}: API request failed before a response was received. Check CORS, network access, and the configured API URL.`;
+      }
+      return `${fallback}: ${error.message || error}`;
     },
     formatDate(date) {
       if (date) {

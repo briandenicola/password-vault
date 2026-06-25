@@ -84,7 +84,7 @@ Manual setup is still documented below as a fallback for locked-down tenants.
 | ------ | ------ | ------ |
 | `AUTH_ENABLED` | `true` / `false` | Master switch, **fail-closed: defaults to ON**. The HTTP triggers are `Anonymous` (AC-2), so token validation is the only guard — it is only skipped when this is the explicit string `false` (local/offline dev). |
 | `AAD_TENANT_ID` | tenant (directory) id | Builds the issuer `https://login.microsoftonline.com/<tenant>/v2.0` and fetches signing keys. |
-| `AAD_AUDIENCE` | `https://${appName}-functions.azurewebsites.net` | The API App Registration's App ID URI (and/or its client id), comma-separated if more than one. |
+| `AAD_AUDIENCE` | `https://${appName}-functions.azurewebsites.net,<api-client-id>` | The accepted token audiences. Include both the API App ID URI and the API app registration client id because Entra may issue access tokens with either value in `aud`. |
 | `AAD_ALLOWED_OIDS` | _(empty)_ | Optional `oid` allowlist. Leave empty to rely on the Enterprise App group assignment (e.g. the "parents" group). |
 
 When `AUTH_ENABLED=true`, every HTTP function except the anonymous health check (`passwords/healthz`)

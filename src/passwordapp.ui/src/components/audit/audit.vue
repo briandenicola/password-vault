@@ -1,11 +1,8 @@
 <template>
-  <div class="container-fluid">
-    <h2 class="mb-3">Security Audit</h2>
-
-    <div class="row navbar navbar-default mb-3">
-      <div class="col table-responsive">
-        | <router-link :to="{ name: 'Home' }">Back to Vault</router-link> |
-      </div>
+  <div class="container-fluid vault-screen">
+    <div class="vault-page-title">
+      <h2>Security audit</h2>
+      <p>A health check of every password on the books.</p>
     </div>
 
     <div class="card mb-3">
@@ -43,7 +40,7 @@
           <span class="text-muted">These accounts use the same password.</span>
         </div>
         <div class="card-body">
-          <DataTable :value="group.accounts" stripedRows size="small" responsiveLayout="stack">
+          <DataTable :value="group.accounts" stripedRows size="small" responsiveLayout="stack" class="vault-table">
             <Column field="accountName" header="Account">
               <template #body="{ data }">
                 <span class="text-lowercase">{{ data.accountName }}</span>
@@ -97,7 +94,7 @@
       <div v-if="breachResults.length" class="card mb-3">
         <div class="card-header">Accounts using a breached password</div>
         <div class="card-body">
-          <DataTable :value="breachResults" stripedRows size="small" responsiveLayout="stack">
+          <DataTable :value="breachResults" stripedRows size="small" responsiveLayout="stack" class="vault-table">
             <Column field="accountName" header="Account">
               <template #body="{ data }">
                 <span class="text-lowercase">{{ data.accountName }}</span>

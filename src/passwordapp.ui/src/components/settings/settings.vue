@@ -1,11 +1,8 @@
 <template>
-  <div class="container-fluid">
-    <h2 class="mb-3">Settings</h2>
-
-    <div class="row navbar navbar-default mb-3">
-      <div class="col table-responsive">
-        | <router-link :to="{ name: 'Home' }">Back to Vault</router-link> |
-      </div>
+  <div class="container-fluid vault-screen">
+    <div class="vault-page-title">
+      <h2>Settings</h2>
+      <p>Arrange the room to your taste.</p>
     </div>
 
     <!-- Password generator defaults -->

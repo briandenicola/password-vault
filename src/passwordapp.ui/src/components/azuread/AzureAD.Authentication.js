@@ -24,6 +24,10 @@ const msalConfig = {
 let authService = new msal.PublicClientApplication(msalConfig);
 let initialization = null;
 
+function scopes(...values) {
+  return values.filter(value => typeof value === 'string' && value.trim().length > 0);
+}
+
 function applyActiveAccount(redirectResponse) {
   if (redirectResponse && redirectResponse.account) {
     authService.setActiveAccount(redirectResponse.account);
@@ -60,11 +64,11 @@ function ensureInitialized() {
 
 const api = {
   tokenRequest: {
-    scopes: [process.env.VUE_APP_AAD_SCOPE],
+    scopes: scopes(process.env.VUE_APP_AAD_SCOPE),
   },
 
   loginRequest: {
-    scopes: ["User.Read"],
+    scopes: scopes("User.Read", process.env.VUE_APP_AAD_SCOPE),
   },
 
   // Awaitable bootstrap. Safe to call multiple times; work happens once.

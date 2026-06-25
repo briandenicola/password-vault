@@ -37,6 +37,7 @@ import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import Axios from 'axios'
 import './registerServiceWorker'
 import './css/main.css';
+import { configureAuthenticatedAxios } from './components/api/authenticated-axios.js';
 
 let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? true : false;
 
@@ -54,12 +55,7 @@ let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? 
   Axios.defaults.baseURL = process.env.VUE_APP_API_ENDPOINT;
 
   await Authentication.initialize();
-  if (Authentication.isAuthenticated()) {
-    const token = await Authentication.getBearerToken();
-    if (token) {
-      Axios.defaults.headers.common['Authorization'] = "Bearer ".concat(token);
-    }
-  }
+  configureAuthenticatedAxios(Axios, Authentication);
 
   if(requiresAppInsights ) {
     const clickPluginInstance = new ClickAnalyticsPlugin();

@@ -1,17 +1,9 @@
 <template>
-  <div class="container-fluid">
-    <h2 class="mb-3">Recycle Bin</h2>
-
-    <div class="row navbar navbar-default mb-3">
-      <div class="col table-responsive">
-        | <router-link :to="{ name: 'Home' }">Back to Vault</router-link> |
-      </div>
+  <div class="container-fluid vault-screen">
+    <div class="vault-page-title">
+      <h2>Recycle bin</h2>
+      <p>Deleted entries linger here so you can recover them.</p>
     </div>
-
-    <p class="mb-3 text-muted">
-      Deleted accounts are kept here so you can recover them. Restore an account
-      to return it to your vault.
-    </p>
 
     <Message v-if="error" severity="error" class="mb-3">{{ error }}</Message>
     <Message v-if="message" severity="success" class="mb-3">{{ message }}</Message>
@@ -22,7 +14,7 @@
       The recycle bin is empty.
     </Message>
 
-    <DataTable v-else :value="entries" stripedRows size="small" responsiveLayout="stack">
+    <DataTable v-else :value="entries" stripedRows size="small" responsiveLayout="stack" class="vault-table">
       <Column field="accountName" header="Account" sortable>
         <template #body="{ data }">
           <span class="text-lowercase">{{ data.accountName }}</span>

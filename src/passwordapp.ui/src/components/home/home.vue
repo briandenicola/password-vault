@@ -1,19 +1,16 @@
 <template>
- <div>
-    <h1 class="homeText">Password Vault</h1>
-    <br/>
-    <div class="row navbar navbar-default">
-      <div class="col-sm-12">
-        <div class="table-responsive">
-          | <router-link :to="{ name: 'Create' }">New Account</router-link> | <router-link :to="{ name: 'Audit' }">Security Audit</router-link> | <router-link :to="{ name: 'Trash' }">Recycle Bin</router-link> | <router-link :to="{ name: 'Transfer' }">Import / Export</router-link> | <router-link :to="{ name: 'Settings' }">Settings</router-link> | <a href="#" v-on:click.stop="logOut()">Sign Out</a> |
-        </div>
+ <div class="vault-screen">
+    <div class="vault-toolbar">
+      <div class="vault-page-title">
+        <h2>Accounts</h2>
+        <p>Your shared vault, sorted and searchable.</p>
       </div>
+      <Button label="New account" icon="pi pi-plus" @click="$router.push({ name: 'Create' })" />
     </div>
 
-    <div class="row">
-      <div class="col-12 my-2">
-        <div class="d-flex flex-wrap gap-2 align-items-center">
-          <InputText v-model="filter" placeholder="Search account, site, notes, tags..." class="flex-grow-1" />
+    <div class="vault-toolbar">
+        <div class="d-flex flex-wrap gap-2 align-items-center vault-search">
+          <InputText v-model="filter" placeholder="Search for an account..." class="flex-grow-1" />
           <Select
             v-model="selectedTag"
             :options="tagChoices"
@@ -25,8 +22,11 @@
             v-if="allTags.length" />
           <Button label="Clear" severity="secondary" :disabled="!filter && !selectedTag" @click="filter = ''; selectedTag = null;" />
         </div>
-      </div>
     </div>
+
+    <Message v-if="apiError" severity="error" class="mb-3">
+      {{ apiError }}
+    </Message>
 
     <div class="row">
       <div class="col-12">
@@ -41,10 +41,11 @@
           :sortOrder="sortDesc ? -1 : 1"
           stripedRows
           responsiveLayout="stack"
+          class="vault-table"
           size="small">
           <Column field="accountName" header="Account" sortable>
             <template #body="{ data }">
-              <div class="d-inline-block text-truncate text-lowercase" style="max-width: 200px;">{{ data.accountName }}</div>
+              <div class="d-inline-block text-truncate text-lowercase account-name">{{ data.accountName }}</div>
               <div v-if="tagsOf(data).length" class="mt-1">
                 <Tag v-for="tag in tagsOf(data)" :key="tag" :value="tag" severity="secondary" class="me-1 mb-1" @click.stop="selectedTag = tag" style="cursor: pointer;" />
               </div>
@@ -52,7 +53,7 @@
           </Column>
           <Column field="siteName" header="Site" sortable>
             <template #body="{ data }">
-              <span class="d-inline-block text-truncate text-lowercase" style="max-width: 250px;">{{ data.siteName }}</span>
+              <span class="d-inline-block text-truncate text-lowercase site-name">{{ data.siteName }}</span>
             </template>
           </Column>
           <Column field="lastModifiedDate" header="Last Modified" sortable>
@@ -65,12 +66,12 @@
           <Column header="Edit/Remove">
             <template #body="{ data }">
               <div class="d-flex flex-wrap gap-1">
-                <Button size="small" severity="success" @click.stop="copyPassword(data.id)" v-tooltip.top="'Copy'"><font-awesome-icon icon="copy" /></Button>
-                <Button size="small" @click.stop="displayPassword(data.id)" v-tooltip.top="'Reveal'"><font-awesome-icon icon="info" /></Button>
-                <Button size="small" severity="info" @click.stop="updatePassword(data.id)" v-tooltip.top="'Edit'"><font-awesome-icon icon="user-edit" /></Button>
-                <Button size="small" severity="contrast" @click.stop="toggleDetails(data)" v-tooltip.top="'Details'"><font-awesome-icon icon="bars" /></Button>
-                <Button size="small" severity="warn" @click.stop="showHistory(data.id)" v-tooltip.top="'History'"><font-awesome-icon :icon="['fas', 'clock-rotate-left']" /></Button>
-                <Button size="small" severity="danger" @click.stop="deletePassword(data.id)" v-tooltip.top="'Delete'"><font-awesome-icon icon="trash-alt" /></Button>
+                <Button class="vault-icon-button" size="small" severity="success" @click.stop="copyPassword(data.id)" v-tooltip.top="'Copy'"><font-awesome-icon icon="copy" /></Button>
+                <Button class="vault-icon-button" size="small" @click.stop="displayPassword(data.id)" v-tooltip.top="'Reveal'"><font-awesome-icon icon="info" /></Button>
+                <Button class="vault-icon-button" size="small" severity="info" @click.stop="updatePassword(data.id)" v-tooltip.top="'Edit'"><font-awesome-icon icon="user-edit" /></Button>
+                <Button class="vault-icon-button" size="small" severity="contrast" @click.stop="toggleDetails(data)" v-tooltip.top="'Details'"><font-awesome-icon icon="bars" /></Button>
+                <Button class="vault-icon-button" size="small" severity="warn" @click.stop="showHistory(data.id)" v-tooltip.top="'History'"><font-awesome-icon :icon="['fas', 'clock-rotate-left']" /></Button>
+                <Button class="vault-icon-button" size="small" severity="danger" @click.stop="deletePassword(data.id)" v-tooltip.top="'Delete'"><font-awesome-icon icon="trash-alt" /></Button>
               </div>
             </template>
           </Column>
