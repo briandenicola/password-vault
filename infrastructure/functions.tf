@@ -31,10 +31,10 @@ resource "azurerm_function_app_flex_consumption" "this" {
   maximum_instance_count        = 50
   instance_memory_in_mb         = 2048
 
-  storage_container_type            = "blobContainer"
-  storage_container_endpoint        = "${azurerm_storage_account.this.primary_blob_endpoint}${azurerm_storage_container.apps_container.name}"
-  storage_authentication_type       = "UserAssignedIdentity"
-  storage_user_assigned_identity_id = azurerm_user_assigned_identity.functions_identity.id
+  storage_container_type      = "blobContainer"
+  storage_container_endpoint  = "${azurerm_storage_account.this.primary_blob_endpoint}${azurerm_storage_container.apps_container.name}"
+  storage_authentication_type = "StorageAccountConnectionString"
+  storage_access_key          = azurerm_storage_account.this.primary_access_key
 
   identity {
     type = "SystemAssigned, UserAssigned"
