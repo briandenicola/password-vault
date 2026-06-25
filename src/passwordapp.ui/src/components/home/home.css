@@ -84,10 +84,96 @@
   }
 }
 
-body.theme-classic .vault-desktop-table {
-  display: flex;
+@media (min-width: 761px) {
+  body.theme-classic .vault-desktop-table {
+    display: flex;
+  }
+
+  body.theme-classic .vault-mobile-list {
+    display: none;
+  }
 }
 
-body.theme-classic .vault-mobile-list {
-  display: none;
+@media (max-width: 760px) {
+  body.theme-classic .vault-mobile-list {
+    display: block;
+    border: 2px solid #dee2e6;
+    background: #fff;
+  }
+
+  body.theme-classic .vault-mobile-account {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: #fff;
+  }
+
+  body.theme-classic .vault-mobile-account + .vault-mobile-account {
+    margin-top: 0;
+    border-top: 4px solid #dee2e6;
+  }
+
+  body.theme-classic .vault-mobile-account-row {
+    grid-template-columns: 42% 58%;
+    min-height: 3.5rem;
+    border-bottom: 2px solid #dee2e6;
+    background: #f5f5f5;
+  }
+
+  body.theme-classic .vault-mobile-account-label,
+  body.theme-classic .vault-mobile-account-value,
+  body.theme-classic .vault-mobile-account-actions {
+    display: flex;
+    align-items: center;
+    padding: .6rem .75rem;
+    color: #212529;
+    font-size: 1.1rem;
+    line-height: 1.25;
+  }
+
+  body.theme-classic .vault-mobile-account-label {
+    justify-content: flex-end;
+    background: transparent;
+    font-weight: 700;
+    text-align: right;
+  }
+
+  body.theme-classic .vault-mobile-account-value {
+    justify-content: center;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  body.theme-classic .vault-mobile-account-actions {
+    position: relative;
+    flex-wrap: nowrap !important;
+    justify-content: space-between;
+    gap: .35rem;
+    overflow: visible;
+  }
+
+  body.theme-classic .vault-mobile-account-actions .vault-history-action {
+    display: none;
+  }
+
+  body.theme-classic .vault-mobile-account-actions .p-button {
+    position: relative;
+  }
+
+  body.theme-classic .vault-mobile-account-actions .p-button + .p-button::before {
+    content: '|';
+    position: absolute;
+    left: -.55rem;
+    color: #000;
+    font-size: 1.25rem;
+    font-weight: 400;
+  }
+
+  body.theme-classic .vault-mobile-details {
+    border-bottom: 2px solid #dee2e6;
+    background: #fff;
+    color: #212529;
+  }
 }
