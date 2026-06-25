@@ -9,7 +9,7 @@ output "APP_RESOURCE_GROUP" {
 }
 
 output "FUNCTION_NAME" {
-  value     = azurerm_linux_function_app.this.name
+  value     = azurerm_function_app_flex_consumption.this.name
   sensitive = false
 }
 

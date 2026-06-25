@@ -100,7 +100,7 @@ requires a valid bearer token (issuer + audience + signature + lifetime). Invali
 2. **Deploy** the API. With `AUTH_ENABLED` unset (or `true`), every HTTP function except the anonymous
    health check requires a valid bearer token. The SPA already sends one — verify sign-in + full CRUD.
    *Safety:* if the AAD settings are wrong, requests are denied (401), never served unauthenticated.
-3. **Deploy the SPA** (`task deploy-ui`) — it no longer writes `VUE_APP_API_KEY` or sends the
+3. **Deploy the SPA** (`.github/workflows/deploy.yml`, component `ui`) — it no longer writes `VUE_APP_API_KEY` or sends the
    `x-functions-key` header. The Entra token is the only credential.
 4. **Rotate** the old function/host key (it lived in `ui/.env` and git history) so the leaked value is
    dead. In the portal/CLI, regenerate the host key; nothing references it anymore.

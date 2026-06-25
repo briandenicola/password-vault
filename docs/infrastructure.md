@@ -29,11 +29,11 @@ The main resource group hosts the running vault:
 | **Cosmos DB** | `azurerm_cosmosdb_account` + SQL database `AccountPasswords` | Session consistency, system-assigned identity, optional free tier. |
 | → Containers | `Passwords`, `VaultKeys` | Both partitioned on `/PartitionKey`. `VaultKeys` (OFF-4 §5B) holds the opaque vault-key record and is isolated so it never appears in the passwords list. |
 | **Key Vault** | `azurerm_key_vault` + secrets | RBAC-authorized. Secrets: `aes-encryption-key`, `aes-encryption-iv`, `cosmosdb-connection-string`, `appinsights-connection-string`, `appinsights-key`. |
-| **Function App** | `azurerm_linux_function_app` on a Linux `azurerm_service_plan` | .NET 10 isolated worker; **run-from-package** from the storage `app` container. HTTP triggers are `Anonymous` (guarded by Entra middleware, AC-2). |
+| **Function App** | `azurerm_function_app_flex_consumption` on a Linux Flex Consumption `azurerm_service_plan` (`FC1`) | .NET 10 isolated worker; code is deployed by GitHub Actions using the Azure Functions deploy action. HTTP triggers are `Anonymous` (guarded by Entra middleware, AC-2). |
 | **Identity & RBAC** | `azurerm_user_assigned_identity.functions_identity` + role assignments | Function reads Key Vault (`Key Vault Secrets User`) and storage (`Blob Owner`/`Contributor`) via managed identity. A deployer KV access assignment supports `task` runs. |
-| **Storage** | `azurerm_storage_account` + `app` container | Holds the published `vault.zip` consumed by `WEBSITE_RUN_FROM_PACKAGE`. |
+| **Storage** | `azurerm_storage_account` + `app` container | Flex Consumption deployment storage for function code and runtime artifacts. |
 | **Observability** | `azurerm_log_analytics_workspace` + `azurerm_application_insights` | Connection string/key stored in Key Vault and referenced by the Function App. |
-| **UI hosting** | `azurerm_static_web_app` (+ optional `..._custom_domain`) | Vue 3 SPA deployed via the SWA CLI (`task deploy-ui`). Custom domain gated by `add_custom_domain`. |
+| **UI hosting** | `azurerm_static_web_app` (+ optional `..._custom_domain`) | Vue 3 SPA deployed by GitHub Actions via the SWA CLI. Custom domain gated by `add_custom_domain`. |
 
 ## Maintenance resource group _(optional)_
 Created when `deploy_maintenance_infrastructure = true` (`infrastructure/maintenance/`): its own resource group, storage account + `app` container, Linux service plan, **Python Function App** (keep-alive + backup), a user-assigned identity and the matching storage role assignments.

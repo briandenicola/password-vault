@@ -28,9 +28,6 @@ Deployment is automated using [Taskfile](https://taskfile.dev/#/), simplifying t
 ### Taskfile Commands
 * `task up`                  : Builds the complete environment
 * `task down`                : Destroys all Azure resources and cleans up Terraform
-* `task deploy-api`          : Builds and deploys the API to Azure Functions
-* `task deploy-maintenance`  : Deploys the maintenance function
-* `task deploy-ui`           : Builds and deploys the UI to Azure Static Web Apps
 * `task cors`                : Adds the UI origins to the Azure Functions CORS allow-list
 * `task entra:configure`     : Creates or updates the Entra app registrations after infrastructure exists
 * `task test-api`            : Hits the API health endpoint to validate a deployment
@@ -38,6 +35,8 @@ Deployment is automated using [Taskfile](https://taskfile.dev/#/), simplifying t
 * `task migrate:apply`       : Re-encrypts legacy `v1` secrets to `v2` (AES-GCM); backs up first
 * `task init`                : Initializes Terraform
 * `task plan`                : Creates a Terraform plan
+
+Code deployment is handled by GitHub Actions (`.github/workflows/deploy.yml`), not local Taskfile targets.
 
 ### Taskfile Configuration
 The [TaskFile](../TaskFile.yaml) is located in the root of the repository and includes default values that can be customized:

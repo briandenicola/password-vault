@@ -19,12 +19,12 @@ output "STORAGE_ACCOUNT_NAME" {
 }
 
 output "FUNCTION_NAME" {
-  value     = azurerm_linux_function_app.this.name
+  value     = azurerm_function_app_flex_consumption.this.name
   sensitive = false
 }
 
 output "FUNCTION_URL" {
-  value     = "https://${azurerm_linux_function_app.this.default_hostname}"
+  value     = "https://${azurerm_function_app_flex_consumption.this.default_hostname}"
   sensitive = false
 }
 
