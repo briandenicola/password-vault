@@ -9,7 +9,7 @@ API Build & Deployment
 - :two: `task entra:configure` - Creates or updates Entra app registrations after infrastructure exists
 - :three: `task github:configure` - Writes Terraform outputs and required secret values to GitHub Actions variables/secrets
 - :four: Run `.github/workflows/deploy.yml` with component `api`, or merge API changes to `main`
-- :five: `task cors` - Configures CORS for the API to allow access from the UI
+- :five: `task cors` - Configures CORS for the API to allow access from the UI. CORS is intentionally handled outside Terraform because the AzureRM Flex Functions resource can produce inconsistent final plans when managing the CORS block.
 <p align="right">(<a href="#build">back to top</a>)</p>
 
 

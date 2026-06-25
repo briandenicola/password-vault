@@ -45,14 +45,6 @@ resource "azurerm_function_app_flex_consumption" "this" {
 
   site_config {
     use_32_bit_worker = false
-
-    cors {
-      allowed_origins = distinct(compact([
-        "https://${azurerm_static_web_app.this.default_host_name}",
-        var.production_ui_url == "" ? "" : trimsuffix(startswith(var.production_ui_url, "http") ? var.production_ui_url : "https://${var.production_ui_url}", "/")
-      ]))
-      support_credentials = false
-    }
   }
 
   app_settings = {

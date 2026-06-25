@@ -1,7 +1,7 @@
 Infrastructure
 ============
 * The infrastructure is deployed to Azure using **Terraform** (`infrastructure/`).
-* `task up` runs `init` → `keys` → `apply` → `cors`. A full create can take up to ~30 minutes.
+* `task up` runs `init` → `keys` → `apply` → `cors`. A full create can take up to ~30 minutes. Function App CORS is configured by `task cors`, not Terraform, to avoid AzureRM Flex Functions provider plan instability.
 * Resource names are derived from a Terraform-generated `random_pet` + `random_id` (e.g. `airedale-60249`). Save this name — it appears throughout the deployment.
 * The default region is `southcentralus` (`DEFAULT_REGION` in `Taskfile.yaml`).
 
