@@ -65,6 +65,33 @@ tasks:
     cmds:
     - pwsh -NoProfile -ExecutionPolicy Bypass -File "{{.TASKFILE_DIR}}\scripts\configure-entra.ps1" {{.CLI_ARGS}}
 
+  deploy:api:
+    desc: Triggers the GitHub Actions API deployment workflow
+    cmds:
+    - gh workflow run deploy.yml --ref "{{.DEPLOY_REF}}" -f component=api
+    vars: &deploy_workflow_vars
+      DEPLOY_REF: '{{default .CURRENT_BRANCH .CLI_ARGS}}'
+      CURRENT_BRANCH:
+        sh: git branch --show-current
+
+  deploy:ui:
+    desc: Triggers the GitHub Actions UI deployment workflow
+    cmds:
+    - gh workflow run deploy.yml --ref "{{.DEPLOY_REF}}" -f component=ui
+    vars: *deploy_workflow_vars
+
+  deploy:maintenance:
+    desc: Triggers the GitHub Actions maintenance deployment workflow
+    cmds:
+    - gh workflow run deploy.yml --ref "{{.DEPLOY_REF}}" -f component=maintenance
+    vars: *deploy_workflow_vars
+
+  deploy:all:
+    desc: Triggers the GitHub Actions deployment workflow for all components
+    cmds:
+    - gh workflow run deploy.yml --ref "{{.DEPLOY_REF}}" -f component=all
+    vars: *deploy_workflow_vars
+
   apply:
     dir: ./infrastructure
     desc: Applies a Terraform plan
