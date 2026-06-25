@@ -73,29 +73,22 @@ tasks:
   deploy:api:
     desc: Triggers the GitHub Actions API deployment workflow
     cmds:
-    - gh workflow run deploy.yml --ref "{{.DEPLOY_REF}}" -f component=api
-    vars: &deploy_workflow_vars
-      DEPLOY_REF: '{{default .CURRENT_BRANCH .CLI_ARGS}}'
-      CURRENT_BRANCH:
-        sh: git branch --show-current
+    - pwsh -NoProfile -ExecutionPolicy Bypass -File "{{.TASKFILE_DIR}}\scripts\run-deploy-workflow.ps1" -Component api {{.CLI_ARGS}}
 
   deploy:ui:
     desc: Triggers the GitHub Actions UI deployment workflow
     cmds:
-    - gh workflow run deploy.yml --ref "{{.DEPLOY_REF}}" -f component=ui
-    vars: *deploy_workflow_vars
+    - pwsh -NoProfile -ExecutionPolicy Bypass -File "{{.TASKFILE_DIR}}\scripts\run-deploy-workflow.ps1" -Component ui {{.CLI_ARGS}}
 
   deploy:maintenance:
     desc: Triggers the GitHub Actions maintenance deployment workflow
     cmds:
-    - gh workflow run deploy.yml --ref "{{.DEPLOY_REF}}" -f component=maintenance
-    vars: *deploy_workflow_vars
+    - pwsh -NoProfile -ExecutionPolicy Bypass -File "{{.TASKFILE_DIR}}\scripts\run-deploy-workflow.ps1" -Component maintenance {{.CLI_ARGS}}
 
   deploy:all:
     desc: Triggers the GitHub Actions deployment workflow for all components
     cmds:
-    - gh workflow run deploy.yml --ref "{{.DEPLOY_REF}}" -f component=all
-    vars: *deploy_workflow_vars
+    - pwsh -NoProfile -ExecutionPolicy Bypass -File "{{.TASKFILE_DIR}}\scripts\run-deploy-workflow.ps1" -Component all {{.CLI_ARGS}}
 
   apply:
     dir: ./infrastructure
