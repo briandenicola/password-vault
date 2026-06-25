@@ -1,5 +1,6 @@
 import PasswordService from '@/components/api/Password.Service.js';
 import Moment from 'moment';
+import { useAccountsStore } from '@/stores/accounts.store.js';
 
 export default {
   name: 'RecycleBin',
@@ -10,6 +11,7 @@ export default {
       message: '',
       restoringId: null,
       entries: [],
+      accountsStore: useAccountsStore(),
     };
   },
   created() {
@@ -37,7 +39,7 @@ export default {
       this.error = '';
       this.message = '';
       try {
-        await PasswordService.restore(row.id);
+        await this.accountsStore.restoreAccount(row.id);
         this.entries = this.entries.filter(e => e.id !== row.id);
         this.message = `Restored "${row.accountName || row.siteName}" to the vault.`;
       } catch (err) {

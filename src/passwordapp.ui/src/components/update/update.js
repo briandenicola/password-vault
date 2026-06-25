@@ -3,6 +3,7 @@ import Authentication from '@/components/azuread/AzureAD.Authentication.js';
 import PasswordGenerator from '@/components/generator/generator.vue';
 import PasswordStrength from '@/components/strength/strength-meter.vue';
 import { parseTags, formatTags } from '@/components/utils/tags.js';
+import { useAccountsStore } from '@/stores/accounts.store.js';
 
 export default {
   name: 'Update',
@@ -20,6 +21,7 @@ export default {
   data() {
     return {
       formData:           PasswordService.newPassword(),
+      accountsStore:      useAccountsStore(),
       id:                 '',
       alertModalTitle:    '',
       alertModalContent:  '',
@@ -40,7 +42,7 @@ export default {
     },
     updatePassword() {
       this.formData.lastModifiedBy = Authentication.getUserProfile();
-      PasswordService.update(this.id, this.formData)
+      this.accountsStore.updateAccount(this.id, this.formData)
       .then(() => {
         this.isSuccessfully = true;
         this.alertModalTitle = 'Successfully';

@@ -1,6 +1,7 @@
 import PasswordService from '@/components/api/Password.Service.js';
 import Authentication from '@/components/azuread/AzureAD.Authentication.js';
 import { entriesToCsv, csvToEntries } from '@/components/transfer/csv.js';
+import { useAccountsStore } from '@/stores/accounts.store.js';
 
 export default {
   name: 'ImportExport',
@@ -20,6 +21,7 @@ export default {
       skipped: 0,
       imported: 0,
       failed: 0,
+      accountsStore: useAccountsStore(),
     };
   },
   computed: {
@@ -34,8 +36,7 @@ export default {
       this.exportError = '';
       this.exportMessage = '';
       try {
-        const listResponse = await PasswordService.getAll();
-        const accounts = Array.isArray(listResponse.data) ? listResponse.data : [];
+        const accounts = await this.accountsStore.fetchAccounts();
 
         // The list returns only encrypted blobs; fetch each entry for its
         // server-decrypted password.
@@ -130,7 +131,7 @@ export default {
           isDeleted: false,
         };
         try {
-          await PasswordService.create(payload);
+          await this.accountsStore.createAccount(payload);
           this.imported += 1;
         } catch {
           this.failed += 1;

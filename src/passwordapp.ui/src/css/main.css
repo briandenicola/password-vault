@@ -426,8 +426,10 @@ body {
   min-height: 2.5rem;
 }
 
-.vault-select.p-select {
-  width: 9rem;
+.vault-select.p-select,
+.vault-select.p-inputtext {
+  width: 14.5rem;
+  max-width: 100%;
 }
 
 .p-inputtext::placeholder {
