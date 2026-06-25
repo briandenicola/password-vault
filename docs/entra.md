@@ -108,5 +108,5 @@ requires a valid bearer token (issuer + audience + signature + lifetime). Invali
 
 
 # Navigation
-[Previous Section ⏪](../README.md.md) ‖ [Return to Main Index 🏠](../README.md) ‖ [Next Section ⏩](./infrastructure.md)
+[Previous Section ⏪](../README.md) ‖ [Return to Main Index 🏠](../README.md) ‖ [Next Section ⏩](./infrastructure.md)
 <p align="right">(<a href="#infrastructure">back to top</a>)</p>

@@ -1,9 +1,9 @@
 # vault-migrate
 
-Operator tool for **MIG-3** (backup + verify), **MIG-2** (one-time re-encryption of
-legacy `v1` AES-CBC secrets to `v2` AES-GCM), JSON backup restore, and the
-blue-green **MIG-4/MIG-5** import/parity flow. See [`docs/BACKLOG.md`](../../docs/BACKLOG.md)
-Theme 3 and [`docs/design/e2ee.md`](../../docs/design/e2ee.md) §5–6.
+Operator tool for **MIG-2/MIG-3/MIG-4/MIG-5**: backup + verify, one-time
+re-encryption of legacy `v1` AES-CBC secrets to `v2` AES-GCM, JSON backup
+restore, and blue-green import/parity checks. See [`docs/BACKLOG.md`](../../docs/BACKLOG.md)
+and [`docs/design/e2ee.md`](../../docs/design/e2ee.md) §5–6.
 
 It reuses the **exact** production crypto and migration logic (`Encryptor`,
 `SecretEnvelope`, `VaultMigration`, `DocumentMigrator` are linked from `passwordapp.api`),

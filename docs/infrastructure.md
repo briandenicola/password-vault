@@ -3,7 +3,7 @@ Infrastructure
 * The infrastructure is deployed to Azure using **Terraform** (`infrastructure/`).
 * `task up` runs `init` → `keys` → `apply` → `cors`. A full create can take up to ~30 minutes.
 * Resource names are derived from a Terraform-generated `random_pet` + `random_id` (e.g. `airedale-60249`). Save this name — it appears throughout the deployment.
-* The default region is `canadacentral` (`DEFAULT_REGION` in `Taskfile.yaml`).
+* The default region is `southcentralus` (`DEFAULT_REGION` in `Taskfile.yaml`).
 
 ### State & authentication
 * **Remote state:** Terraform uses an `azurerm` backend (`providers.tf` → `denicolafamily/state`, `use_oidc = true`). The first `init` against existing local state needs `terraform init -migrate-state`.
