@@ -12,3 +12,9 @@ resource "azurerm_storage_container" "apps_container" {
   storage_account_id    = azurerm_storage_account.this.id
   container_access_type = "private"
 }
+
+resource "azurerm_storage_container" "vault_backups" {
+  name                  = "vault-backups"
+  storage_account_id    = azurerm_storage_account.this.id
+  container_access_type = "private"
+}

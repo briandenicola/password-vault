@@ -46,6 +46,7 @@ Code deployment is handled by GitHub Actions (`.github/workflows/deploy.yml`), n
 ## UI Features
 * Security audit for reused passwords and HaveIBeenPwned breach checks, with paged results for large vaults.
 * Import/export tooling for JSON backups and CSV transfer workflows.
+* Scheduled encrypted vault backups: the API exports encrypted Cosmos password documents to a zipped blob archive without decrypting stored passwords.
 * Recycle bin for soft-deleted accounts.
 * Per-user settings for generator defaults, list behavior, clipboard auto-clear, idle lock, and password-age reminders.
 * Dark/light vault theme toggle.

@@ -92,6 +92,57 @@
       </div>
     </div>
 
+    <!-- Backups -->
+    <div class="card mb-3">
+      <div class="card-header">Encrypted Vault Backups</div>
+      <div class="card-body">
+        <p class="mb-3">
+          Schedule a server-side export of all Cosmos password documents to private blob storage.
+          Password fields stay encrypted; the backup is zipped before upload.
+        </p>
+
+        <div class="row mb-2">
+          <label class="col-4 col-form-label">Scheduled backups:</label>
+          <div class="col d-flex align-items-center">
+            <Checkbox v-model="backupSettings.enabled" :binary="true" inputId="backup-enabled" />
+            <label for="backup-enabled" class="ms-2">Enabled</label>
+          </div>
+        </div>
+        <div class="row mb-2">
+          <label class="col-4 col-form-label">Frequency:</label>
+          <div class="col"><Select v-model="backupSettings.frequency" :options="backupFrequencyChoices" optionLabel="text" optionValue="value" size="small" class="vault-select" /></div>
+        </div>
+        <div v-if="backupSettings.frequency === 'weekly'" class="row mb-2">
+          <label class="col-4 col-form-label">Day of week:</label>
+          <div class="col"><Select v-model="backupSettings.dayOfWeek" :options="dayOfWeekChoices" optionLabel="text" optionValue="value" size="small" class="vault-select" /></div>
+        </div>
+        <div v-if="backupSettings.frequency === 'monthly'" class="row mb-2">
+          <label class="col-4 col-form-label">Day of month:</label>
+          <div class="col"><Select v-model="backupSettings.dayOfMonth" :options="dayOfMonthChoices" size="small" class="vault-select" /></div>
+        </div>
+        <div class="row mb-2">
+          <label class="col-4 col-form-label">Time:</label>
+          <div class="col"><InputText v-model="backupSettings.timeOfDay" type="time" size="small" class="vault-select" /></div>
+        </div>
+        <div class="row mb-2">
+          <label class="col-4 col-form-label">Time zone:</label>
+          <div class="col"><InputText v-model="backupSettings.timeZoneId" size="small" class="vault-select" placeholder="UTC" /></div>
+        </div>
+        <div class="row mb-2">
+          <label class="col-4 col-form-label">Keep backups:</label>
+          <div class="col"><Select v-model="backupSettings.retentionCount" :options="retentionChoices" size="small" class="vault-select" /></div>
+        </div>
+
+        <small class="text-muted d-block">
+          Timer checks run every 15 minutes, then apply this schedule. Last status:
+          {{ backupSettings.lastStatus || 'Not configured' }}
+          <span v-if="backupSettings.lastBackupBlobName">({{ backupSettings.lastBackupBlobName }})</span>
+        </small>
+        <Message v-if="backupSettingsError" severity="error" class="mt-2 py-2">{{ backupSettingsError }}</Message>
+        <Message v-else-if="backupSettingsLoading" severity="info" class="mt-2 py-2">Loading backup schedule...</Message>
+      </div>
+    </div>
+
     <div class="row">
       <div class="col d-flex gap-2">
         <Button size="small" severity="info" label="Save" @click.stop="save()" />
