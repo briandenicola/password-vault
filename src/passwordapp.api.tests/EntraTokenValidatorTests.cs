@@ -237,6 +237,56 @@ namespace PasswordService.Tests
             Assert.Empty(options.AllowedObjectIds);
         }
 
+        [Fact]
+        public void Enabled_options_require_tenant_id()
+        {
+            var settings = new Dictionary<string, string?>
+            {
+                ["AAD_AUDIENCE"] = Audience,
+            };
+            var options = EntraAuthOptions.FromConfiguration(k => settings.GetValueOrDefault(k));
+
+            var ex = Assert.Throws<InvalidOperationException>(options.Validate);
+
+            Assert.Contains("AAD_TENANT_ID", ex.Message);
+        }
+
+        [Fact]
+        public void Enabled_options_require_audience()
+        {
+            var settings = new Dictionary<string, string?>
+            {
+                ["AAD_TENANT_ID"] = "test-tenant",
+            };
+            var options = EntraAuthOptions.FromConfiguration(k => settings.GetValueOrDefault(k));
+
+            var ex = Assert.Throws<InvalidOperationException>(options.Validate);
+
+            Assert.Contains("AAD_AUDIENCE", ex.Message);
+        }
+
+        [Fact]
+        public void Enabled_options_validate_when_tenant_and_audience_are_present()
+        {
+            var settings = new Dictionary<string, string?>
+            {
+                ["AAD_TENANT_ID"] = "test-tenant",
+                ["AAD_AUDIENCE"] = Audience,
+            };
+            var options = EntraAuthOptions.FromConfiguration(k => settings.GetValueOrDefault(k));
+
+            options.Validate();
+        }
+
+        [Fact]
+        public void Disabled_options_do_not_require_tenant_or_audience()
+        {
+            var settings = new Dictionary<string, string?> { ["AUTH_ENABLED"] = "false" };
+            var options = EntraAuthOptions.FromConfiguration(k => settings.GetValueOrDefault(k));
+
+            options.Validate();
+        }
+
         [Theory]
         [InlineData("true")]
         [InlineData("TRUE")]
