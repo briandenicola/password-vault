@@ -52,6 +52,7 @@ describe('settings.store', () => {
     expect(loaded.generator.mode).toBe('password'); // backfilled
     expect(loaded.generator.password.length).toBe(defaultSettings().generator.password.length);
     expect(loaded.security.clipboardClearSeconds).toBe(defaultSettings().security.clipboardClearSeconds); // backfilled
+    expect(loaded.appearance.theme).toBe('vault'); // backfilled
   });
 
   it('preserves and persists security preferences', () => {
@@ -62,6 +63,13 @@ describe('settings.store', () => {
     const loaded = loadSettings('alice', storage);
     expect(loaded.security.clipboardClearSeconds).toBe(10);
     expect(loaded.security.autoLockMinutes).toBe(15);
+  });
+
+  it('preserves and persists appearance preferences', () => {
+    const s = defaultSettings();
+    s.appearance.theme = 'classic';
+    expect(saveSettings('alice', s, storage)).toBe(true);
+    expect(loadSettings('alice', storage).appearance.theme).toBe('classic');
   });
 
   it('ignores foreign / wrong-typed fields', () => {

@@ -23,6 +23,11 @@ export default {
       backupSettingsLoading: false,
       backupRunningNow: false,
       savedMessage: '',
+      themeChoices: [
+        { value: 'vault', text: 'Vault' },
+        { value: 'classic', text: 'Classic' },
+        { value: 'roman-bank', text: 'Roman/Classical Bank' },
+      ],
       separatorChoices: [
         { value: '-', text: 'Dash ( - )' },
         { value: '.', text: 'Dot ( . )' },
@@ -104,6 +109,9 @@ export default {
     async save() {
       const userId = Authentication.getUserProfile();
       const ok = saveSettings(userId, this.settings);
+      if (ok) {
+        this.applyTheme();
+      }
       try {
         this.backupSettings = await putBackupSettings(this.backupSettings);
         this.backupSettingsError = '';
@@ -118,7 +126,13 @@ export default {
     resetToDefaults() {
       const userId = Authentication.getUserProfile();
       this.settings = resetSettings(userId);
+      this.applyTheme();
       this.savedMessage = 'Preferences reset to defaults.';
+    },
+    applyTheme() {
+      window.dispatchEvent(new CustomEvent('vaultThemeChanged', {
+        detail: { theme: this.settings.appearance.theme },
+      }));
     },
     async runBackupNow() {
       this.backupRunningNow = true;

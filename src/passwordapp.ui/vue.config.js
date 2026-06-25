@@ -1,8 +1,8 @@
 module.exports = {
     pwa: {
         name: "Password Vault",
-        themeColor: "#202A44",
-        msTileColor: "#202A44",
+        themeColor: "#2d2417",
+        msTileColor: "#2d2417",
         appleMobileWebAppCapable: "yes",
         appleMobileWebAppStatusBarStyle: "black",
         // Web app manifest (manifest.json). These options — not the top-level
@@ -11,7 +11,7 @@ module.exports = {
         manifestOptions: {
             name: "Password Vault",
             short_name: "Vault",
-            description: "Secure family password vault — store and generate account credentials.",
+            description: "Secure family password vault with a bank-vault inspired PWA experience.",
             id: "/",
             start_url: ".",
             scope: ".",
@@ -19,8 +19,8 @@ module.exports = {
             orientation: "portrait",
             lang: "en",
             categories: ["productivity", "utilities"],
-            theme_color: "#202A44",
-            background_color: "#343541",
+            theme_color: "#2d2417",
+            background_color: "#f4efe7",
             icons: [
                 { src: "./img/icons/android-chrome-192x192.png", sizes: "192x192", type: "image/png", purpose: "any" },
                 { src: "./img/icons/android-chrome-512x512.png", sizes: "512x512", type: "image/png", purpose: "any" },

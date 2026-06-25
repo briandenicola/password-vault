@@ -83,3 +83,11 @@
     display: block;
   }
 }
+
+body.theme-classic .vault-desktop-table {
+  display: flex;
+}
+
+body.theme-classic .vault-mobile-list {
+  display: none;
+}

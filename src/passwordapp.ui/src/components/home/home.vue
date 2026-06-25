@@ -69,13 +69,13 @@
           </Column>
           <Column header="Edit/Remove">
             <template #body="{ data }">
-              <div class="d-flex flex-wrap gap-1">
-                <Button class="vault-icon-button" size="small" severity="success" @click.stop="copyPassword(data.id)" v-tooltip.top="'Copy'"><font-awesome-icon icon="copy" /></Button>
-                <Button class="vault-icon-button" size="small" @click.stop="displayPassword(data.id)" v-tooltip.top="'Reveal'"><font-awesome-icon icon="info" /></Button>
-                <Button class="vault-icon-button" size="small" severity="info" @click.stop="updatePassword(data.id)" v-tooltip.top="'Edit'"><font-awesome-icon icon="user-edit" /></Button>
-                <Button class="vault-icon-button" size="small" severity="contrast" @click.stop="toggleDetails(data)" v-tooltip.top="'Details'"><font-awesome-icon icon="bars" /></Button>
-                <Button class="vault-icon-button" size="small" severity="warn" @click.stop="showHistory(data.id)" v-tooltip.top="'History'"><font-awesome-icon :icon="['fas', 'clock-rotate-left']" /></Button>
-                <Button class="vault-icon-button" size="small" severity="danger" @click.stop="deletePassword(data.id)" v-tooltip.top="'Delete'"><font-awesome-icon icon="trash-alt" /></Button>
+              <div class="d-flex gap-1 vault-action-row">
+                <Button class="vault-icon-button" size="small" severity="success" aria-label="Copy password" @click.stop="copyPassword(data.id)" v-tooltip.top="'Copy'"><font-awesome-icon icon="copy" /></Button>
+                <Button class="vault-icon-button" size="small" aria-label="Reveal password" @click.stop="displayPassword(data.id)" v-tooltip.top="'Reveal'"><font-awesome-icon icon="info" /></Button>
+                <Button class="vault-icon-button" size="small" severity="info" aria-label="Edit account" @click.stop="updatePassword(data.id)" v-tooltip.top="'Edit'"><font-awesome-icon icon="user-edit" /></Button>
+                <Button class="vault-icon-button" size="small" severity="contrast" aria-label="Account details" @click.stop="toggleDetails(data)" v-tooltip.top="'Details'"><font-awesome-icon icon="bars" /></Button>
+                <Button class="vault-icon-button" size="small" severity="warn" aria-label="Password history" @click.stop="showHistory(data.id)" v-tooltip.top="'History'"><font-awesome-icon :icon="['fas', 'clock-rotate-left']" /></Button>
+                <Button class="vault-icon-button" size="small" severity="danger" aria-label="Delete account" @click.stop="deletePassword(data.id)" v-tooltip.top="'Delete'"><font-awesome-icon icon="trash-alt" /></Button>
               </div>
             </template>
           </Column>
@@ -129,13 +129,13 @@
         </div>
         <div class="vault-mobile-account-row">
           <div class="vault-mobile-account-label">Edit/Remove</div>
-          <div class="vault-mobile-account-actions">
-            <Button class="vault-icon-button" size="small" severity="success" @click.stop="copyPassword(password.id)" v-tooltip.top="'Copy'"><font-awesome-icon icon="copy" /></Button>
-            <Button class="vault-icon-button" size="small" @click.stop="displayPassword(password.id)" v-tooltip.top="'Reveal'"><font-awesome-icon icon="info" /></Button>
-            <Button class="vault-icon-button" size="small" severity="info" @click.stop="updatePassword(password.id)" v-tooltip.top="'Edit'"><font-awesome-icon icon="user-edit" /></Button>
-            <Button class="vault-icon-button" size="small" severity="contrast" @click.stop="toggleDetails(password)" v-tooltip.top="'Details'"><font-awesome-icon icon="bars" /></Button>
-            <Button class="vault-icon-button" size="small" severity="warn" @click.stop="showHistory(password.id)" v-tooltip.top="'History'"><font-awesome-icon :icon="['fas', 'clock-rotate-left']" /></Button>
-            <Button class="vault-icon-button" size="small" severity="danger" @click.stop="deletePassword(password.id)" v-tooltip.top="'Delete'"><font-awesome-icon icon="trash-alt" /></Button>
+          <div class="vault-mobile-account-actions vault-action-row">
+            <Button class="vault-icon-button" size="small" severity="success" aria-label="Copy password" @click.stop="copyPassword(password.id)" v-tooltip.top="'Copy'"><font-awesome-icon icon="copy" /></Button>
+            <Button class="vault-icon-button" size="small" aria-label="Reveal password" @click.stop="displayPassword(password.id)" v-tooltip.top="'Reveal'"><font-awesome-icon icon="info" /></Button>
+            <Button class="vault-icon-button" size="small" severity="info" aria-label="Edit account" @click.stop="updatePassword(password.id)" v-tooltip.top="'Edit'"><font-awesome-icon icon="user-edit" /></Button>
+            <Button class="vault-icon-button" size="small" severity="contrast" aria-label="Account details" @click.stop="toggleDetails(password)" v-tooltip.top="'Details'"><font-awesome-icon icon="bars" /></Button>
+            <Button class="vault-icon-button" size="small" severity="warn" aria-label="Password history" @click.stop="showHistory(password.id)" v-tooltip.top="'History'"><font-awesome-icon :icon="['fas', 'clock-rotate-left']" /></Button>
+            <Button class="vault-icon-button" size="small" severity="danger" aria-label="Delete account" @click.stop="deletePassword(password.id)" v-tooltip.top="'Delete'"><font-awesome-icon icon="trash-alt" /></Button>
           </div>
         </div>
         <div v-if="isDetailsExpanded(password)" class="vault-mobile-details">

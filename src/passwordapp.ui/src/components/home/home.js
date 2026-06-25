@@ -7,6 +7,8 @@ import { parseTags, collectTags, hasTag } from '@/components/utils/tags.js';
 import { isStale, ageLabel } from '@/components/utils/age.js';
 import { useAccountsStore } from '@/stores/accounts.store.js';
 
+const ACCOUNT_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+
 export default {
   name: 'PasswordList',
   computed: {
@@ -69,11 +71,21 @@ export default {
       showAlertModal:     false,
       showHistoryModal:   false,
       apiError:           '',
+      accountRefreshTimer: null,
     };
   },
 
   created() {
     this.fetchPasswords();
+    this.accountRefreshTimer = window.setInterval(() => this.refreshPasswords(), ACCOUNT_REFRESH_INTERVAL_MS);
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
+  },
+
+  beforeUnmount() {
+    if (this.accountRefreshTimer) {
+      window.clearInterval(this.accountRefreshTimer);
+    }
+    document.removeEventListener('visibilitychange', this.onVisibilityChange);
   },
 
   watch: {
@@ -161,6 +173,20 @@ export default {
         .catch(() => {
           this.apiError = this.accountsStore.error;
         });
+    },
+    refreshPasswords() {
+      this.accountsStore.refreshAccounts()
+        .then(() => {
+          this.apiError = '';
+        })
+        .catch(() => {
+          this.apiError = this.accountsStore.error;
+        });
+    },
+    onVisibilityChange() {
+      if (document.visibilityState === 'visible' && this.accountsStore.isStale) {
+        this.refreshPasswords();
+      }
     },
     formatDate(date) {
       if (date) {
