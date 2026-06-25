@@ -35,6 +35,14 @@ concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  ARM_USE_OIDC: 'true'
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  TF_VAR_password_encryption_key: ${{ secrets.TF_ENCRYPTION_KEY }}
+  TF_VAR_password_encryption_initialization_vector: ${{ secrets.TF_ENCRYPTION_IV }}
+
 jobs:
   api:
     name: Deploy API
@@ -53,6 +61,8 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: '~> 1.7'
+      - name: Terraform init
+        run: terraform -chdir=infrastructure init -input=false
       - name: Read Terraform outputs
         id: tf
         run: |
@@ -88,6 +98,8 @@ jobs:
           terraform_version: '~> 1.7'
       - name: Install SWA CLI
         run: npm install -g @azure/static-web-apps-cli
+      - name: Terraform init
+        run: terraform -chdir=infrastructure init -input=false
       - name: Read Terraform outputs
         id: tf
         run: |
@@ -139,6 +151,8 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: '~> 1.7'
+      - name: Terraform init
+        run: terraform -chdir=infrastructure init -input=false
       - name: Read Terraform outputs
         id: tf
         run: |
