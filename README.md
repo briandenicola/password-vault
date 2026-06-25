@@ -30,6 +30,7 @@ Deployment is automated using [Taskfile](https://taskfile.dev/#/), simplifying t
 * `task down`                : Destroys all Azure resources and cleans up Terraform
 * `task cors`                : Adds the UI origins to the Azure Functions CORS allow-list
 * `task entra:configure`     : Creates or updates the Entra app registrations after infrastructure exists
+* `task github:configure`    : Creates or updates GitHub Actions variables/secrets from Terraform outputs
 * `task test-api`            : Hits the API health endpoint to validate a deployment
 * `task migrate:verify`      : Reports any undecryptable vault secrets (read-only)
 * `task migrate:apply`       : Re-encrypts legacy `v1` secrets to `v2` (AES-GCM); backs up first

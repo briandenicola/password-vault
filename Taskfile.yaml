@@ -65,6 +65,11 @@ tasks:
     cmds:
     - pwsh -NoProfile -ExecutionPolicy Bypass -File "{{.TASKFILE_DIR}}\scripts\configure-entra.ps1" {{.CLI_ARGS}}
 
+  github:configure:
+    desc: Creates or updates GitHub Actions variables and secrets from Terraform outputs
+    cmds:
+    - pwsh -NoProfile -ExecutionPolicy Bypass -File "{{.TASKFILE_DIR}}\scripts\configure-github-actions.ps1" {{.CLI_ARGS}}
+
   deploy:api:
     desc: Triggers the GitHub Actions API deployment workflow
     cmds:
