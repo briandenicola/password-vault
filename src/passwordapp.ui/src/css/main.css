@@ -152,6 +152,11 @@ body {
   text-align: left;
 }
 
+.vault-screen.container-fluid {
+  padding-right: 0;
+  padding-left: 0;
+}
+
 .vault-page-title {
   margin-bottom: 0;
 }
@@ -210,6 +215,61 @@ body {
 .card-body {
   background: transparent;
   color: var(--vault-text);
+  font-size: .875rem;
+  line-height: 1.55;
+}
+
+.card-body p {
+  margin: 0 0 1rem;
+  color: var(--vault-muted);
+  font-size: .8125rem;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.card-body h3,
+.card-body .h5,
+.card-body .h6 {
+  margin: 0 0 .5rem;
+  color: var(--vault-text);
+  font-family: var(--vault-serif);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.card-body label,
+.card-body .col-form-label {
+  color: var(--vault-muted);
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+.vault-expansion-card {
+  background: var(--vault-surface-2);
+}
+
+.vault-expansion-card .row {
+  margin-right: 0;
+  margin-left: 0;
+  padding: .35rem 0;
+  border-bottom: .5px solid var(--vault-border-soft);
+}
+
+.vault-expansion-card .row:last-child {
+  border-bottom: none;
+}
+
+.vault-expansion-card b {
+  color: var(--vault-accent-strong);
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.vault-screen a:not(.p-button):not(.router-link-active),
+.vault-screen a:not(.p-button):not(.router-link-exact-active) {
+  color: var(--vault-accent-strong);
 }
 
 .vault-grid {
@@ -272,6 +332,20 @@ body {
   background: var(--vault-surface-2) !important;
 }
 
+.p-paginator .p-paginator-page,
+.p-paginator .p-paginator-next,
+.p-paginator .p-paginator-prev,
+.p-paginator .p-paginator-first,
+.p-paginator .p-paginator-last {
+  color: var(--vault-muted) !important;
+}
+
+.p-paginator .p-paginator-page.p-paginator-page-selected {
+  border-color: var(--vault-accent) !important;
+  background: color-mix(in srgb, var(--vault-accent) 18%, transparent) !important;
+  color: var(--vault-accent-strong) !important;
+}
+
 .p-button {
   min-height: 2.5rem;
   padding: .5rem 1.125rem;
@@ -296,6 +370,18 @@ body {
 .p-button-danger:not(.p-button-text):not(.p-button-link) {
   border-color: var(--vault-danger);
   color: #fff;
+}
+
+.p-button-success:not(.p-button-text):not(.p-button-link) {
+  border-color: var(--vault-success);
+}
+
+.p-button-info:not(.p-button-text):not(.p-button-link) {
+  border-color: var(--vault-info);
+}
+
+.p-button-warn:not(.p-button-text):not(.p-button-link) {
+  border-color: var(--vault-accent);
 }
 
 .vault-icon-button.p-button {
@@ -331,9 +417,136 @@ body {
   color: var(--vault-muted);
 }
 
+.p-select-label,
+.p-select-dropdown {
+  color: var(--vault-text) !important;
+}
+
+.p-select-overlay,
+.p-select-list,
+.p-select-option {
+  border-color: var(--vault-border) !important;
+  background: var(--vault-surface) !important;
+  color: var(--vault-text) !important;
+}
+
+.p-select-option:not(.p-select-option-selected):not(.p-disabled).p-focus,
+.p-select-option:not(.p-select-option-selected):not(.p-disabled):hover {
+  background: var(--vault-surface-2) !important;
+  color: var(--vault-text) !important;
+}
+
+.p-select-option-selected {
+  background: color-mix(in srgb, var(--vault-accent) 18%, transparent) !important;
+  color: var(--vault-accent-strong) !important;
+}
+
+.form-range {
+  accent-color: var(--vault-accent);
+}
+
+.form-control::file-selector-button {
+  border-color: var(--vault-border);
+  background: var(--vault-surface-2);
+  color: var(--vault-text);
+}
+
+.p-checkbox-box,
+.p-radiobutton-box {
+  border-color: var(--vault-border) !important;
+  background: var(--vault-surface) !important;
+}
+
+.p-checkbox-checked .p-checkbox-box,
+.p-radiobutton-checked .p-radiobutton-box {
+  border-color: var(--vault-accent) !important;
+  background: var(--vault-accent) !important;
+}
+
+.p-checkbox-icon,
+.p-radiobutton-icon {
+  color: var(--vault-bg) !important;
+}
+
+.p-focus,
+.p-inputtext:focus,
+.p-textarea:focus,
+.p-select.p-focus,
+.form-control:focus {
+  border-color: var(--vault-accent) !important;
+  box-shadow: 0 0 0 .12rem color-mix(in srgb, var(--vault-accent) 26%, transparent) !important;
+}
+
 .text-muted,
 small.text-muted {
   color: var(--vault-muted) !important;
+}
+
+.text-success {
+  color: var(--vault-success) !important;
+}
+
+.text-danger {
+  color: var(--vault-danger) !important;
+}
+
+.font-monospace {
+  font-family: var(--vault-mono) !important;
+}
+
+.p-tag {
+  border-radius: 999px;
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+
+.p-message {
+  border: .5px solid var(--vault-border) !important;
+  background: var(--vault-surface-2) !important;
+  color: var(--vault-text) !important;
+}
+
+.p-message .p-message-text,
+.p-message .p-message-content,
+.p-message .p-message-icon {
+  color: inherit !important;
+  font-size: .8125rem;
+}
+
+.p-message-success {
+  border-color: color-mix(in srgb, var(--vault-success) 45%, var(--vault-border)) !important;
+  color: var(--vault-success) !important;
+}
+
+.p-message-warn {
+  border-color: color-mix(in srgb, var(--vault-accent) 55%, var(--vault-border)) !important;
+  color: var(--vault-accent-strong) !important;
+}
+
+.p-message-error {
+  border-color: color-mix(in srgb, var(--vault-danger) 55%, var(--vault-border)) !important;
+  color: var(--vault-danger) !important;
+}
+
+.progress {
+  background: var(--vault-border-soft) !important;
+}
+
+.progress-bar.bg-danger {
+  background-color: var(--vault-danger) !important;
+}
+
+.progress-bar.bg-warning {
+  background-color: var(--vault-accent) !important;
+}
+
+.progress-bar.bg-info {
+  background-color: var(--vault-info) !important;
+}
+
+.progress-bar.bg-success {
+  background-color: var(--vault-success) !important;
 }
 
 .p-dialog,
@@ -363,6 +576,13 @@ small.text-muted {
   text-align: left;
 }
 
+.p-tooltip .p-tooltip-text {
+  border: .5px solid var(--vault-border);
+  background: var(--vault-bg);
+  color: var(--vault-text);
+  font-size: .75rem;
+}
+
 .form-wrapper {
   padding: 1.5rem;
 }
@@ -377,6 +597,14 @@ small.text-muted {
   font-weight: 600;
   letter-spacing: .1em;
   text-transform: uppercase;
+}
+
+.form-wrapper .row {
+  --bs-gutter-x: 1rem;
+}
+
+.form-wrapper .row.mb-2 {
+  margin-bottom: 1rem !important;
 }
 
 .vault-action-card h3,
@@ -404,5 +632,17 @@ small.text-muted {
 
   .vault-search {
     width: 100%;
+  }
+
+  .vault-form-row > [class*="col-"],
+  .form-wrapper .row > [class*="col-"] {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .vault-form-row label,
+  .form-wrapper .row label {
+    margin-bottom: .35rem;
   }
 }

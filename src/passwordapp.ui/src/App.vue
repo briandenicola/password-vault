@@ -43,7 +43,8 @@ const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scr
 export default {
   components: { UpdatePrompt, PasskeyVaultGate },
   setup() {
-    const isDarkMode = ref(localStorage.getItem('darkMode') === 'true');
+    const savedDarkMode = localStorage.getItem('darkMode');
+    const isDarkMode = ref(savedDarkMode === null ? true : savedDarkMode === 'true');
     const e2eeEnabled = isE2eeEnabled();
     const sessionState = ref({ isUnlocked: vaultSession.isUnlocked, unlockedAt: vaultSession.unlockedAt });
     const vaultUnlocked = computed(() => !e2eeEnabled || sessionState.value.isUnlocked);

@@ -64,12 +64,14 @@ export default {
   justify-content: center;
   gap: 1rem;
   padding: 0.75rem 1rem;
-  background: #202A44;
-  color: #fff;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.25);
+  border-top: .5px solid var(--vault-border);
+  background: var(--vault-bg);
+  color: var(--vault-text);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.28);
 }
 
 .pwa-update-text {
-  font-size: 0.95rem;
+  color: var(--vault-muted);
+  font-size: .8125rem;
 }
 </style>

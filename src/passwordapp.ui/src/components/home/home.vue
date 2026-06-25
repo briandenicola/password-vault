@@ -80,7 +80,7 @@
             </template>
           </Column>
           <template #expansion="{ data }">
-            <div class="card text-start">
+            <div class="card vault-expansion-card">
               <div class="card-body">
                 <div class="row mb-2"><div class="col"><b>Site:</b></div><div class="col">{{ data.siteName }}</div></div>
                 <div class="row mb-2"><div class="col"><b>Created By:</b></div><div class="col">{{ data.createdBy }}</div></div>
