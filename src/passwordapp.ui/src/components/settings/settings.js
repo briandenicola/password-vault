@@ -8,7 +8,9 @@ import {
 import {
   defaultBackupSettings,
   getBackupSettings,
+  normalizeBackupSettings,
   putBackupSettings,
+  runBackupNow,
 } from '@/components/api/BackupSettings.Api.js';
 
 export default {
@@ -19,6 +21,7 @@ export default {
       backupSettings: defaultBackupSettings(),
       backupSettingsError: '',
       backupSettingsLoading: false,
+      backupRunningNow: false,
       savedMessage: '',
       separatorChoices: [
         { value: '-', text: 'Dash ( - )' },
@@ -116,6 +119,29 @@ export default {
       const userId = Authentication.getUserProfile();
       this.settings = resetSettings(userId);
       this.savedMessage = 'Preferences reset to defaults.';
+    },
+    async runBackupNow() {
+      this.backupRunningNow = true;
+      this.backupSettingsError = '';
+      this.savedMessage = '';
+      try {
+        this.backupSettings = await runBackupNow();
+        this.savedMessage = 'Backup completed.';
+      } catch (err) {
+        if (err && err.response && err.response.data) {
+          this.backupSettings = normalizeBackupSettings(err.response.data);
+        }
+        this.backupSettingsError = 'Could not run backup: ' + this.describeBackupError(err);
+      } finally {
+        this.backupRunningNow = false;
+      }
+    },
+    describeBackupError(err) {
+      const data = err && err.response && err.response.data;
+      if (data) {
+        return data.lastError || data.LastError || data.lastStatus || data.LastStatus || err.message;
+      }
+      return err && err.message ? err.message : err;
     },
   },
 };

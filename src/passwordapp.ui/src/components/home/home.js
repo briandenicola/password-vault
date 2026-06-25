@@ -34,12 +34,22 @@ export default {
       }
       return list;
     },
+    sortedFilteredPasswords() {
+      const field = this.sortBy || 'accountName';
+      const direction = this.sortDesc ? -1 : 1;
+      return [...this.filteredPasswords].sort((left, right) =>
+        this.compareRows(left, right, field) * direction);
+    },
+    mobilePagedPasswords() {
+      return this.sortedFilteredPasswords.slice(this.mobileFirst, this.mobileFirst + this.perPage);
+    },
   },
   data() {
     const settings = loadSettings(Authentication.getUserProfile());
     return {
       passwords:    [],
       perPage:      settings.list.perPage,
+      mobileFirst:  0,
       filter:       '',
       selectedTag:  null,
       sortBy:       settings.list.sortBy,
@@ -60,6 +70,21 @@ export default {
 
   created() {
     this.fetchPasswords();
+  },
+
+  watch: {
+    filter() {
+      this.mobileFirst = 0;
+    },
+    selectedTag() {
+      this.mobileFirst = 0;
+    },
+    filteredPasswords(list) {
+      this.clampMobileFirst(list.length);
+    },
+    perPage() {
+      this.clampMobileFirst();
+    },
   },
 
   methods: {
@@ -83,6 +108,38 @@ export default {
         expanded[row.id] = true;
       }
       this.expandedRows = expanded;
+    },
+    isDetailsExpanded(row) {
+      return Boolean(this.expandedRows[row.id]);
+    },
+    onMobilePage(event) {
+      this.mobileFirst = event.first;
+      this.perPage = event.rows;
+    },
+    clampMobileFirst(total = this.filteredPasswords.length) {
+      if (total <= 0) {
+        this.mobileFirst = 0;
+        return;
+      }
+
+      if (this.mobileFirst >= total) {
+        this.mobileFirst = Math.floor((total - 1) / this.perPage) * this.perPage;
+      }
+    },
+    compareRows(left, right, field) {
+      const leftValue = this.sortValue(left && left[field], field);
+      const rightValue = this.sortValue(right && right[field], field);
+      if (typeof leftValue === 'number' && typeof rightValue === 'number') {
+        return leftValue - rightValue;
+      }
+      return String(leftValue).localeCompare(String(rightValue), undefined, { sensitivity: 'base' });
+    },
+    sortValue(value, field) {
+      if (field === 'lastModifiedDate') {
+        const time = Date.parse(value);
+        return Number.isFinite(time) ? time : 0;
+      }
+      return value ?? '';
     },
     updatePassword(passwordId) {
       this.$router.push({ name: 'Update', params: { id: passwordId } });

@@ -54,15 +54,7 @@ namespace PasswordService.API
 
             try
             {
-                var archive = VaultBackupArchive.Create(passwordCollection, now);
-                var store = new VaultBackupBlobStore(_backupStorageAccountName, _backupStorageContainerName);
-                await store.UploadAsync(archive.BlobName, archive.ZipBytes, CancellationToken.None);
-
-                settings.LastBackupAt = now.UtcDateTime;
-                settings.LastBackupBlobName = archive.BlobName;
-                settings.LastStatus = $"Backed up {archive.DocumentCount} document(s).";
-                settings.LastError = null;
-                _logger.LogInformation("Scheduled vault backup wrote {BlobName} with {DocumentCount} document(s).", archive.BlobName, archive.DocumentCount);
+                await CreateVaultBackupAsync(passwordCollection, settings, now, "Scheduled vault backup");
             }
             catch (Exception ex) when (ex is InvalidOperationException or Azure.RequestFailedException)
             {
@@ -72,6 +64,23 @@ namespace PasswordService.API
             }
 
             return new RunScheduledVaultBackupOutput { Settings = settings };
+        }
+
+        private async Task CreateVaultBackupAsync(
+            IReadOnlyList<AccountPassword> passwordCollection,
+            BackupSettingsRecord settings,
+            DateTimeOffset now,
+            string operationName)
+        {
+            var archive = VaultBackupArchive.Create(passwordCollection, now);
+            var store = new VaultBackupBlobStore(_backupStorageAccountName, _backupStorageContainerName);
+            await store.UploadAsync(archive.BlobName, archive.ZipBytes, CancellationToken.None);
+
+            settings.LastBackupAt = now.UtcDateTime;
+            settings.LastBackupBlobName = archive.BlobName;
+            settings.LastStatus = $"Backed up {archive.DocumentCount} document(s).";
+            settings.LastError = null;
+            _logger.LogInformation("{OperationName} wrote {BlobName} with {DocumentCount} document(s).", operationName, archive.BlobName, archive.DocumentCount);
         }
     }
 }

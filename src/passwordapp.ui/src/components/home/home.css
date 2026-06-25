@@ -2,3 +2,84 @@
 .site-name {
   max-width: 260px;
 }
+
+.vault-mobile-list {
+  display: none;
+}
+
+.vault-mobile-account {
+  overflow: hidden;
+  border: .5px solid var(--vault-border);
+  border-radius: .5rem;
+  background: var(--vault-surface);
+}
+
+.vault-mobile-account + .vault-mobile-account {
+  margin-top: .85rem;
+}
+
+.vault-mobile-account-row {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 38%) 1fr;
+  border-bottom: .5px solid var(--vault-border-soft);
+}
+
+.vault-mobile-account-label,
+.vault-mobile-account-value,
+.vault-mobile-account-actions {
+  min-width: 0;
+  padding: .65rem .75rem;
+}
+
+.vault-mobile-account-label {
+  background: color-mix(in srgb, var(--vault-surface-2) 70%, transparent);
+  color: var(--vault-text);
+  font-size: .8125rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.vault-mobile-account-value {
+  overflow-wrap: anywhere;
+  color: var(--vault-text);
+  font-size: .8125rem;
+}
+
+.vault-mobile-account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+}
+
+.vault-mobile-details {
+  display: grid;
+  gap: .4rem;
+  padding: .75rem;
+  background: var(--vault-surface-2);
+  color: var(--vault-text);
+  font-size: .8125rem;
+}
+
+.vault-mobile-details b {
+  color: var(--vault-accent-strong);
+}
+
+.vault-mobile-empty {
+  margin: 1rem 0;
+  color: var(--vault-muted);
+}
+
+@media (max-width: 760px) {
+  .account-name,
+  .site-name {
+    max-width: 100%;
+  }
+
+  .vault-desktop-table {
+    display: none;
+  }
+
+  .vault-mobile-list {
+    display: block;
+  }
+}

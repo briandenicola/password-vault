@@ -5,7 +5,16 @@
         <h1>The Vault</h1>
         <span>Members only</span>
       </div>
-      <nav class="vault-nav" aria-label="Vault navigation">
+      <button
+        class="vault-menu-toggle"
+        type="button"
+        :aria-expanded="navOpen ? 'true' : 'false'"
+        aria-controls="vault-navigation"
+        @click="toggleNav">
+        <font-awesome-icon icon="bars" />
+        Menu
+      </button>
+      <nav id="vault-navigation" class="vault-nav" :class="{ 'is-open': navOpen }" aria-label="Vault navigation" @click="closeNav">
         <template v-if="vaultUnlocked">
           <router-link :to="{ name: 'Home' }"><i class="pi pi-id-card"></i> Accounts</router-link>
           <router-link :to="{ name: 'Settings' }"><i class="pi pi-cog"></i> Settings</router-link>
@@ -45,6 +54,7 @@ export default {
   setup() {
     const savedDarkMode = localStorage.getItem('darkMode');
     const isDarkMode = ref(savedDarkMode === null ? true : savedDarkMode === 'true');
+    const navOpen = ref(false);
     const e2eeEnabled = isE2eeEnabled();
     const sessionState = ref({ isUnlocked: vaultSession.isUnlocked, unlockedAt: vaultSession.unlockedAt });
     const vaultUnlocked = computed(() => !e2eeEnabled || sessionState.value.isUnlocked);
@@ -61,6 +71,14 @@ export default {
 
     const logOut = () => {
       Authentication.signOut();
+    };
+
+    const toggleNav = () => {
+      navOpen.value = !navOpen.value;
+    };
+
+    const closeNav = () => {
+      navOpen.value = false;
     };
 
     if (isDarkMode.value) {
@@ -125,10 +143,13 @@ export default {
 
     return {
       isDarkMode,
+      navOpen,
       e2eeEnabled,
       sessionState,
       vaultUnlocked,
       toggleDarkMode,
+      toggleNav,
+      closeNav,
       logOut,
     };
   },
