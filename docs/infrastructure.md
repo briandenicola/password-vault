@@ -3,7 +3,7 @@ Infrastructure
 * The infrastructure is deployed to Azure using **Terraform** (`infrastructure/`).
 * `task up` runs `init` → `keys` → `apply` → `cors`. A full create can take up to ~30 minutes.
 * Resource names are derived from a Terraform-generated `random_pet` + `random_id` (e.g. `airedale-60249`). Save this name — it appears throughout the deployment.
-* The default region is `canadacentral` (`DEFAULT_REGION` in `Taskfile.yaml`).
+* The default region is `southcentralus` (`DEFAULT_REGION` in `Taskfile.yaml`).
 
 ### State & authentication
 * **Remote state:** Terraform uses an `azurerm` backend (`providers.tf` → `denicolafamily/state`, `use_oidc = true`). The first `init` against existing local state needs `terraform init -migrate-state`.
@@ -26,7 +26,7 @@ The main resource group hosts the running vault:
 
 | Component | Resource(s) | Notes |
 |-----------|-------------|-------|
-| **Cosmos DB** | `azurerm_cosmosdb_account` + SQL database `AccountPasswords` | Session consistency, system-assigned identity, optional free tier. |
+| **Cosmos DB** | `azurerm_cosmosdb_account` + SQL database `AccountPasswords` | Session consistency, system-assigned identity, free tier enabled by default for new accounts unless `COSMOSDB_FREE_TIER=false` is set. |
 | → Containers | `Passwords`, `VaultKeys` | Both partitioned on `/PartitionKey`. `VaultKeys` (OFF-4 §5B) holds the opaque vault-key record and is isolated so it never appears in the passwords list. |
 | **Key Vault** | `azurerm_key_vault` + secrets | RBAC-authorized. Secrets: `aes-encryption-key`, `aes-encryption-iv`, `cosmosdb-connection-string`, `appinsights-connection-string`, `appinsights-key`. |
 | **Function App** | `azurerm_function_app_flex_consumption` on a Linux Flex Consumption `azurerm_service_plan` (`FC1`) | .NET 10 isolated worker; code is deployed by GitHub Actions using the Azure Functions deploy action. HTTP triggers are `Anonymous` (guarded by Entra middleware, AC-2). |

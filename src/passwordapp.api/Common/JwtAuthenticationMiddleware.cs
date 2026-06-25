@@ -34,7 +34,7 @@ namespace PasswordService.Common
             _options = options;
             _logger = logger;
 
-            if (_options.Enabled)
+            if (_options.Enabled && !string.IsNullOrWhiteSpace(_options.TenantId))
             {
                 // Caches the JWKS and refreshes on its own schedule.
                 _configManager = new ConfigurationManager<OpenIdConnectConfiguration>(
@@ -59,6 +59,14 @@ namespace PasswordService.Common
                 return;
             }
 
+            if (_options.TryGetConfigurationError() is { } configurationError)
+            {
+                _logger.LogError("API authentication is enabled but misconfigured: {Reason}", configurationError);
+                httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                await httpContext.Response.WriteAsJsonAsync(new { error = "unauthorized" });
+                return;
+            }
+
             string? authHeader = httpContext.Request.Headers.Authorization.FirstOrDefault();
 
             var oidcConfig = await _configManager!.GetConfigurationAsync(context.CancellationToken);
@@ -67,7 +75,7 @@ namespace PasswordService.Common
                 ValidIssuer = oidcConfig.Issuer,
                 ValidateIssuer = true,
                 ValidAudiences = _options.Audiences,
-                ValidateAudience = _options.Audiences.Count > 0,
+                ValidateAudience = true,
                 IssuerSigningKeys = oidcConfig.SigningKeys,
                 ValidateIssuerSigningKey = true,
                 ValidateLifetime = true,

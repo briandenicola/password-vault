@@ -23,7 +23,7 @@ This repository demonstrates the integration of Azure Functions with HTTP Trigge
 > **Note:** The script [./.devcontainer/post-create.sh](./.devcontainer/post-create.sh) can be used to install the tools on a Linux VM.
 
 ## Task Automation
-Deployment is automated using [Taskfile](https://taskfile.dev/#/), simplifying the deployment process without a CI/CD pipeline. The Taskfile provides a consistent way to execute commands and scripts.
+Taskfile handles local infrastructure/operator workflows, while CI/CD is handled by GitHub Actions (`.github/workflows/*.yml`). The Taskfile provides a consistent way to execute commands and scripts.
 
 ### Taskfile Commands
 * `task up`                  : Builds the complete environment
@@ -32,12 +32,24 @@ Deployment is automated using [Taskfile](https://taskfile.dev/#/), simplifying t
 * `task entra:configure`     : Creates or updates the Entra app registrations after infrastructure exists
 * `task github:configure`    : Creates or updates GitHub Actions variables/secrets from Terraform outputs
 * `task test-api`            : Hits the API health endpoint to validate a deployment
+* `task migrate:backup`      : Writes a JSON backup of the current vault
 * `task migrate:verify`      : Reports any undecryptable vault secrets (read-only)
+* `task migrate:dryrun`      : Plans legacy `v1` to `v2` re-encryption without writing
 * `task migrate:apply`       : Re-encrypts legacy `v1` secrets to `v2` (AES-GCM); backs up first
+* `task migrate:import`      : Restores an app JSON backup into the target vault
+* `task migrate:verify-parity` : Compares source and target vault data after import
 * `task init`                : Initializes Terraform
 * `task plan`                : Creates a Terraform plan
 
 Code deployment is handled by GitHub Actions (`.github/workflows/deploy.yml`), not local Taskfile targets.
+
+## UI Features
+* Security audit for reused passwords and HaveIBeenPwned breach checks, with paged results for large vaults.
+* Import/export tooling for JSON backups and CSV transfer workflows.
+* Recycle bin for soft-deleted accounts.
+* Per-user settings for generator defaults, list behavior, clipboard auto-clear, idle lock, and password-age reminders.
+* Dark/light vault theme toggle.
+* Optional passkey-backed E2EE vault gate controlled by `VUE_APP_E2EE`, `VUE_APP_RP_ID`, and related settings in `src/passwordapp.ui/.env.example`.
 
 ### Taskfile Configuration
 The [TaskFile](../TaskFile.yaml) is located in the root of the repository and includes default values that can be customized:
@@ -45,7 +57,7 @@ The [TaskFile](../TaskFile.yaml) is located in the root of the repository and in
 |------|-------|---------------|
 | TAG | Value used in Azure Tags | Password Vault on Azure Functions |
 | DEFAULT_REGION | Default region to deploy to | southcentralus |
-| COSMOSDB_FREE_TIER | Use the Cosmos DB free tier | false |
+| COSMOSDB_FREE_TIER | Enable Cosmos DB free tier for new accounts. Set `COSMOSDB_FREE_TIER=false` to opt out. Azure allows only one free-tier Cosmos account per subscription. | true |
 | DEPLOY_MAINTENANCE | Deploy Azure Functions for Keep Alives | false |
 | ADD_CUSTOM_DOMAIN | Add a custom domain to Azure Static Web Apps | false |
 | APP_REQUIRES_AUTHENTICATION | Require authentication for the UI | true |

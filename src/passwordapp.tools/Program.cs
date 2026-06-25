@@ -32,6 +32,7 @@ namespace PasswordService.Tools
             }
 
             var encryptor = new Encryptor(config.AesKey, config.AesIv);
+            Console.WriteLine(config.SourceStoreDescription());
 
             try
             {
@@ -168,16 +169,27 @@ namespace PasswordService.Tools
                 return 1;
             }
 
-            var dekEncryptor = DekEncryptor(args);
             var oldDocs = ReadJsonArrayFile(backupPath);
-            var plan = BlueGreenVaultTransformer.PlanImport(oldEncryptor, dekEncryptor, oldDocs);
+            Console.WriteLine($"Loaded {oldDocs.Count} document(s) from backup file {backupPath}.");
+            if (args.Contains("--e2ee"))
+            {
+                return await ImportE2eeAsync(oldEncryptor, config, args, apply, oldDocs);
+            }
+
+            var source = SourceBackupEncryptor(config);
+            Console.WriteLine(source.UsesDestinationKey
+                ? "Backup/source key: using the destination/current vault AES key and IV."
+                : "Backup/source key: using SOURCE_AES_KEY/SOURCE_AES_IV or prompted values.");
+            Console.WriteLine(config.TargetStoreDescription());
+            Console.WriteLine("Planning restore: decrypting backup secrets, re-encrypting for destination, and verifying every transformed secret ...");
+            var plan = VaultBackupImporter.PlanRestore(source.Encryptor, oldEncryptor, oldDocs);
 
             foreach (var error in plan.Errors)
             {
                 Console.WriteLine($"  ✗ {error}");
             }
             Console.WriteLine();
-            Console.WriteLine($"Import plan: {plan.DocumentsReady} document(s) ready, {plan.DocumentsFailed} failed; {plan.SecretsTransformed} secret(s) transformed, {plan.AlreadyNew} already new-schema.");
+            Console.WriteLine($"Restore import plan: {plan.DocumentsReady} document(s) ready, {plan.DocumentsFailed} failed; {plan.SecretsTransformed} secret(s) transformed for the target vault, {plan.SecretsVerified} verified.");
 
             if (!apply)
             {
@@ -192,15 +204,71 @@ namespace PasswordService.Tools
             }
 
             await using var targetStore = NewStore(config, target: true);
+            Console.WriteLine("Reading destination container before import so a safety backup can be written ...");
             var targetDocs = await ReadStoreAsync(targetStore, config.TargetDatabase, config.TargetCollection);
-            var targetBackup = Backup(targetDocs, null);
+            var targetBackup = Backup(targetDocs, null, "Target pre-import backup");
 
             Console.WriteLine($"Applying {plan.Documents.Count} upsert(s) to {config.TargetDatabase}/{config.TargetCollection} ...");
-            foreach (var doc in plan.Documents)
+            await UpsertWithProgressAsync(targetStore, plan.Documents);
+
+            Console.WriteLine("Reading destination container after import to confirm the write landed ...");
+            var postImportDocs = await ReadStoreAsync(targetStore, config.TargetDatabase, config.TargetCollection);
+            var verification = VerifyRestoredDocuments(plan.Documents, postImportDocs);
+            Console.WriteLine($"Post-import destination count: {postImportDocs.Count} document(s). Verified {verification.Found}/{verification.Expected} restored document id(s) are present.");
+            if (verification.Missing.Count > 0)
             {
-                await targetStore.UpsertAsync(doc);
+                Console.Error.WriteLine($"Post-import verification failed: missing restored document id(s): {string.Join(", ", verification.Missing.Take(10))}{(verification.Missing.Count > 10 ? ", ..." : string.Empty)}");
+                return 3;
             }
-            Console.WriteLine($"Done. Target backup at {targetBackup}.");
+
+            Console.WriteLine($"Done. Restored {plan.Documents.Count} document(s). Target pre-import backup at {targetBackup}.");
+            return 0;
+        }
+
+        private static async Task<int> ImportE2eeAsync(Encryptor oldEncryptor, Config config, string[] args, bool apply, List<JObject> oldDocs)
+        {
+            var dekEncryptor = DekEncryptor(args);
+            var plan = BlueGreenVaultTransformer.PlanImport(oldEncryptor, dekEncryptor, oldDocs);
+
+            foreach (var error in plan.Errors)
+            {
+                Console.WriteLine($"  ✗ {error}");
+            }
+            Console.WriteLine();
+            Console.WriteLine($"E2EE import plan: {plan.DocumentsReady} document(s) ready, {plan.DocumentsFailed} failed; {plan.SecretsTransformed} secret(s) transformed, {plan.AlreadyNew} already new-schema.");
+
+            if (!apply)
+            {
+                Console.WriteLine("DRY RUN — nothing written. Re-run with --apply to import.");
+                return plan.DocumentsFailed == 0 ? 0 : 3;
+            }
+
+            if (plan.DocumentsFailed > 0)
+            {
+                Console.Error.WriteLine("Refusing to apply: at least one document failed transform/verification.");
+                return 3;
+            }
+
+            await using var targetStore = NewStore(config, target: true);
+            Console.WriteLine(config.TargetStoreDescription());
+            Console.WriteLine("Reading destination container before import so a safety backup can be written ...");
+            var targetDocs = await ReadStoreAsync(targetStore, config.TargetDatabase, config.TargetCollection);
+            var targetBackup = Backup(targetDocs, null, "Target pre-import backup");
+
+            Console.WriteLine($"Applying {plan.Documents.Count} upsert(s) to {config.TargetDatabase}/{config.TargetCollection} ...");
+            await UpsertWithProgressAsync(targetStore, plan.Documents);
+
+            Console.WriteLine("Reading destination container after import to confirm the write landed ...");
+            var postImportDocs = await ReadStoreAsync(targetStore, config.TargetDatabase, config.TargetCollection);
+            var verification = VerifyRestoredDocuments(plan.Documents, postImportDocs);
+            Console.WriteLine($"Post-import destination count: {postImportDocs.Count} document(s). Verified {verification.Found}/{verification.Expected} restored document id(s) are present.");
+            if (verification.Missing.Count > 0)
+            {
+                Console.Error.WriteLine($"Post-import verification failed: missing restored document id(s): {string.Join(", ", verification.Missing.Take(10))}{(verification.Missing.Count > 10 ? ", ..." : string.Empty)}");
+                return 3;
+            }
+
+            Console.WriteLine($"Done. Imported {plan.Documents.Count} E2EE document(s). Target pre-import backup at {targetBackup}.");
             return 0;
         }
 
@@ -241,11 +309,11 @@ namespace PasswordService.Tools
             return result.Success ? 0 : 3;
         }
 
-        private static string Backup(List<JObject> docs, string? path)
+        private static string Backup(List<JObject> docs, string? path, string label = "Backup")
         {
             path ??= $"vault-backup-{DateTime.UtcNow:yyyyMMdd-HHmmss}.json";
             File.WriteAllText(path, JsonConvert.SerializeObject(new JArray(docs), Formatting.Indented));
-            Console.WriteLine($"Backup of {docs.Count} document(s) written to {path}.");
+            Console.WriteLine($"{label} of {docs.Count} document(s) written to {path}.");
             return path;
         }
 
@@ -285,7 +353,7 @@ namespace PasswordService.Tools
             }
         }
 
-        private static Encryptor DekEncryptor(string[] args)
+        private static ISecretProtector DekEncryptor(string[] args)
         {
             var dek = OptionValue(args, "--dek-base64") ?? Environment.GetEnvironmentVariable("VAULT_DEK_BASE64");
             if (string.IsNullOrWhiteSpace(dek))
@@ -293,8 +361,46 @@ namespace PasswordService.Tools
                 throw new InvalidOperationException("missing vault DEK: set VAULT_DEK_BASE64 or pass --dek-base64 <base64>");
             }
 
-            _ = Convert.FromBase64String(dek);
-            return new Encryptor(dek, Convert.ToBase64String(new byte[16]));
+            return new E2eeDekProtector(dek);
+        }
+
+        private static SourceEncryptorSelection SourceBackupEncryptor(Config config)
+        {
+            var sourceKey = OptionalEnv("SOURCE_AES_KEY") ?? PromptSecretOptional("Backup/source AES key (press Enter if same as destination): ");
+            var sourceIv = OptionalEnv("SOURCE_AES_IV") ?? PromptSecretOptional("Backup/source AES IV (press Enter if same as destination): ");
+            var usesDestinationKey = string.IsNullOrWhiteSpace(sourceKey) && string.IsNullOrWhiteSpace(sourceIv);
+
+            sourceKey = string.IsNullOrWhiteSpace(sourceKey) ? config.AesKey : sourceKey;
+            sourceIv = string.IsNullOrWhiteSpace(sourceIv) ? config.AesIv : sourceIv;
+            return new SourceEncryptorSelection(new Encryptor(sourceKey, sourceIv), usesDestinationKey);
+        }
+
+        private static async Task UpsertWithProgressAsync(IVaultStore store, IReadOnlyList<JObject> docs)
+        {
+            for (var i = 0; i < docs.Count; i++)
+            {
+                await store.UpsertAsync(docs[i]);
+                var completed = i + 1;
+                if (completed == docs.Count || completed % 50 == 0)
+                {
+                    Console.WriteLine($"  Upserted {completed}/{docs.Count} document(s) ...");
+                }
+            }
+        }
+
+        private static RestoreWriteVerification VerifyRestoredDocuments(IReadOnlyList<JObject> expectedDocs, IReadOnlyList<JObject> actualDocs)
+        {
+            var actualIds = actualDocs
+                .Select(Id)
+                .Where(id => id != "<no-id>")
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var missing = expectedDocs
+                .Select(Id)
+                .Where(id => id != "<no-id>" && !actualIds.Contains(id))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            return new RestoreWriteVerification(expectedDocs.Count, expectedDocs.Count - missing.Count, missing);
         }
 
         private static string? OptionValue(string[] args, string name)
@@ -311,8 +417,8 @@ namespace PasswordService.Tools
 
         private static CosmosVaultStore NewStore(Config config, bool target) =>
             target
-                ? NewCosmosStore(config.TargetCosmosConnection, config.TargetDatabase, config.TargetCollection, "target")
-                : NewCosmosStore(config.CosmosConnection, config.Database, config.Collection, "source");
+                ? NewCosmosStore(config.TargetCosmosConnection, config.TargetDatabase, config.TargetCollection, "destination/target")
+                : NewCosmosStore(config.CosmosConnection, config.Database, config.Collection, "source/current");
 
         private static CosmosVaultStore NewCosmosStore(string connection, string database, string collection, string label)
         {
@@ -332,24 +438,53 @@ namespace PasswordService.Tools
             Console.WriteLine("  vault-migrate verify            Decrypt every secret and report undecryptable entries");
             Console.WriteLine("  vault-migrate migrate           DRY RUN: show what would be re-encrypted to v2 (writes a backup)");
             Console.WriteLine("  vault-migrate migrate --apply   Re-encrypt legacy v1 secrets to v2 and write them back");
-            Console.WriteLine("  vault-migrate import <backup.json> [--apply] [--dek-base64 <b64>]");
+            Console.WriteLine("  vault-migrate import <backup.json> [--apply]");
+            Console.WriteLine("  vault-migrate import <backup.json> --e2ee [--apply] [--dek-base64 <b64>]");
             Console.WriteLine("  vault-migrate verify-parity <old.json> <new.json> [--dek-base64 <b64>]");
             Console.WriteLine("  vault-migrate verify-parity <old.json> --new-store [--dek-base64 <b64>]");
             Console.WriteLine();
-            Console.WriteLine("Required environment variables:");
-            Console.WriteLine("  COSMOSDB, COSMOS_DATABASE_NAME, COSMOS_COLLECTION_NAME, AesKey, AesIV");
-            Console.WriteLine("  VAULT_DEK_BASE64 for import/verify-parity (unless --dek-base64 is supplied)");
+            Console.WriteLine("Configuration:");
+            Console.WriteLine("  COSMOSDB, COSMOS_DATABASE_NAME, COSMOS_COLLECTION_NAME for store reads/writes");
+            Console.WriteLine("  AesKey/AesIV may be set in env; otherwise the tool prompts without echoing input");
+            Console.WriteLine("  SOURCE_AES_KEY/SOURCE_AES_IV may be set for import; otherwise the tool prompts");
+            Console.WriteLine("  VAULT_DEK_BASE64 for --e2ee import/verify-parity (unless --dek-base64 is supplied)");
             Console.WriteLine("  Optional target overrides: NEW_COSMOSDB, NEW_COSMOS_DATABASE_NAME, NEW_COSMOS_COLLECTION_NAME");
         }
 
+        private sealed record SourceEncryptorSelection(Encryptor Encryptor, bool UsesDestinationKey);
+
+        private sealed record RestoreWriteVerification(int Expected, int Found, IReadOnlyList<string> Missing);
+
         private sealed record Config(string CosmosConnection, string Database, string Collection, string TargetCosmosConnection, string TargetDatabase, string TargetCollection, string AesKey, string AesIv)
         {
+            public string SourceStoreDescription() =>
+                StoreDescription("Source/current", CosmosConnection, Database, Collection);
+
+            public string TargetStoreDescription() =>
+                StoreDescription("Destination/target", TargetCosmosConnection, TargetDatabase, TargetCollection);
+
+            private static string StoreDescription(string label, string connection, string database, string collection) =>
+                $"{label} Cosmos store: endpoint={ConnectionEndpoint(connection)}, database={ValueOrMissing(database)}, container={ValueOrMissing(collection)}";
+
+            private static string ConnectionEndpoint(string connection)
+            {
+                if (string.IsNullOrWhiteSpace(connection))
+                {
+                    return "<missing COSMOSDB>";
+                }
+
+                var endpoint = connection.Split(';', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(part => part.Split('=', 2))
+                    .FirstOrDefault(parts => parts.Length == 2 && string.Equals(parts[0], "AccountEndpoint", StringComparison.OrdinalIgnoreCase));
+
+                return endpoint is null ? "<COSMOSDB present; endpoint not parseable>" : endpoint[1];
+            }
+
+            private static string ValueOrMissing(string value) =>
+                string.IsNullOrWhiteSpace(value) ? "<missing>" : value;
+
             public static Config FromEnvironment()
             {
-                static string Require(string name) =>
-                    Environment.GetEnvironmentVariable(name)
-                    ?? throw new InvalidOperationException($"missing environment variable '{name}'");
-
                 var cosmos = Optional("COSMOSDB") ?? string.Empty;
                 var database = Optional("COSMOS_DATABASE_NAME") ?? string.Empty;
                 var collection = Optional("COSMOS_COLLECTION_NAME") ?? string.Empty;
@@ -361,13 +496,63 @@ namespace PasswordService.Tools
                     Optional("NEW_COSMOSDB") ?? cosmos,
                     Optional("NEW_COSMOS_DATABASE_NAME") ?? database,
                     Optional("NEW_COSMOS_COLLECTION_NAME") ?? collection,
-                    Require("AesKey"),
-                    Require("AesIV"));
+                    Optional("AesKey") ?? Optional("ENCRYPTION_KEY") ?? PromptSecretRequired("Destination/current vault AES key (AesKey): "),
+                    Optional("AesIV") ?? Optional("ENCRYPTION_IV") ?? PromptSecretRequired("Destination/current vault AES IV (AesIV): "));
 
                 static string? Optional(string name)
                 {
-                    var value = Environment.GetEnvironmentVariable(name);
-                    return string.IsNullOrWhiteSpace(value) ? null : value;
+                    return OptionalEnv(name);
+                }
+            }
+        }
+
+        private static string? OptionalEnv(string name)
+        {
+            var value = Environment.GetEnvironmentVariable(name);
+            return string.IsNullOrWhiteSpace(value) ? null : value;
+        }
+
+        private static string PromptSecretRequired(string prompt)
+        {
+            var value = PromptSecretOptional(prompt);
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                throw new InvalidOperationException($"missing required value: {prompt.TrimEnd(' ', ':')}");
+            }
+
+            return value;
+        }
+
+        private static string? PromptSecretOptional(string prompt)
+        {
+            if (Console.IsInputRedirected)
+            {
+                return null;
+            }
+
+            Console.Error.Write(prompt);
+            var chars = new List<char>();
+            while (true)
+            {
+                var key = Console.ReadKey(intercept: true);
+                if (key.Key == ConsoleKey.Enter)
+                {
+                    Console.Error.WriteLine();
+                    return chars.Count == 0 ? null : new string(chars.ToArray());
+                }
+
+                if (key.Key == ConsoleKey.Backspace)
+                {
+                    if (chars.Count > 0)
+                    {
+                        chars.RemoveAt(chars.Count - 1);
+                    }
+                    continue;
+                }
+
+                if (!char.IsControl(key.KeyChar))
+                {
+                    chars.Add(key.KeyChar);
                 }
             }
         }

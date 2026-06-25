@@ -27,14 +27,14 @@ resource "azurerm_function_app_flex_consumption" "this" {
   enabled                       = true
   public_network_access_enabled = true
   runtime_name                  = "dotnet-isolated"
-  runtime_version               = "10"
+  runtime_version               = "10.0"
   maximum_instance_count        = 50
   instance_memory_in_mb         = 2048
 
-  storage_container_type            = "blobContainer"
-  storage_container_endpoint        = "${azurerm_storage_account.this.primary_blob_endpoint}${azurerm_storage_container.apps_container.name}"
-  storage_authentication_type       = "UserAssignedIdentity"
-  storage_user_assigned_identity_id = azurerm_user_assigned_identity.functions_identity.id
+  storage_container_type      = "blobContainer"
+  storage_container_endpoint  = "${azurerm_storage_account.this.primary_blob_endpoint}${azurerm_storage_container.apps_container.name}"
+  storage_authentication_type = "StorageAccountConnectionString"
+  storage_access_key          = azurerm_storage_account.this.primary_access_key
 
   identity {
     type = "SystemAssigned, UserAssigned"
@@ -45,6 +45,14 @@ resource "azurerm_function_app_flex_consumption" "this" {
 
   site_config {
     use_32_bit_worker = false
+
+    cors {
+      allowed_origins = distinct(compact([
+        "https://${azurerm_static_web_app.this.default_host_name}",
+        var.production_ui_url == "" ? "" : trimsuffix(startswith(var.production_ui_url, "http") ? var.production_ui_url : "https://${var.production_ui_url}", "/")
+      ]))
+      support_credentials = false
+    }
   }
 
   app_settings = {

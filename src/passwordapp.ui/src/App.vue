@@ -1,27 +1,35 @@
 <template>
-  <div :class="{ 'dark-mode': isDarkMode }">
-    <nav class="navbar">
-      <button class="btn" @click="toggleDarkMode">
-        <font-awesome-icon icon="moon" />
-      </button>
-    </nav>
-  <div id="app" class="container-fluid">
-    <PasskeyVaultGate v-if="e2eeEnabled" />
-    <div class="row">
-      <div class="col"></div>
-    </div>
-    <div v-if="!e2eeEnabled || sessionState.isUnlocked" class="row">
-      <div class="col">
-        <router-view/>
+  <div class="vault-app" :class="{ 'dark-mode': isDarkMode }">
+    <header class="vault-header">
+      <div class="vault-brand">
+        <h1>The Vault</h1>
+        <span>Members only</span>
       </div>
-    </div>
-  </div>
+      <nav class="vault-nav" aria-label="Vault navigation">
+        <template v-if="vaultUnlocked">
+          <router-link :to="{ name: 'Home' }"><i class="pi pi-id-card"></i> Accounts</router-link>
+          <router-link :to="{ name: 'Settings' }"><i class="pi pi-cog"></i> Settings</router-link>
+          <router-link :to="{ name: 'Trash' }"><i class="pi pi-trash"></i> Recycle bin</router-link>
+          <router-link :to="{ name: 'Audit' }"><i class="pi pi-shield"></i> Audit</router-link>
+          <router-link :to="{ name: 'Transfer' }"><i class="pi pi-sort-alt"></i> Import / Export</router-link>
+        </template>
+        <button class="vault-nav-button" type="button" @click="toggleDarkMode">
+          <font-awesome-icon icon="moon" />
+          {{ isDarkMode ? 'Light' : 'Dark' }}
+        </button>
+        <button class="vault-nav-button" type="button" @click="logOut">Sign out</button>
+      </nav>
+    </header>
+    <main id="app" class="vault-page">
+      <PasskeyVaultGate v-if="e2eeEnabled" />
+      <router-view v-if="vaultUnlocked" />
+    </main>
     <UpdatePrompt />
   </div> 
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { IdleTimer } from '@/components/utils/idle-timer.js';
 import { vaultSession } from '@/components/crypto/vault-session.js';
 import { isE2eeEnabled } from '@/components/crypto/feature-flag.js';
@@ -35,9 +43,11 @@ const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scr
 export default {
   components: { UpdatePrompt, PasskeyVaultGate },
   setup() {
-    const isDarkMode = ref(localStorage.getItem('darkMode') === 'true');
+    const savedDarkMode = localStorage.getItem('darkMode');
+    const isDarkMode = ref(savedDarkMode === null ? true : savedDarkMode === 'true');
     const e2eeEnabled = isE2eeEnabled();
     const sessionState = ref({ isUnlocked: vaultSession.isUnlocked, unlockedAt: vaultSession.unlockedAt });
+    const vaultUnlocked = computed(() => !e2eeEnabled || sessionState.value.isUnlocked);
 
     const toggleDarkMode = () => {
       isDarkMode.value = !isDarkMode.value;
@@ -47,6 +57,10 @@ export default {
       } else {
         document.body.classList.remove('dark-mode');
       }
+    };
+
+    const logOut = () => {
+      Authentication.signOut();
     };
 
     if (isDarkMode.value) {
@@ -113,7 +127,9 @@ export default {
       isDarkMode,
       e2eeEnabled,
       sessionState,
+      vaultUnlocked,
       toggleDarkMode,
+      logOut,
     };
   },
 };

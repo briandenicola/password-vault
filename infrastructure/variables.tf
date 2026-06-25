@@ -8,7 +8,8 @@ variable "tags" {
 }
 
 variable "enable_cosmosdb_free_tier" {
-  description = "CosmosDB SKU"
+  description = "Enable the Azure Cosmos DB free tier for the account. Azure allows only one free-tier Cosmos account per subscription, and this is only intended for new accounts."
+  type        = bool
   default     = true
 }
 
@@ -51,7 +52,7 @@ variable "aad_tenant_id" {
 }
 
 variable "aad_audience" {
-  description = "Accepted audience(s) for API bearer tokens, comma-separated (e.g. api://password-vault)"
+  description = "Required when API authentication is enabled. Accepted audience(s) for API bearer tokens, comma-separated (for example the API app-id URI and/or client id)."
   default     = ""
 }
 

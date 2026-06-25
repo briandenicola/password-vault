@@ -1,6 +1,19 @@
-p {
-    font-weight: bold;
-    font-size: 50px;
-    text-align: center;
-    color: #0b0ff1e0;
+.not-found-screen {
+    max-width: 32rem;
+    margin: 0 auto;
+}
+
+.not-found-title {
+    margin: 0 0 .5rem;
+    color: var(--vault-text);
+    font-family: var(--vault-serif);
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.not-found-message {
+    margin: 0;
+    color: var(--vault-muted);
+    font-size: .875rem;
+    line-height: 1.5;
 }

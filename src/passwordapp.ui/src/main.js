@@ -15,6 +15,7 @@ import Select from 'primevue/select'
 import Dialog from 'primevue/dialog'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import Paginator from 'primevue/paginator'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
 import Tooltip from 'primevue/tooltip'
@@ -37,6 +38,7 @@ import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import Axios from 'axios'
 import './registerServiceWorker'
 import './css/main.css';
+import { configureAuthenticatedAxios } from './components/api/authenticated-axios.js';
 
 let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? true : false;
 
@@ -54,12 +56,9 @@ let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? 
   Axios.defaults.baseURL = process.env.VUE_APP_API_ENDPOINT;
 
   await Authentication.initialize();
-  if (Authentication.isAuthenticated()) {
-    const token = await Authentication.getBearerToken();
-    if (token) {
-      Axios.defaults.headers.common['Authorization'] = "Bearer ".concat(token);
-    }
-  }
+  configureAuthenticatedAxios(Axios, Authentication, {
+    enabled: process.env.VUE_APP_REQUIRES_AUTHENTICATION == 'true',
+  });
 
   if(requiresAppInsights ) {
     const clickPluginInstance = new ClickAnalyticsPlugin();
@@ -100,6 +99,7 @@ let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? 
   app.component('Dialog', Dialog);
   app.component('DataTable', DataTable);
   app.component('Column', Column);
+  app.component('Paginator', Paginator);
   app.component('Tag', Tag);
   app.component('Message', Message);
   app.directive('tooltip', Tooltip);

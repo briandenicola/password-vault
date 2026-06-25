@@ -51,6 +51,32 @@ namespace PasswordService.Common
             };
         }
 
+        /// <summary>Validate required auth settings when token validation is enabled.</summary>
+        public void Validate()
+        {
+            if (TryGetConfigurationError() is { } error)
+            {
+                throw new InvalidOperationException(error);
+            }
+        }
+
+        public string? TryGetConfigurationError()
+        {
+            if (!Enabled)
+            {
+                return null;
+            }
+
+            if (string.IsNullOrWhiteSpace(TenantId))
+            {
+                return "AAD_TENANT_ID is required when AUTH_ENABLED is not false.";
+            }
+
+            return Audiences.Count == 0
+                ? "AAD_AUDIENCE is required when AUTH_ENABLED is not false."
+                : null;
+        }
+
         private static IReadOnlyList<string> Split(string? raw) =>
             string.IsNullOrWhiteSpace(raw)
                 ? Array.Empty<string>()

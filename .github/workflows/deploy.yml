@@ -20,6 +20,11 @@ on:
         type: choice
         default: all
         options: [all, api, ui, maintenance]
+      confirm_main:
+        description: Type deploy-main to manually deploy from main
+        type: string
+        required: false
+        default: ''
   push:
     branches: [main]
     paths:
@@ -47,7 +52,8 @@ jobs:
     name: Deploy API
     if: >-
       github.event_name == 'push' ||
-      contains(fromJSON('["all","api"]'), github.event.inputs.component)
+      (contains(fromJSON('["all","api"]'), github.event.inputs.component) &&
+       (github.ref_name != 'main' || github.event.inputs.confirm_main == 'deploy-main'))
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -72,7 +78,8 @@ jobs:
     name: Deploy UI
     if: >-
       github.event_name == 'push' ||
-      contains(fromJSON('["all","ui"]'), github.event.inputs.component)
+      (contains(fromJSON('["all","ui"]'), github.event.inputs.component) &&
+       (github.ref_name != 'main' || github.event.inputs.confirm_main == 'deploy-main'))
     runs-on: ubuntu-latest
     environment: production
     env:
@@ -120,7 +127,8 @@ jobs:
     if: >-
       (github.event_name == 'push' &&
        contains(toJSON(github.event.commits.*.modified), 'src/passwordapp.maintenance/')) ||
-      contains(fromJSON('["all","maintenance"]'), github.event.inputs.component)
+      (contains(fromJSON('["all","maintenance"]'), github.event.inputs.component) &&
+       (github.ref_name != 'main' || github.event.inputs.confirm_main == 'deploy-main'))
     runs-on: ubuntu-latest
     environment: production
     steps:

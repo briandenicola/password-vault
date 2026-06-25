@@ -345,6 +345,7 @@ $passwordAllScopeId = Get-ObjectProperty $passwordAllScope "id"
 if (-not $passwordAllScopeId) {
     throw "Unable to resolve the $scopeValue scope id for the API app registration."
 }
+$apiAudience = "$functionUrl,$($apiApp.appId)"
 $requiredResourceAccess = Merge-RequiredResourceAccess (Get-ObjectProperty $uiApp "requiredResourceAccess") $apiApp.appId $passwordAllScopeId
 
 Write-Host "Configuring UI app registration: $UiDisplayName"
@@ -366,13 +367,13 @@ else {
 Set-EnvValues $EnvFile @{
     AAD_CLIENT_ID        = $uiApp.appId
     AAD_TENANT_ID        = $tenantId
-    AAD_AUDIENCE         = $functionUrl
+    AAD_AUDIENCE         = $apiAudience
     AAD_SCOPE            = $scopeUri
     VUE_APP_AAD_CLIENT_ID = $uiApp.appId
     VUE_APP_AAD_TENANT_ID = $tenantId
     VUE_APP_AAD_SCOPE    = $scopeUri
     TF_VAR_aad_tenant_id = $tenantId
-    TF_VAR_aad_audience  = $functionUrl
+    TF_VAR_aad_audience  = $apiAudience
 }
 
 Write-Host ""
@@ -380,7 +381,7 @@ Write-Host "Entra configuration complete."
 Write-Host "API app registration: $ApiDisplayName ($($apiApp.appId))"
 Write-Host "UI app registration:  $UiDisplayName ($($uiApp.appId))"
 Write-Host "Tenant ID:            $tenantId"
-Write-Host "API audience:         $functionUrl"
+Write-Host "API audience:         $apiAudience"
 Write-Host "SPA scope:            $scopeUri"
 Write-Host "Redirect URIs:        $($redirectUris -join ', ')"
 Write-Host "Updated env file:     $EnvFile"

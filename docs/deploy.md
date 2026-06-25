@@ -51,7 +51,7 @@ Taskfile owns infrastructure/setup. GitHub Actions owns code deployment:
 * **Infrastructure** (`.github/workflows/infra.yml`) — `task plan` on PRs that
   touch `infrastructure/**`, and `task apply` on merge to `main`. State lives in
   the `azurerm` remote backend (`providers.tf`).
-* **Deploy** (`.github/workflows/deploy.yml`) — deploys API, UI, and maintenance code directly. Trigger manually (pick a component) or on merge to `main` for the paths that changed.
+* **Deploy** (`.github/workflows/deploy.yml`) — deploys API, UI, and maintenance code directly. Trigger manually (pick a component) or on merge to `main` for the paths that changed. Manual runs against `main` require the `confirm_main` input to be exactly `deploy-main`; the `task deploy:*` wrappers also refuse `main` unless `-AllowMain` is passed.
 
 **Authentication is OIDC only (CD-3)** — Azure login uses
 [federated credentials](https://learn.microsoft.com/azure/active-directory/workload-identities/workload-identity-federation),

@@ -65,7 +65,8 @@
               :options="separatorChoices"
               optionLabel="text"
               optionValue="value"
-              size="small" />
+              size="small"
+              class="vault-select" />
           </div>
           <span class="me-3"><Checkbox v-model="passphraseOptions.capitalize" :binary="true" inputId="gen-cap" /> <label for="gen-cap" class="ms-1">Capitalize</label></span>
           <span class="me-3"><Checkbox v-model="passphraseOptions.includeNumber" :binary="true" inputId="gen-num" /> <label for="gen-num" class="ms-1">Add a number</label></span>

@@ -1,40 +1,39 @@
 <template>
-  <div class="container-fluid">
-    <h2 class="mb-3">Import / Export</h2>
+  <div class="container-fluid vault-screen">
+    <div class="vault-page-title">
+      <h2>Import &amp; export</h2>
+      <p>Bring the band in, or take the set on the road.</p>
+    </div>
 
-    <div class="row navbar navbar-default mb-3">
-      <div class="col table-responsive">
-        | <router-link :to="{ name: 'Home' }">Back to Vault</router-link> |
+    <div class="vault-grid">
+      <div class="card vault-action-card mb-3">
+        <div class="card-body">
+          <div class="vault-action-icon"><i class="pi pi-download"></i></div>
+          <h3>Export vault</h3>
+          <p class="mb-2">
+            Download every account to a CSV file (columns: name, url, username,
+            password, notes, tags). It re-imports here and into most browsers and
+            password managers.
+          </p>
+          <Message severity="warn" class="mb-3">
+            The exported file contains your passwords in plain text. Store it
+            securely and delete it when you're done.
+          </Message>
+          <Button
+            label="Export to CSV"
+            icon="pi pi-download"
+            :loading="exporting"
+            @click="exportCsv" />
+          <span v-if="exportMessage" class="ms-3 text-success">{{ exportMessage }}</span>
+          <Message v-if="exportError" severity="error" class="mt-3">{{ exportError }}</Message>
+        </div>
       </div>
     </div>
 
-    <!-- Export -->
-    <div class="card mb-3">
-      <div class="card-header">Export to CSV</div>
+    <div class="card vault-import-panel mb-3">
       <div class="card-body">
-        <p class="mb-2">
-          Download every account to a CSV file (columns: name, url, username,
-          password, notes, tags). It re-imports here and into most browsers and
-          password managers.
-        </p>
-        <Message severity="warn" class="mb-3">
-          The exported file contains your passwords in plain text. Store it
-          securely and delete it when you're done.
-        </Message>
-        <Button
-          label="Export to CSV"
-          icon="pi pi-download"
-          :loading="exporting"
-          @click="exportCsv" />
-        <span v-if="exportMessage" class="ms-3 text-success">{{ exportMessage }}</span>
-      </div>
-    </div>
-    <Message v-if="exportError" severity="error" class="mb-3">{{ exportError }}</Message>
-
-    <!-- Import -->
-    <div class="card mb-3">
-      <div class="card-header">Import from CSV</div>
-      <div class="card-body">
+        <div class="vault-action-icon"><i class="pi pi-upload"></i></div>
+        <h3>Import accounts</h3>
         <p class="mb-2">
           Import accounts from a CSV file. The importer recognises this app's
           export plus common Bitwarden, 1Password and browser column names. Rows
@@ -54,7 +53,7 @@
             {{ fileName }}.<span v-if="skipped"> {{ skipped }} row{{ skipped === 1 ? '' : 's' }} will be skipped (missing fields).</span>
           </Message>
 
-          <DataTable v-if="pending.length" :value="pending" stripedRows size="small" :rows="10" paginator responsiveLayout="stack" class="mb-2">
+          <DataTable v-if="pending.length" :value="pending" stripedRows size="small" :rows="10" paginator responsiveLayout="stack" class="vault-table mb-2">
             <Column field="accountName" header="Account">
               <template #body="{ data }"><span class="text-lowercase">{{ data.accountName }}</span></template>
             </Column>

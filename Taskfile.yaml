@@ -11,7 +11,7 @@ dotenv:
 vars:
   TAG: "Password Vault on Azure Functions (New)"
   DEFAULT_REGION: southcentralus
-  COSMOSDB_FREE_TIER: false
+  COSMOSDB_FREE_TIER: true
   DEPLOY_MAINTENANCE: false
   ADD_CUSTOM_DOMAIN: false 
   APP_REQUIRES_AUTHENTICATION: true
@@ -166,7 +166,8 @@ tasks:
   # COSMOSDB is auto-derived from the deployed infra (Terraform output), so no
   # manual `export COSMOSDB=...` is needed. Override it by exporting COSMOSDB or
   # adding it to infrastructure/.env (e.g. to run against a backup/offline).
-  # AesKey/AesIV are sourced from infrastructure/.env (ENCRYPTION_*).
+  # AesKey/AesIV are read from local env when present; otherwise vault-migrate
+  # prompts interactively so secrets do not need to be stored in infrastructure/.env.
   migrate:backup:
     desc: Snapshot every vault document to a timestamped JSON file
     dir: ./src/passwordapp.tools
@@ -222,7 +223,7 @@ tasks:
       COSMOS_COLLECTION_NAME: Passwords
 
   migrate:import:
-    desc: MIG-4 — import/transform a backup into the new E2EE store (dry run unless --apply is passed)
+    desc: Restore a JSON backup into the target vault store (dry run unless --apply is passed)
     dir: ./src/passwordapp.tools
     cmds:
     - dotnet run -- import {{.CLI_ARGS}}
