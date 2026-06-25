@@ -11,7 +11,7 @@ namespace PasswordService.API
                 "%COSMOS_KEY_COLLECTION_NAME%",
                 PartitionKey = "%COSMOS_KEY_PARTITION_KEY%",
                 Connection = "COSMOSDB")]
-            public BackupSettingsRecord? Settings { get; set; }
+            public BackupSettingsRecord? SavedSettings { get; set; }
 
             [HttpResult]
             public HttpResponseData Response { get; set; } = default!;
@@ -46,7 +46,7 @@ namespace PasswordService.API
                 settings.LastError = validationError;
                 return new RunVaultBackupNowOutput
                 {
-                    Settings = settings,
+                    SavedSettings = settings,
                     Response = await JsonResponse(req, HttpStatusCode.BadRequest, settings),
                 };
             }
@@ -56,7 +56,7 @@ namespace PasswordService.API
                 await CreateVaultBackupAsync(passwordCollection, settings, now, "Manual vault backup");
                 return new RunVaultBackupNowOutput
                 {
-                    Settings = settings,
+                    SavedSettings = settings,
                     Response = await JsonResponse(req, HttpStatusCode.OK, settings),
                 };
             }
@@ -67,7 +67,7 @@ namespace PasswordService.API
                 _logger.LogError(ex, "Manual vault backup failed.");
                 return new RunVaultBackupNowOutput
                 {
-                    Settings = settings,
+                    SavedSettings = settings,
                     Response = await JsonResponse(req, HttpStatusCode.InternalServerError, settings),
                 };
             }
