@@ -27,16 +27,19 @@ The main resource group hosts the running vault:
 | Component | Resource(s) | Notes |
 |-----------|-------------|-------|
 | **Cosmos DB** | `azurerm_cosmosdb_account` + SQL database `AccountPasswords` | Session consistency, system-assigned identity, free tier enabled by default for new accounts unless `COSMOSDB_FREE_TIER=false` is set. |
-| → Containers | `Passwords`, `VaultKeys` | Both partitioned on `/PartitionKey`. `VaultKeys` (OFF-4 §5B) holds the opaque vault-key record and is isolated so it never appears in the passwords list. |
+| → Containers | `Passwords`, `VaultKeys` | Both partitioned on `/PartitionKey`. `VaultKeys` (OFF-4 §5B) holds the opaque vault-key record and the server-side encrypted backup schedule/status so those records never appear in the passwords list. |
 | **Key Vault** | `azurerm_key_vault` + secrets | RBAC-authorized. Secrets: `aes-encryption-key`, `aes-encryption-iv`, `cosmosdb-connection-string`, `appinsights-connection-string`, `appinsights-key`. |
 | **Function App** | `azurerm_function_app_flex_consumption` on a Linux Flex Consumption `azurerm_service_plan` (`FC1`) | .NET 10 isolated worker; code is deployed by GitHub Actions using the Azure Functions deploy action. HTTP triggers are `Anonymous` (guarded by Entra middleware, AC-2). |
 | **Identity & RBAC** | `azurerm_user_assigned_identity.functions_identity` + role assignments | Function reads Key Vault (`Key Vault Secrets User`) and storage (`Blob Owner`/`Contributor`) via managed identity. A deployer KV access assignment supports `task` runs. |
-| **Storage** | `azurerm_storage_account` + `app` container | Flex Consumption deployment storage for function code and runtime artifacts. |
+| **Storage** | `azurerm_storage_account` + `app`, `vault-backups` containers | Flex Consumption deployment storage for function code/runtime artifacts plus private zipped encrypted vault backup archives. |
 | **Observability** | `azurerm_log_analytics_workspace` + `azurerm_application_insights` | Connection string/key stored in Key Vault and referenced by the Function App. |
 | **UI hosting** | `azurerm_static_web_app` (+ optional `..._custom_domain`) | Vue 3 SPA deployed by GitHub Actions via the SWA CLI. Custom domain gated by `add_custom_domain`. |
 
+## Scheduled encrypted backups
+The .NET API Function App owns scheduled vault backups. A timer trigger (`BACKUP_TIMER_SCHEDULE`, default every 15 minutes) checks the schedule saved from the Settings page, exports the encrypted password documents as-is, writes `passwords.json` and `manifest.json` into a zip archive, and uploads it to the private `vault-backups` storage container. The backup process does not decrypt password values.
+
 ## Maintenance resource group _(optional)_
-Created when `deploy_maintenance_infrastructure = true` (`infrastructure/maintenance/`): its own resource group, storage account + `app` container, Linux service plan, **Python Function App** (keep-alive + backup), a user-assigned identity and the matching storage role assignments.
+Created when `deploy_maintenance_infrastructure = true` (`infrastructure/maintenance/`): its own resource group, storage account + `app` container, Linux service plan, **Python Function App** (keep-alive + legacy backup), a user-assigned identity and the matching storage role assignments. The API-hosted scheduled encrypted backup feature is intended to replace this optional project after rollout.
 
 ## CI/CD & supply chain
 * **Workflows** (`.github/workflows/`): `ci.yml` (build/test/lint + `terraform fmt`/`validate` on every PR), `infra.yml` (`task plan` on PR, `task apply` on `main` behind the `production` Environment), `deploy.yml` (`task deploy-*`, OIDC, Environment-gated).

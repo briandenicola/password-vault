@@ -61,6 +61,9 @@ resource "azurerm_function_app_flex_consumption" "this" {
     AAD_TENANT_ID                         = var.aad_tenant_id
     AAD_AUDIENCE                          = var.aad_audience
     AAD_ALLOWED_OIDS                      = var.aad_allowed_oids
+    BACKUP_STORAGE_ACCOUNT_NAME           = azurerm_storage_account.this.name
+    BACKUP_STORAGE_CONTAINER_NAME         = azurerm_storage_container.vault_backups.name
+    BACKUP_TIMER_SCHEDULE                 = "0 */15 * * * *"
     APPLICATIONINSIGHTS_CONNECTION_STRING = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.appinsights_connection_string.id})"
     APPINSIGHTS_INSTRUMENTATIONKEY        = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.appinsights_key.id})"
   }

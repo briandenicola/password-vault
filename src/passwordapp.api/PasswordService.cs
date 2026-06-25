@@ -5,6 +5,9 @@ namespace PasswordService.API
     {
         private ILogger<PasswordService> _logger;
         private string _partitionKey;
+        private string _keyPartitionKey;
+        private string _backupStorageAccountName;
+        private string _backupStorageContainerName;
 
         private Encryptor _encryptor; 
 
@@ -16,6 +19,9 @@ namespace PasswordService.API
                 Environment.GetEnvironmentVariable("AesIV", EnvironmentVariableTarget.Process) ?? string.Empty
             );
             _partitionKey = Environment.GetEnvironmentVariable("COSMOS_PARTITION_KEY", EnvironmentVariableTarget.Process) ?? string.Empty;
+            _keyPartitionKey = Environment.GetEnvironmentVariable("COSMOS_KEY_PARTITION_KEY", EnvironmentVariableTarget.Process) ?? "VaultKeys";
+            _backupStorageAccountName = Environment.GetEnvironmentVariable("BACKUP_STORAGE_ACCOUNT_NAME", EnvironmentVariableTarget.Process) ?? string.Empty;
+            _backupStorageContainerName = Environment.GetEnvironmentVariable("BACKUP_STORAGE_CONTAINER_NAME", EnvironmentVariableTarget.Process) ?? "vault-backups";
         }
     }
 }
