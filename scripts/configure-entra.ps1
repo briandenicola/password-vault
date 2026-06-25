@@ -77,6 +77,14 @@ function Get-ObjectProperty {
         return $null
     }
 
+    if ($Object -is [System.Collections.IDictionary]) {
+        if ($Object.Contains($Name)) {
+            return $Object[$Name]
+        }
+
+        return $null
+    }
+
     $property = $Object.PSObject.Properties[$Name]
     if ($null -eq $property) {
         return $null
@@ -187,6 +195,17 @@ function Merge-AppRoles {
     }
 }
 
+function Convert-ResourceAccess {
+    param($ResourceAccess)
+
+    @($ResourceAccess) | ForEach-Object {
+        [ordered]@{
+            id   = Get-ObjectProperty $_ "id"
+            type = Get-ObjectProperty $_ "type"
+        }
+    }
+}
+
 function Merge-RequiredResourceAccess {
     param(
         $ExistingRequiredResourceAccess,
@@ -194,7 +213,17 @@ function Merge-RequiredResourceAccess {
         [Parameter(Mandatory = $true)][string]$PasswordAllScopeId
     )
 
-    $resources = @($ExistingRequiredResourceAccess) | Where-Object { (Get-ObjectProperty $_ "resourceAppId") -ne $ApiAppId }
+    $resources = @($ExistingRequiredResourceAccess) |
+        Where-Object {
+            $resourceAppId = Get-ObjectProperty $_ "resourceAppId"
+            $resourceAppId -and $resourceAppId -ne $ApiAppId
+        } |
+        ForEach-Object {
+            [ordered]@{
+                resourceAppId  = Get-ObjectProperty $_ "resourceAppId"
+                resourceAccess = @(Convert-ResourceAccess (Get-ObjectProperty $_ "resourceAccess"))
+            }
+        }
     $apiResource = [ordered]@{
         resourceAppId  = $ApiAppId
         resourceAccess = @(
@@ -216,7 +245,7 @@ function Update-GraphApplication {
 
     $tempFile = New-TemporaryFile
     try {
-        $Body | ConvertTo-Json -Depth 20 | Set-Content -Path $tempFile -Encoding utf8
+        ConvertTo-Json -InputObject $Body -Depth 20 | Set-Content -Path $tempFile -Encoding utf8
         $null = Invoke-TextCommand "az" @(
             "rest",
             "--method", "PATCH",
@@ -306,9 +335,9 @@ Update-GraphApplication $apiApp.id @{
     }
     api            = @{
         requestedAccessTokenVersion = 2
-        oauth2PermissionScopes      = $apiScopes
+        oauth2PermissionScopes      = @($apiScopes)
     }
-    appRoles       = $apiRoles
+    appRoles       = @($apiRoles)
 }
 
 $passwordAllScope = @($apiScopes) | Where-Object { (Get-ObjectProperty $_ "value") -eq $scopeValue } | Select-Object -First 1
@@ -323,7 +352,7 @@ Update-GraphApplication $uiApp.id @{
     spa                    = @{
         redirectUris = $redirectUris
     }
-    requiredResourceAccess = $requiredResourceAccess
+    requiredResourceAccess = @($requiredResourceAccess)
 }
 
 if ($GrantAdminConsent) {
