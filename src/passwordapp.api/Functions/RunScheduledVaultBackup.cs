@@ -9,12 +9,12 @@ namespace PasswordService.API
                 "%COSMOS_KEY_COLLECTION_NAME%",
                 PartitionKey = "%COSMOS_KEY_PARTITION_KEY%",
                 Connection = "COSMOSDB")]
-            public BackupSettingsRecord? Settings { get; set; }
+            public BackupSettingsRecord? SavedSettings { get; set; }
         }
 
         [Function(nameof(RunScheduledVaultBackup))]
         public async Task<RunScheduledVaultBackupOutput> RunScheduledVaultBackup(
-            [TimerTrigger("%BACKUP_TIMER_SCHEDULE%")] TimerInfo timer,
+            [TimerTrigger("0 */15 * * * *")] TimerInfo timer,
             [CosmosDBInput(
                 "%COSMOS_DATABASE_NAME%",
                 "%COSMOS_COLLECTION_NAME%",
@@ -43,7 +43,7 @@ namespace PasswordService.API
                 settings.LastStatus = "Invalid settings";
                 settings.LastError = validationError;
                 _logger.LogWarning("Scheduled vault backup skipped: {Reason}", validationError);
-                return new RunScheduledVaultBackupOutput { Settings = settings };
+                return new RunScheduledVaultBackupOutput { SavedSettings = settings };
             }
 
             if (!VaultBackupScheduler.ShouldRun(settings, now))
@@ -63,7 +63,7 @@ namespace PasswordService.API
                 _logger.LogError(ex, "Scheduled vault backup failed.");
             }
 
-            return new RunScheduledVaultBackupOutput { Settings = settings };
+            return new RunScheduledVaultBackupOutput { SavedSettings = settings };
         }
 
         private async Task CreateVaultBackupAsync(

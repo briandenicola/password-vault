@@ -36,7 +36,7 @@ The main resource group hosts the running vault:
 | **UI hosting** | `azurerm_static_web_app` (+ optional `..._custom_domain`) | Vue 3 SPA deployed by GitHub Actions via the SWA CLI. Custom domain gated by `add_custom_domain`. |
 
 ## Scheduled encrypted backups
-The .NET API Function App owns scheduled vault backups. A timer trigger (`BACKUP_TIMER_SCHEDULE`, default every 15 minutes) checks the schedule saved from the Settings page, exports the encrypted password documents as-is, writes `passwords.json` and `manifest.json` into a zip archive, and uploads it to the private `vault-backups` storage container. The backup process does not decrypt password values.
+The .NET API Function App owns scheduled vault backups. A timer trigger runs every 15 minutes, checks the schedule saved from the Settings page, exports the encrypted password documents as-is, writes `passwords.json` and `manifest.json` into a zip archive, and uploads it to the private `vault-backups` storage container. The backup process does not decrypt password values.
 
 ## Maintenance resource group _(optional)_
 Created when `deploy_maintenance_infrastructure = true` (`infrastructure/maintenance/`): its own resource group, storage account + `app` container, Linux service plan, **Python Function App** (keep-alive + legacy backup), a user-assigned identity and the matching storage role assignments. The API-hosted scheduled encrypted backup feature is intended to replace this optional project after rollout.
