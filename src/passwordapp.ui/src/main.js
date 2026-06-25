@@ -56,7 +56,9 @@ let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? 
   Axios.defaults.baseURL = process.env.VUE_APP_API_ENDPOINT;
 
   await Authentication.initialize();
-  configureAuthenticatedAxios(Axios, Authentication);
+  configureAuthenticatedAxios(Axios, Authentication, {
+    enabled: process.env.VUE_APP_REQUIRES_AUTHENTICATION == 'true',
+  });
 
   if(requiresAppInsights ) {
     const clickPluginInstance = new ClickAnalyticsPlugin();

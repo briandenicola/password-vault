@@ -3,7 +3,11 @@ function isVaultApiRequest(config) {
   return url.startsWith('/api/') || url.includes('/api/');
 }
 
-export function configureAuthenticatedAxios(http, authentication) {
+export function configureAuthenticatedAxios(http, authentication, { enabled = true } = {}) {
+  if (!enabled) {
+    return;
+  }
+
   http.interceptors.request.use(async (config) => {
     if (!isVaultApiRequest(config)) {
       return config;

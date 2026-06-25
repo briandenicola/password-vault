@@ -353,7 +353,7 @@ namespace PasswordService.Tools
             }
         }
 
-        private static Encryptor DekEncryptor(string[] args)
+        private static ISecretProtector DekEncryptor(string[] args)
         {
             var dek = OptionValue(args, "--dek-base64") ?? Environment.GetEnvironmentVariable("VAULT_DEK_BASE64");
             if (string.IsNullOrWhiteSpace(dek))
@@ -361,8 +361,7 @@ namespace PasswordService.Tools
                 throw new InvalidOperationException("missing vault DEK: set VAULT_DEK_BASE64 or pass --dek-base64 <base64>");
             }
 
-            _ = Convert.FromBase64String(dek);
-            return new Encryptor(dek, Convert.ToBase64String(new byte[16]));
+            return new E2eeDekProtector(dek);
         }
 
         private static SourceEncryptorSelection SourceBackupEncryptor(Config config)

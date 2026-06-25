@@ -12,6 +12,9 @@ function makeHttp() {
       },
     },
     async apply(config) {
+      if (!requestHandler) {
+        return config;
+      }
       return requestHandler(config);
     },
   };
@@ -48,5 +51,16 @@ describe('configureAuthenticatedAxios', () => {
 
     await expect(http.apply({ url: '/api/passwords' }))
       .rejects.toThrow('Unable to acquire an API access token');
+  });
+
+  it('leaves local auth-disabled API requests untouched', async () => {
+    const http = makeHttp();
+    const authentication = { getBearerToken: vi.fn() };
+
+    configureAuthenticatedAxios(http, authentication, { enabled: false });
+    const config = await http.apply({ url: '/api/passwords' });
+
+    expect(authentication.getBearerToken).not.toHaveBeenCalled();
+    expect(config.headers).toBeUndefined();
   });
 });

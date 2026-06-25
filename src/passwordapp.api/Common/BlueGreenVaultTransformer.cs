@@ -18,7 +18,7 @@ namespace PasswordService.Common
 
         public sealed record ParityResult(bool Success, int AccountsChecked, int SecretsChecked, IReadOnlyList<string> Errors);
 
-        public static ImportPlan PlanImport(Encryptor oldEncryptor, Encryptor dekEncryptor, IEnumerable<JObject> sourceDocs)
+        public static ImportPlan PlanImport(Encryptor oldEncryptor, ISecretProtector dekProtector, IEnumerable<JObject> sourceDocs)
         {
             var documents = new List<JObject>();
             var errors = new List<string>();
@@ -27,7 +27,7 @@ namespace PasswordService.Common
             foreach (var source in sourceDocs)
             {
                 var id = Id(source);
-                var result = TransformDocument(oldEncryptor, dekEncryptor, source);
+                var result = TransformDocument(oldEncryptor, dekProtector, source);
                 transformed += result.SecretsTransformed;
                 alreadyNew += result.AlreadyNew;
                 if (result.Success && result.Document is not null)
@@ -45,20 +45,17 @@ namespace PasswordService.Common
             return new ImportPlan(ready, failed, transformed, alreadyNew, errors, documents);
         }
 
-        public static TransformResult TransformDocument(Encryptor oldEncryptor, Encryptor dekEncryptor, JObject source)
+        public static TransformResult TransformDocument(Encryptor oldEncryptor, ISecretProtector dekProtector, JObject source)
         {
             ArgumentNullException.ThrowIfNull(source);
             var errors = new List<string>();
             int transformed = 0, alreadyNew = 0;
 
-            var output = new JObject();
-            CopyIfPresent(source, output, "PartitionKey");
-            CopyIfPresent(source, output, "id");
-            CopyIfPresent(source, output, "SiteName");
-            CopyIfPresent(source, output, "AccountName");
+            var output = (JObject)source.DeepClone();
+            RemoveCosmosSystemProperties(output);
 
             var currentBlob = ReadStringProperty(source, "CurrentPassword");
-            var current = TransformSecret(oldEncryptor, dekEncryptor, currentBlob, "CurrentPassword");
+            var current = TransformSecret(oldEncryptor, dekProtector, currentBlob, "CurrentPassword");
             Tally(current);
             if (current.Success)
             {
@@ -77,19 +74,15 @@ namespace PasswordService.Common
                     }
 
                     var secret = ReadHistorySecret(entry);
-                    var transformedSecret = TransformSecret(oldEncryptor, dekEncryptor, secret, $"OldPasswords[{i}].Password");
+                    var transformedSecret = TransformSecret(oldEncryptor, dekProtector, secret, $"OldPasswords[{i}].Password");
                     Tally(transformedSecret);
                     if (!transformedSecret.Success)
                     {
                         continue;
                     }
 
-                    var newEntry = new JObject { ["Password"] = transformedSecret.Blob };
-                    var createdDate = FindProperty(entry, "CreatedDate");
-                    if (createdDate is not null)
-                    {
-                        newEntry["CreatedDate"] = createdDate.Value.DeepClone();
-                    }
+                    var newEntry = (JObject)entry.DeepClone();
+                    newEntry["Password"] = transformedSecret.Blob;
                     historyOutput.Add(newEntry);
                 }
             }
@@ -116,7 +109,7 @@ namespace PasswordService.Common
             }
         }
 
-        public static ParityResult VerifyParity(Encryptor oldEncryptor, Encryptor dekEncryptor, IEnumerable<JObject> oldDocs, IEnumerable<JObject> newDocs)
+        public static ParityResult VerifyParity(Encryptor oldEncryptor, ISecretProtector dekProtector, IEnumerable<JObject> oldDocs, IEnumerable<JObject> newDocs)
         {
             var errors = new List<string>();
             var oldById = IndexById(oldDocs, "old", errors);
@@ -133,7 +126,7 @@ namespace PasswordService.Common
                 }
 
                 accountsChecked++;
-                CompareSecret(id, "CurrentPassword", ReadStringProperty(oldDoc, "CurrentPassword"), oldEncryptor, ReadStringProperty(newDoc, "CurrentPassword"), dekEncryptor);
+                CompareSecret(id, "CurrentPassword", ReadStringProperty(oldDoc, "CurrentPassword"), oldEncryptor, ReadStringProperty(newDoc, "CurrentPassword"), dekProtector);
 
                 var oldHistory = FindProperty(oldDoc, "OldPasswords")?.Value as JArray ?? new JArray();
                 var newHistory = FindProperty(newDoc, "OldPasswords")?.Value as JArray ?? new JArray();
@@ -147,7 +140,7 @@ namespace PasswordService.Common
                 {
                     var oldEntry = oldHistory[i] as JObject;
                     var newEntry = newHistory[i] as JObject;
-                    CompareSecret(id, $"OldPasswords[{i}].Password", oldEntry is null ? null : ReadHistorySecret(oldEntry), oldEncryptor, newEntry is null ? null : ReadHistorySecret(newEntry), dekEncryptor);
+                    CompareSecret(id, $"OldPasswords[{i}].Password", oldEntry is null ? null : ReadHistorySecret(oldEntry), oldEncryptor, newEntry is null ? null : ReadHistorySecret(newEntry), dekProtector);
                 }
             }
 
@@ -158,7 +151,7 @@ namespace PasswordService.Common
 
             return new ParityResult(errors.Count == 0, accountsChecked, secretsChecked, errors);
 
-            void CompareSecret(string id, string where, string? oldBlob, Encryptor oldE, string? newBlob, Encryptor newE)
+            void CompareSecret(string id, string where, string? oldBlob, Encryptor oldE, string? newBlob, ISecretProtector newE)
             {
                 var oldPlain = string.IsNullOrWhiteSpace(oldBlob) ? null : SafeDecrypt(oldE, oldBlob);
                 var newPlain = string.IsNullOrWhiteSpace(newBlob) ? null : SafeDecrypt(newE, newBlob);
@@ -182,7 +175,7 @@ namespace PasswordService.Common
 
         private sealed record SecretTransform(bool Success, string? Blob, bool AlreadyNew, string? Error);
 
-        private static SecretTransform TransformSecret(Encryptor oldEncryptor, Encryptor dekEncryptor, string? sourceBlob, string where)
+        private static SecretTransform TransformSecret(Encryptor oldEncryptor, ISecretProtector dekProtector, string? sourceBlob, string where)
         {
             if (string.IsNullOrWhiteSpace(sourceBlob))
             {
@@ -192,27 +185,27 @@ namespace PasswordService.Common
             var plaintext = SafeDecrypt(oldEncryptor, sourceBlob);
             if (plaintext is not null)
             {
-                var newBlob = dekEncryptor.EncryptGcm(plaintext);
-                return VerifyNewBlob(dekEncryptor, newBlob, plaintext, where, alreadyNew: false);
+                var newBlob = dekProtector.EncryptGcm(plaintext);
+                return VerifyNewBlob(dekProtector, newBlob, plaintext, where, alreadyNew: false);
             }
 
-            plaintext = SafeDecrypt(dekEncryptor, sourceBlob);
+            plaintext = SafeDecrypt(dekProtector, sourceBlob);
             if (plaintext is not null)
             {
-                return VerifyNewBlob(dekEncryptor, sourceBlob, plaintext, where, alreadyNew: true);
+                return VerifyNewBlob(dekProtector, sourceBlob, plaintext, where, alreadyNew: true);
             }
 
             return new SecretTransform(false, null, false, $"{where}: decrypt failed");
         }
 
-        private static SecretTransform VerifyNewBlob(Encryptor dekEncryptor, string blob, string plaintext, string where, bool alreadyNew)
+        private static SecretTransform VerifyNewBlob(ISecretProtector dekProtector, string blob, string plaintext, string where, bool alreadyNew)
         {
             if (!blob.StartsWith("v2.gcm.", StringComparison.Ordinal))
             {
                 return new SecretTransform(false, null, alreadyNew, $"{where}: transformed secret is not v2.gcm");
             }
 
-            var verify = SafeDecrypt(dekEncryptor, blob);
+            var verify = SafeDecrypt(dekProtector, blob);
             return string.Equals(verify, plaintext, StringComparison.Ordinal)
                 ? new SecretTransform(true, blob, alreadyNew, null)
                 : new SecretTransform(false, null, alreadyNew, $"{where}: transform verification failed");
@@ -237,7 +230,7 @@ namespace PasswordService.Common
             return result;
         }
 
-        private static string? SafeDecrypt(Encryptor encryptor, string stored)
+        private static string? SafeDecrypt(ISecretProtector encryptor, string stored)
         {
             try
             {
@@ -278,14 +271,16 @@ namespace PasswordService.Common
             return string.IsNullOrEmpty(hmac) ? null : SecretEnvelope.FromV1(hmac, cipher).Serialize();
         }
 
-        private static void CopyIfPresent(JObject source, JObject target, string name)
+        private static void RemoveCosmosSystemProperties(JObject target)
         {
-            var prop = FindProperty(source, name);
-            if (prop is not null)
-            {
-                target[name] = prop.Value.DeepClone();
-            }
+            RemoveIfPresent(target, "_rid");
+            RemoveIfPresent(target, "_self");
+            RemoveIfPresent(target, "_etag");
+            RemoveIfPresent(target, "_attachments");
+            RemoveIfPresent(target, "_ts");
         }
+
+        private static void RemoveIfPresent(JObject target, string name) => FindProperty(target, name)?.Remove();
 
         private static string Id(JObject doc) => ReadStringProperty(doc, "id") ?? "<no-id>";
 

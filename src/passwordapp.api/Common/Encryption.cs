@@ -3,7 +3,14 @@ using System.Security.Cryptography;
 
 namespace PasswordService.Common
 {
-    public class Encryptor
+    public interface ISecretProtector
+    {
+        string EncryptGcm(string plainText);
+
+        string? DecryptStored(string stored);
+    }
+
+    public class Encryptor : ISecretProtector
     {
         // Instance state: these were previously static, which let the most recently constructed
         // Encryptor overwrite the key/IV for every other instance process-wide (a real bug under
