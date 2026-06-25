@@ -1,5 +1,5 @@
 <template>
-  <p>
+  <p class="not-found-message">
     404 - SORRY COULDN'T YOUR PAGE
   </p>
 </template>

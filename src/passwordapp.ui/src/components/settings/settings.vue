@@ -40,7 +40,7 @@
           </div>
           <div class="mb-2">
             <label class="d-block mb-1">Separator:</label>
-            <Select v-model="settings.generator.passphrase.separator" :options="separatorChoices" optionLabel="text" optionValue="value" size="small" />
+            <Select v-model="settings.generator.passphrase.separator" :options="separatorChoices" optionLabel="text" optionValue="value" size="small" class="vault-select" />
           </div>
           <span class="me-3"><Checkbox v-model="settings.generator.passphrase.capitalize" :binary="true" inputId="set-cap" /> <label for="set-cap" class="ms-1">Capitalize</label></span>
           <span class="me-3"><Checkbox v-model="settings.generator.passphrase.includeNumber" :binary="true" inputId="set-num" /> <label for="set-num" class="ms-1">Add a number</label></span>
@@ -56,19 +56,19 @@
       <div class="card-body">
         <div class="row mb-2">
           <label class="col-3 col-form-label">Sort by:</label>
-          <div class="col"><Select v-model="settings.list.sortBy" :options="sortChoices" optionLabel="text" optionValue="value" size="small" /></div>
+          <div class="col"><Select v-model="settings.list.sortBy" :options="sortChoices" optionLabel="text" optionValue="value" size="small" class="vault-select" /></div>
         </div>
         <div class="row mb-2">
           <label class="col-3 col-form-label">Direction:</label>
-          <div class="col"><Select v-model="settings.list.sortDesc" :options="directionChoices" optionLabel="text" optionValue="value" size="small" /></div>
+          <div class="col"><Select v-model="settings.list.sortDesc" :options="directionChoices" optionLabel="text" optionValue="value" size="small" class="vault-select" /></div>
         </div>
         <div class="row mb-2">
           <label class="col-3 col-form-label">Rows per page:</label>
-          <div class="col"><Select v-model="settings.list.perPage" :options="perPageChoices" size="small" /></div>
+          <div class="col"><Select v-model="settings.list.perPage" :options="perPageChoices" size="small" class="vault-select" /></div>
         </div>
         <div class="row mb-2">
           <label class="col-3 col-form-label">Flag passwords older than:</label>
-          <div class="col"><Select v-model="settings.list.staleAfterMonths" :options="staleChoices" optionLabel="text" optionValue="value" size="small" /></div>
+          <div class="col"><Select v-model="settings.list.staleAfterMonths" :options="staleChoices" optionLabel="text" optionValue="value" size="small" class="vault-select" /></div>
         </div>
       </div>
     </div>
@@ -79,11 +79,11 @@
       <div class="card-body">
         <div class="row mb-2">
           <label class="col-4 col-form-label">Auto-clear clipboard:</label>
-          <div class="col"><Select v-model="settings.security.clipboardClearSeconds" :options="clipboardClearChoices" optionLabel="text" optionValue="value" size="small" /></div>
+          <div class="col"><Select v-model="settings.security.clipboardClearSeconds" :options="clipboardClearChoices" optionLabel="text" optionValue="value" size="small" class="vault-select" /></div>
         </div>
         <div class="row mb-2">
           <label class="col-4 col-form-label">Auto-lock after idle:</label>
-          <div class="col"><Select v-model="settings.security.autoLockMinutes" :options="autoLockChoices" optionLabel="text" optionValue="value" size="small" /></div>
+          <div class="col"><Select v-model="settings.security.autoLockMinutes" :options="autoLockChoices" optionLabel="text" optionValue="value" size="small" class="vault-select" /></div>
         </div>
         <small class="text-muted d-block">
           Copied passwords are wiped from the clipboard after the selected delay. Auto-lock signs you out

@@ -1,6 +1,6 @@
-p {
+.not-found-message {
     font-weight: bold;
-    font-size: 50px;
+    font-size: 2rem;
     text-align: center;
-    color: #0b0ff1e0;
+    color: var(--vault-accent-strong);
 }

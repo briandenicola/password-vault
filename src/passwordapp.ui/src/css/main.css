@@ -323,6 +323,10 @@ body {
   min-height: 2.5rem;
 }
 
+.vault-select.p-select {
+  width: 9rem;
+}
+
 .p-inputtext::placeholder {
   color: var(--vault-muted);
 }
@@ -342,6 +346,21 @@ small.text-muted {
 
 .p-dialog {
   border: .5px solid var(--vault-border);
+}
+
+.p-dialog .p-dialog-title {
+  color: var(--vault-text);
+  font-family: var(--vault-sans);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.p-dialog .p-dialog-content p {
+  color: var(--vault-text);
+  font-size: .9375rem;
+  font-weight: 400;
+  line-height: 1.55;
+  text-align: left;
 }
 
 .form-wrapper {

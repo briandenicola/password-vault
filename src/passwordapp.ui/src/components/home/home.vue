@@ -59,8 +59,12 @@
           <Column field="lastModifiedDate" header="Last Modified" sortable>
             <template #body="{ data }">
               <div>{{ formatDate(data.lastModifiedDate) }}</div>
-              <small class="text-muted">{{ ageOf(data) }}</small>
-              <Tag v-if="isStaleRow(data)" severity="warn" value="Old" class="ms-1" v-tooltip.top="'This password hasn\'t changed in a while — consider updating it.'" />
+              <small
+                class="text-muted"
+                :class="{ 'fst-italic': isStaleRow(data) }"
+                v-tooltip.top="isStaleRow(data) ? 'This password hasn\'t changed in a while — consider updating it.' : null">
+                {{ isStaleRow(data) ? staleAgeOf(data) : ageOf(data) }}
+              </small>
             </template>
           </Column>
           <Column header="Edit/Remove">

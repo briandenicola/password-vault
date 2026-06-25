@@ -69,6 +69,9 @@ export default {
     ageOf(row) {
       return ageLabel(row && row.lastModifiedDate);
     },
+    staleAgeOf(row) {
+      return `${this.ageOf(row).replace(/\b\w/g, c => c.toUpperCase())} Old`;
+    },
     isStaleRow(row) {
       return isStale(row && row.lastModifiedDate, this.staleAfterMonths);
     },
