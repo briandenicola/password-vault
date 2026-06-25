@@ -79,6 +79,8 @@ One-time setup (operator):
 | `SWA_NAME` | `terraform output SWA_NAME` |
 | `SWA_DEFAULT_URL` | `terraform output SWA_DEFAULT_URL` |
 | `MAINTENANCE_FUNCTION_NAME` | `terraform output MAINTENANCE_FUNCTION_NAME` when maintenance infra exists |
+| `AAD_TENANT_ID` | local `AAD_TENANT_ID`, `TF_VAR_aad_tenant_id`, or `VUE_APP_AAD_TENANT_ID` |
+| `AAD_AUDIENCE` | local `AAD_AUDIENCE` or `TF_VAR_aad_audience` |
 
 It also writes these repository secrets:
 

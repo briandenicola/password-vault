@@ -112,6 +112,8 @@ Set-GhVariable "FUNCTION_URL" (Get-TerraformOutput "FUNCTION_URL")
 Set-GhVariable "SWA_NAME" (Get-TerraformOutput "SWA_NAME")
 Set-GhVariable "SWA_DEFAULT_URL" (Get-TerraformOutput "SWA_DEFAULT_URL")
 Set-GhVariable "MAINTENANCE_FUNCTION_NAME" (Get-TerraformOutput "MAINTENANCE_FUNCTION_NAME")
+Set-GhVariable "AAD_TENANT_ID" (Get-EnvValue @("AAD_TENANT_ID", "TF_VAR_aad_tenant_id", "VUE_APP_AAD_TENANT_ID"))
+Set-GhVariable "AAD_AUDIENCE" (Get-EnvValue @("AAD_AUDIENCE", "TF_VAR_aad_audience"))
 
 Set-GhSecret "APP_INSIGHTS_CONNECTION_STRING" (Get-TerraformOutput "APP_INSIGHTS_CONNECTION_STRING")
 Set-GhSecret "AAD_CLIENT_ID" (Get-EnvValue @("AAD_CLIENT_ID", "VUE_APP_AAD_CLIENT_ID"))

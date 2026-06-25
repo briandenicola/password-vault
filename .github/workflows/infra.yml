@@ -36,6 +36,8 @@ env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   TF_VAR_password_encryption_key: ${{ secrets.TF_ENCRYPTION_KEY }}
   TF_VAR_password_encryption_initialization_vector: ${{ secrets.TF_ENCRYPTION_IV }}
+  TF_VAR_aad_tenant_id: ${{ vars.AAD_TENANT_ID }}
+  TF_VAR_aad_audience: ${{ vars.AAD_AUDIENCE }}
 
 jobs:
   plan:
