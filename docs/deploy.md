@@ -1,34 +1,32 @@
 API Build & Deployment
 =============
 * The Vault API is built on dotnet10 and uses Azure Functions with HTTP Triggers.
-* It runs as a serverless API on an Linux based Azure Function
-* The build and deploy is part of the same process.
-* The deployment uploads the published code to an Azure Storage Account and the Function references the code from the storage account using the WEBSITE_RUN_FROM_PACKAGE environment variable.
+* It runs as a serverless API on Azure Functions Flex Consumption for Linux.
+* Infrastructure is provisioned with Task/Terraform. Code is deployed by GitHub Actions using the Azure Functions deploy action and Flex remote build.
 
 # Steps
-- :one: `task deploy-api`          - Builds and deploys the API to Azure Functions
-- :two: `task cors`                - Configures CORS for the API to allow access from the UI
+- :one: `task up` / `task apply` - Creates or updates infrastructure
+- :two: `task entra:configure` - Creates or updates Entra app registrations after infrastructure exists
+- :three: Run `.github/workflows/deploy.yml` with component `api`, or merge API changes to `main`
+- :four: `task cors` - Configures CORS for the API to allow access from the UI
 <p align="right">(<a href="#build">back to top</a>)</p>
 
 
 UI Build & Deployment
 =============
 * The Vault UI is built on VUE and uses Azure Static Web Apps.
-* The build and deploy is part of the same process.
-* The deployment uses the Azure Static Web Apps cli to deploy the application to Azure.
-* `task deploy-ui` generates the full `.env` for the build from Terraform outputs and the Azure CLI — **no manual `.env.production` file is required**:
+* GitHub Actions builds and deploys it with the Azure Static Web Apps CLI.
+* `.github/workflows/deploy.yml` generates the full `.env` for the build from Terraform outputs and repository secrets — **no manual `.env.production` file is required**:
     * App Insights and API endpoint come from Terraform outputs.
     * `VUE_APP_AAD_REDIRECT_URL` defaults to the Static Web App URL (`SWA_DEFAULT_URL`).
     * `VUE_APP_AAD_TENANT_ID` defaults to the signed-in `az` tenant.
     * `VUE_APP_AAD_SCOPE` is written by `task entra:configure` as the API `Password.All` scope.
     * `VUE_APP_AAD_CLIENT_ID` is written by `task entra:configure`.
-* Any value can be overridden by exporting the matching `VUE_APP_AAD_*` variable (e.g. in `infrastructure/.env`) — useful for a custom domain redirect URL.
-* If `APP_REQUIRES_AUTHENTICATION=true` and `AAD_CLIENT_ID` is empty, `deploy-ui` fails fast rather than shipping a broken sign-in.
 * For development, you can disable Entra ID authentication by setting `VUE_APP_REQUIRES_AUTHENTICATION` to false in the `.env` file. This is not recommended for production.
 
 # Steps
 - :one: Run `task entra:configure` after the infrastructure exists, then `task apply` to push the generated API auth settings.
-- :two: `task deploy-ui`          - Builds and deploys the UI to Azure Static Web Apps
+- :two: Run `.github/workflows/deploy.yml` with component `ui`, or merge UI changes to `main`
 <p align="right">(<a href="#build">back to top</a>)</p>
 
 MaintenanceDeployment
@@ -36,26 +34,23 @@ MaintenanceDeployment
 * The Maintenance API is built on Python and uses timer job with Azure Functions 
 * The Keep Alive function is used to keep the Azure Functions warm and responsive
 * The maintenance function is deployed to a separate Azure Function App
-* The build and deploy is part of the same process.
+* GitHub Actions deploys the maintenance function with the Azure Functions deploy action when maintenance infrastructure is enabled.
 
 # Steps
-- :one: `task deploy-maintenance`          - Builds and deploys the API to Azure Functions
+- :one: Run `.github/workflows/deploy.yml` with component `maintenance`, or merge maintenance changes to `main`
 <p align="right">(<a href="#build">back to top</a>)</p>
 
 
-Automated CI/CD (GitHub Actions)
+Automated code deployment (GitHub Actions)
 =============
-The same `task` targets above are also driven by GitHub Actions, so local and
-pipeline deploys never drift (**CD-7**):
+Taskfile owns infrastructure/setup. GitHub Actions owns code deployment:
 
 * **CI** (`.github/workflows/ci.yml`) — runs on every PR and push to `main`:
   API build + tests, UI lint + unit tests + build, and `terraform fmt`/`validate`.
 * **Infrastructure** (`.github/workflows/infra.yml`) — `task plan` on PRs that
   touch `infrastructure/**`, and `task apply` on merge to `main`. State lives in
   the `azurerm` remote backend (`providers.tf`).
-* **Deploy** (`.github/workflows/deploy.yml`) — runs `task deploy-api` /
-  `deploy-ui` / `deploy-maintenance`. Trigger manually (pick a component) or on
-  merge to `main` for the paths that changed.
+* **Deploy** (`.github/workflows/deploy.yml`) — deploys API, UI, and maintenance code directly. Trigger manually (pick a component) or on merge to `main` for the paths that changed.
 
 **Authentication is OIDC only (CD-3)** — Azure login uses
 [federated credentials](https://learn.microsoft.com/azure/active-directory/workload-identities/workload-identity-federation),

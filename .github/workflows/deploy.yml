@@ -2,8 +2,8 @@ name: Deploy
 
 # CD-2: deploy API, UI, and the Python maintenance function. CD-3: Azure auth
 # via OIDC federated credentials (no stored publish profile / SP secret).
-# CD-7: every job calls the same `task` target used locally, so there is no
-# drift between local and pipeline deploys.
+# Infrastructure is provisioned by Task/Terraform; this workflow owns code
+# deployment.
 #
 # Deploys are gated behind the `production` GitHub Environment — configure it to
 # require a reviewer so every deploy is approved. Nothing here can run until the
@@ -50,18 +50,19 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: '~> 1.7'
-      - uses: arduino/setup-task@v2
+      - name: Read Terraform outputs
+        id: tf
+        run: |
+          echo "function_name=$(terraform -chdir=infrastructure output -raw FUNCTION_NAME)" >> "$GITHUB_OUTPUT"
+      - name: Deploy API to Azure Functions Flex Consumption
+        uses: Azure/functions-action@v1
         with:
-          version: 3.x
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Deploy API
-        run: task deploy-api
+          app-name: ${{ steps.tf.outputs.function_name }}
+          package: src/passwordapp.api
+          remote-build: true
 
   ui:
     name: Deploy UI
@@ -85,14 +86,40 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: '~> 1.7'
-      - uses: arduino/setup-task@v2
-        with:
-          version: 3.x
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install SWA CLI
         run: npm install -g @azure/static-web-apps-cli
+      - name: Read Terraform outputs
+        id: tf
+        run: |
+          echo "function_url=$(terraform -chdir=infrastructure output -raw FUNCTION_URL)" >> "$GITHUB_OUTPUT"
+          echo "app_insights_connection_string=$(terraform -chdir=infrastructure output -raw APP_INSIGHTS_CONNECTION_STRING)" >> "$GITHUB_OUTPUT"
+          echo "swa_name=$(terraform -chdir=infrastructure output -raw SWA_NAME)" >> "$GITHUB_OUTPUT"
+          echo "swa_default_url=$(terraform -chdir=infrastructure output -raw SWA_DEFAULT_URL)" >> "$GITHUB_OUTPUT"
+      - name: Resolve Static Web App deployment token
+        id: swa
+        run: |
+          token="$(az staticwebapp secrets list --name "${{ steps.tf.outputs.swa_name }}" --query properties.apiKey -o tsv)"
+          echo "::add-mask::$token"
+          echo "deployment_token=$token" >> "$GITHUB_OUTPUT"
+      - name: Build UI
+        working-directory: src/passwordapp.ui
+        run: |
+          {
+            echo 'VUE_APP_TITLE="Password Vault"'
+            echo 'VUE_APP_REQUIRES_AUTHENTICATION=true'
+            echo 'VUE_APP_REQUIRES_APP_INSIGHTS=true'
+            echo 'VUE_APP_INSIGHTS_CONNECTION_STRING="${{ steps.tf.outputs.app_insights_connection_string }}"'
+            echo 'VUE_APP_API_ENDPOINT="${{ steps.tf.outputs.function_url }}"'
+            echo 'VUE_APP_AAD_REDIRECT_URL="${{ steps.tf.outputs.swa_default_url }}"'
+            echo 'VUE_APP_AAD_CLIENT_ID="${{ secrets.AAD_CLIENT_ID }}"'
+            echo 'VUE_APP_AAD_TENANT_ID="${{ secrets.AZURE_TENANT_ID }}"'
+            echo 'VUE_APP_AAD_SCOPE="${{ steps.tf.outputs.function_url }}/Password.All"'
+          } > .env
+          npm install
+          npm run build
       - name: Deploy UI
-        run: task deploy-ui
+        working-directory: src/passwordapp.ui
+        run: swa deploy ./dist --deployment-token "${{ steps.swa.outputs.deployment_token }}" --env production
 
   maintenance:
     name: Deploy maintenance function
@@ -109,15 +136,16 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: '~> 1.7'
-      - uses: arduino/setup-task@v2
+      - name: Read Terraform outputs
+        id: tf
+        run: |
+          echo "function_name=$(terraform -chdir=infrastructure output -raw MAINTENANCE_FUNCTION_NAME)" >> "$GITHUB_OUTPUT"
+      - name: Deploy maintenance function to Azure Functions Flex Consumption
+        uses: Azure/functions-action@v1
         with:
-          version: 3.x
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Deploy maintenance function
-        run: task deploy-maintenance
+          app-name: ${{ steps.tf.outputs.function_name }}
+          package: src/passwordapp.maintenance
+          remote-build: true
