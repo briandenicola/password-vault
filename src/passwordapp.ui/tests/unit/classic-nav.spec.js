@@ -28,4 +28,9 @@ describe('Classic theme navigation', () => {
     expect(mainCss).toMatch(/body\.theme-classic \.vault-nav-classic \.classic-sign-out \{[\s\S]*position: absolute;[\s\S]*top: \.85rem;[\s\S]*left: 1rem;/);
     expect(mainCss).toMatch(/body\.theme-classic \.classic-sign-out-text \{[\s\S]*clip: rect\(0, 0, 0, 0\);/);
   });
+
+  it('left-aligns the Classic mobile nav with the account table', () => {
+    expect(mainCss).toMatch(/body\.theme-classic \.vault-nav \{[\s\S]*justify-content: flex-start;/);
+    expect(mainCss).toMatch(/body\.theme-classic \.vault-nav-classic \{[\s\S]*padding-inline: 1\.5rem 1rem;/);
+  });
 });
