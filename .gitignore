@@ -372,3 +372,9 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 .DS_Store
+
+# Local Copilot/Squad state
+.copilot/
+.squad/
+# Squad: SubSquad activation file (local to this machine)
+.squad-workstream
