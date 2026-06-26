@@ -201,6 +201,19 @@ export default {
       this.alertModalContent = content;
       this.showAlertModal = true;
     },
+    showCopyToast() {
+      const message = this.copySuccessMessage();
+      if (this.$toast && typeof this.$toast.add === 'function') {
+        this.$toast.add({
+          severity: 'success',
+          summary: 'Copied',
+          detail: message,
+          life: 3500,
+        });
+        return;
+      }
+      this.showAlert('Success. . .', message);
+    },
     displayPassword(passwordId) {
       PasswordService.get(passwordId)
       .then((response) => {
@@ -223,7 +236,7 @@ export default {
     writeSecretToClipboard(text) {
       return copyWithAutoClear(text, this.clipboardClearSeconds)
         .then(() => {
-          this.showAlert('Success. . .', this.copySuccessMessage());
+          this.showCopyToast();
         })
         .catch(err => {
           this.requestClipboardRetry(text, err);
@@ -251,7 +264,7 @@ export default {
         .then(() => {
           this.showClipboardRetryModal = false;
           this.clipboardRetryText = '';
-          this.showAlert('Success. . .', this.copySuccessMessage());
+          this.showCopyToast();
         })
         .catch(err => {
           this.clipboardRetryError = String(err);

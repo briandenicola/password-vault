@@ -611,6 +611,37 @@ body.theme-classic .vault-icon-button.p-button {
   border-radius: 0;
 }
 
+.p-toast {
+  width: min(26rem, calc(100vw - 2rem));
+}
+
+.p-toast .p-toast-message {
+  border: .5px solid var(--vault-border);
+  border-radius: .875rem;
+  background: var(--vault-surface) !important;
+  color: var(--vault-text);
+  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, .32);
+}
+
+.p-toast .p-toast-message-content {
+  align-items: center;
+  padding: 1rem 1.125rem;
+}
+
+.p-toast .p-toast-summary {
+  color: var(--vault-text);
+  font-weight: 700;
+}
+
+.p-toast .p-toast-detail {
+  color: var(--vault-muted);
+  line-height: 1.45;
+}
+
+body.theme-classic .p-toast .p-toast-message {
+  border-radius: .25rem;
+}
+
 .p-inputtext,
 .p-textarea,
 .p-select,

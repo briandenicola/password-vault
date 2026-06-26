@@ -20,6 +20,8 @@ import Paginator from 'primevue/paginator'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
 import Tooltip from 'primevue/tooltip'
+import Toast from 'primevue/toast'
+import ToastService from 'primevue/toastservice'
 
 import 'bootstrap/dist/css/bootstrap.css'
 
@@ -90,6 +92,7 @@ let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? 
       },
     },
   });
+  app.use(ToastService);
 
   app.component('font-awesome-icon', FontAwesomeIcon);
   app.component('Button', Button);
@@ -104,6 +107,7 @@ let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? 
   app.component('Paginator', Paginator);
   app.component('Tag', Tag);
   app.component('Message', Message);
+  app.component('Toast', Toast);
   app.directive('tooltip', Tooltip);
 
   app.mount('#app');
