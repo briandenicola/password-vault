@@ -16,8 +16,8 @@
       </button>
       <nav v-if="currentTheme === 'classic'" id="vault-navigation" class="vault-nav vault-nav-classic" aria-label="Vault navigation">
         <template v-if="vaultUnlocked">
-          <router-link :to="{ name: 'Create' }">New Account</router-link>
-          <router-link :to="{ name: 'Settings' }"><i class="pi pi-cog"></i> Settings</router-link>
+          <router-link class="classic-only" :to="{ name: 'Create' }">New Account</router-link>
+          <router-link class="classic-only" :to="{ name: 'Settings' }">Settings</router-link>
         </template>
         <button class="vault-nav-button" type="button" @click="logOut">Sign out</button>
       </nav>
