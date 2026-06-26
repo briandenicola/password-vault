@@ -7,18 +7,59 @@
 
 let pendingClear = null;
 
+function legacyCopyText(text, documentRef) {
+  const doc = documentRef || (typeof document !== 'undefined' ? document : undefined);
+  if (!doc || !doc.body || typeof doc.createElement !== 'function' || typeof doc.execCommand !== 'function') {
+    return Promise.reject(new Error('Clipboard API unavailable'));
+  }
+
+  const textarea = doc.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.top = '0';
+  textarea.style.left = '-9999px';
+  textarea.style.opacity = '0';
+  doc.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
+
+  let copied = false;
+  try {
+    copied = doc.execCommand('copy');
+  } finally {
+    doc.body.removeChild(textarea);
+  }
+  return copied
+    ? Promise.resolve()
+    : Promise.reject(new Error('Clipboard copy failed'));
+}
+
+export function writeClipboardText(text, deps = {}) {
+  const {
+    clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : undefined,
+    documentRef = typeof document !== 'undefined' ? document : undefined,
+  } = deps;
+
+  if (clipboard && typeof clipboard.writeText === 'function') {
+    return Promise.resolve(clipboard.writeText(text))
+      .catch(primaryError => legacyCopyText(text, documentRef)
+        .catch(() => { throw primaryError; }));
+  }
+
+  return legacyCopyText(text, documentRef);
+}
+
 export function copyWithAutoClear(text, seconds, deps = {}) {
   const {
     clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : undefined,
+    documentRef = typeof document !== 'undefined' ? document : undefined,
     setTimer = (fn, ms) => setTimeout(fn, ms),
     clearTimer = (id) => clearTimeout(id),
   } = deps;
 
-  if (!clipboard || typeof clipboard.writeText !== 'function') {
-    return Promise.reject(new Error('Clipboard API unavailable'));
-  }
-
-  return clipboard.writeText(text).then(() => {
+  return writeClipboardText(text, { clipboard, documentRef }).then(() => {
     if (pendingClear !== null) {
       clearTimer(pendingClear);
       pendingClear = null;
@@ -29,7 +70,7 @@ export function copyWithAutoClear(text, seconds, deps = {}) {
       pendingClear = setTimer(() => {
         pendingClear = null;
         // Best-effort: ignore failures (e.g. document lost focus).
-        Promise.resolve(clipboard.writeText('')).catch(() => {});
+        writeClipboardText('', { clipboard, documentRef }).catch(() => {});
       }, secs * 1000);
     }
 

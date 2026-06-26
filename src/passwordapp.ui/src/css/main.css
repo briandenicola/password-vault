@@ -565,12 +565,39 @@ body.theme-classic .p-datatable .p-datatable-tbody > tr > td {
 }
 
 .vault-icon-button.p-button {
-  width: 1.875rem;
-  min-width: 1.875rem;
-  height: 1.875rem;
-  min-height: 1.875rem;
+  width: 2.75rem;
+  min-width: 2.75rem;
+  height: 2.75rem;
+  min-height: 2.75rem;
   padding: 0;
-  font-size: .875rem;
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--vault-accent-strong) !important;
+  font-size: 1.125rem;
+}
+
+.vault-icon-button.p-button:hover,
+.vault-icon-button.p-button:focus-visible {
+  border-color: transparent !important;
+  background: transparent !important;
+  color: var(--vault-accent) !important;
+}
+
+.vault-icon-button.p-button-success {
+  color: var(--vault-success) !important;
+}
+
+.vault-icon-button.p-button-danger {
+  color: var(--vault-danger) !important;
+}
+
+.vault-icon-button.p-button-info {
+  color: var(--vault-info) !important;
+}
+
+.vault-icon-button.p-button-warn {
+  color: var(--vault-accent) !important;
 }
 
 .vault-action-row {
@@ -581,11 +608,7 @@ body.theme-classic .p-datatable .p-datatable-tbody > tr > td {
 }
 
 body.theme-classic .vault-icon-button.p-button {
-  width: 2.25rem;
-  min-width: 2.25rem;
-  height: 2.25rem;
-  min-height: 2.25rem;
-  border-radius: .25rem;
+  border-radius: 0;
 }
 
 .p-inputtext,

@@ -177,6 +177,19 @@
       </template>
     </Dialog>
 
+    <Dialog v-model:visible="showClipboardRetryModal" modal header="Copy Password" :style="{ width: '30rem' }" @hide="cancelClipboardRetry()">
+      <p class="my-4">
+        This device needs a direct tap before it allows clipboard access. Tap Copy now to finish copying the password.
+      </p>
+      <Message v-if="clipboardRetryError" severity="error" class="mb-3 py-2">
+        Copy failed with error: {{ clipboardRetryError }}
+      </Message>
+      <template #footer>
+        <Button label="Cancel" severity="secondary" @click="cancelClipboardRetry()" />
+        <Button label="Copy now" severity="success" @click.stop="retryClipboardCopy()" />
+      </template>
+    </Dialog>
+
     <Dialog v-model:visible="showHistoryModal" modal header="Password History" :style="{ width: '50rem' }">
       <p v-if="history.length === 0" class="my-4">No password history is available for this account.</p>
       <DataTable v-else :value="history" stripedRows size="small" responsiveLayout="stack">
