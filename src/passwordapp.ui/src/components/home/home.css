@@ -153,12 +153,7 @@
   }
 
   body.theme-classic .vault-mobile-account-actions .p-button + .p-button::before {
-    content: '|';
-    position: absolute;
-    left: -.55rem;
-    color: #000;
-    font-size: 1.25rem;
-    font-weight: 400;
+    content: none;
   }
 
   body.theme-classic .vault-mobile-details {

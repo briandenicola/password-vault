@@ -70,6 +70,9 @@ export default {
       showDeleteModal:    false,
       showAlertModal:     false,
       showHistoryModal:   false,
+      showClipboardRetryModal: false,
+      clipboardRetryText: '',
+      clipboardRetryError: '',
       apiError:           '',
       accountRefreshTimer: null,
     };
@@ -215,23 +218,49 @@ export default {
       });
     },
     copyText(text) {
-      copyWithAutoClear(text, this.clipboardClearSeconds)
+      this.writeSecretToClipboard(text);
+    },
+    writeSecretToClipboard(text) {
+      return copyWithAutoClear(text, this.clipboardClearSeconds)
         .then(() => {
           this.showAlert('Success. . .', this.copySuccessMessage());
         })
         .catch(err => {
-          this.showAlert('Error. . .', "Copy failed with error: " + err);
+          this.requestClipboardRetry(text, err);
         });
     },
     copyPassword(passwordId) {
       PasswordService.get(passwordId)
-        .then(response => copyWithAutoClear(response.data.currentPassword, this.clipboardClearSeconds))
+        .then(response => this.writeSecretToClipboard(response.data.currentPassword))
+        .catch(err => {
+          this.requestClipboardRetry('', err);
+        });
+    },
+    requestClipboardRetry(text, error) {
+      this.clipboardRetryText = text || '';
+      this.clipboardRetryError = error ? String(error) : '';
+      this.showClipboardRetryModal = Boolean(text);
+      if (!text) {
+        this.showAlert('Error. . .', "Copy failed with error: " + error);
+      }
+    },
+    retryClipboardCopy() {
+      const text = this.clipboardRetryText;
+      this.clipboardRetryError = '';
+      copyWithAutoClear(text, this.clipboardClearSeconds)
         .then(() => {
+          this.showClipboardRetryModal = false;
+          this.clipboardRetryText = '';
           this.showAlert('Success. . .', this.copySuccessMessage());
         })
         .catch(err => {
-          this.showAlert('Error. . .', "Copy failed with error: " + err);
+          this.clipboardRetryError = String(err);
         });
+    },
+    cancelClipboardRetry() {
+      this.showClipboardRetryModal = false;
+      this.clipboardRetryText = '';
+      this.clipboardRetryError = '';
     },
     copySuccessMessage() {
       const secs = Number(this.clipboardClearSeconds);

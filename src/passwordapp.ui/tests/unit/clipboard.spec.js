@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { copyWithAutoClear, _resetPendingClear } from '@/components/utils/clipboard.js';
+import { copyWithAutoClear, writeClipboardText, _resetPendingClear } from '@/components/utils/clipboard.js';
 
 function fakeClipboard() {
   return {
@@ -10,6 +10,49 @@ function fakeClipboard() {
     },
   };
 }
+
+function fakeDocument(execResult = true) {
+  const element = {
+    value: '',
+    style: {},
+    setAttribute: vi.fn(),
+    focus: vi.fn(),
+    select: vi.fn(),
+    setSelectionRange: vi.fn(),
+  };
+  return {
+    element,
+    body: {
+      appendChild: vi.fn(),
+      removeChild: vi.fn(),
+    },
+    createElement: vi.fn(() => element),
+    execCommand: vi.fn(() => execResult),
+  };
+}
+
+describe('writeClipboardText', () => {
+  it('falls back to execCommand when clipboard.writeText is rejected', async () => {
+    const clipboard = { writeText: vi.fn(() => Promise.reject(new DOMException('NotAllowedError'))) };
+    const documentRef = fakeDocument();
+    await writeClipboardText('ios-secret', { clipboard, documentRef });
+    expect(documentRef.element.value).toBe('ios-secret');
+    expect(documentRef.execCommand).toHaveBeenCalledWith('copy');
+    expect(documentRef.body.removeChild).toHaveBeenCalledWith(documentRef.element);
+  });
+
+  it('uses the legacy copy path when the Clipboard API is unavailable', async () => {
+    const documentRef = fakeDocument();
+    await writeClipboardText('legacy-secret', { clipboard: undefined, documentRef });
+    expect(documentRef.element.value).toBe('legacy-secret');
+    expect(documentRef.execCommand).toHaveBeenCalledWith('copy');
+  });
+
+  it('rejects when neither clipboard API nor legacy copy is available', async () => {
+    await expect(writeClipboardText('x', { clipboard: undefined, documentRef: undefined }))
+      .rejects.toThrow('Clipboard API unavailable');
+  });
+});
 
 describe('copyWithAutoClear', () => {
   beforeEach(() => {
@@ -50,7 +93,7 @@ describe('copyWithAutoClear', () => {
   });
 
   it('rejects when the clipboard API is unavailable', async () => {
-    await expect(copyWithAutoClear('x', 30, { clipboard: undefined }))
+    await expect(copyWithAutoClear('x', 30, { clipboard: undefined, documentRef: undefined }))
       .rejects.toThrow('Clipboard API unavailable');
   });
 });
