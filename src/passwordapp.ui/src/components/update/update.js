@@ -25,7 +25,6 @@ export default {
       id:                 '',
       alertModalTitle:    '',
       alertModalContent:  '',
-      isSuccessfully:     false,
       showAlertModal:     false,
     };
   },
@@ -58,24 +57,13 @@ export default {
         this.$router.push({ name: 'Home' });
       })
       .catch((error) => {
-        this.isSuccessfully = false;
-        this.alertModalTitle = 'Error';
-        this.alertModalContent = error.response.data;
-        this.showAlertModal = true;
+          this.alertModalTitle = 'Error';
+          this.alertModalContent = error.response.data;
+          this.showAlertModal = true;
       });
     },
     onAlertOk() {
-
       this.showAlertModal = false;
-
-      this.onAlertModalOkClick();
-
-    },
-
-    onAlertModalOkClick() {
-      if (this.isSuccessfully) {
-        this.$router.push({ name: 'Home' });
-      }
     },
   },
 };

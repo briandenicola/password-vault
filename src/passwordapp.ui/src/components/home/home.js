@@ -215,7 +215,6 @@ export default {
         });
         return;
       }
-      this.showAlert('Success. . .', detail);
     },
     displayPassword(passwordId) {
       PasswordService.get(passwordId)

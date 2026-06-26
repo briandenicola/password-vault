@@ -24,7 +24,6 @@ export default {
       accountsStore: useAccountsStore(),
       alertModalTitle: '',
       alertModalContent: '',
-      isSuccessfully: false,
       showAlertModal: false,
     };
   },
@@ -33,17 +32,7 @@ export default {
       this.formData.currentPassword = password;
     },
     onAlertOk() {
-
       this.showAlertModal = false;
-
-      this.onAlertModalOkClick();
-
-    },
-
-    onAlertModalOkClick() {
-      if (this.isSuccessfully) {
-        this.$router.push({ name: 'Home' });
-      }
     },
     showSuccessToast(summary, detail) {
       if (this.$toast && typeof this.$toast.add === 'function') {
@@ -61,9 +50,8 @@ export default {
         this.showSuccessToast('Account created', 'The account was added to the vault.');
         this.formData = PasswordService.newPassword();
         this.$router.push({ name: 'Home' });
-        
       }).catch((error) => {
-        this.isSuccessfully = false;
+      }).catch((error) => {
         this.alertModalTitle = 'Error';
         this.alertModalContent = "Got an error " + error.response.data;
         this.showAlertModal = true;
