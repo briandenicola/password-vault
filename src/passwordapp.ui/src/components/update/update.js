@@ -40,14 +40,22 @@ export default {
     onGenerated(password) {
       this.formData.currentPassword = password;
     },
+    showSuccessToast(summary, detail) {
+      if (this.$toast && typeof this.$toast.add === 'function') {
+        this.$toast.add({
+          severity: 'success',
+          summary,
+          detail,
+          life: 3500,
+        });
+      }
+    },
     updatePassword() {
       this.formData.lastModifiedBy = Authentication.getUserProfile();
       this.accountsStore.updateAccount(this.id, this.formData)
       .then(() => {
-        this.isSuccessfully = true;
-        this.alertModalTitle = 'Successfully';
-        this.alertModalContent = 'Successfully updated Account';
-        this.showAlertModal = true;
+        this.showSuccessToast('Account updated', 'The account changes were saved.');
+        this.$router.push({ name: 'Home' });
       })
       .catch((error) => {
         this.isSuccessfully = false;

@@ -203,16 +203,19 @@ export default {
     },
     showCopyToast() {
       const message = this.copySuccessMessage();
+      this.showSuccessToast('Copied', message);
+    },
+    showSuccessToast(summary, detail) {
       if (this.$toast && typeof this.$toast.add === 'function') {
         this.$toast.add({
           severity: 'success',
-          summary: 'Copied',
-          detail: message,
+          summary,
+          detail,
           life: 3500,
         });
         return;
       }
-      this.showAlert('Success. . .', message);
+      this.showAlert('Success. . .', detail);
     },
     displayPassword(passwordId) {
       PasswordService.get(passwordId)
@@ -286,7 +289,7 @@ export default {
       this.showDeleteModal = false;
       this.accountsStore.deleteAccount(this.selectedPasswordId)
       .then(() => {
-        this.showAlert('Successfully', 'Successfully deleted Account');
+        this.showSuccessToast('Account deleted', 'The account was moved to the recycle bin.');
       })
       .catch((error) => {
         this.showAlert('Error', error.response.data);

@@ -45,14 +45,22 @@ export default {
         this.$router.push({ name: 'Home' });
       }
     },
+    showSuccessToast(summary, detail) {
+      if (this.$toast && typeof this.$toast.add === 'function') {
+        this.$toast.add({
+          severity: 'success',
+          summary,
+          detail,
+          life: 3500,
+        });
+      }
+    },
     createNewAccount() {
       this.formData.createdBy = this.formData.lastModifiedBy = Authentication.getUserProfile(); 
       this.accountsStore.createAccount(this.formData).then(() => {
-        this.isSuccessfully = true;
-        this.alertModalTitle = 'Successfully';
-        this.alertModalContent = 'Successfully created Account / Password';
-        this.showAlertModal = true;
+        this.showSuccessToast('Account created', 'The account was added to the vault.');
         this.formData = PasswordService.newPassword();
+        this.$router.push({ name: 'Home' });
         
       }).catch((error) => {
         this.isSuccessfully = false;
