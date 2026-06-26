@@ -51,6 +51,20 @@
   gap: .35rem;
 }
 
+.vault-mobile-actions-row {
+  grid-template-columns: 1fr;
+}
+
+.vault-mobile-actions-row .vault-mobile-account-label {
+  display: none;
+}
+
+.vault-mobile-actions-row .vault-mobile-account-actions {
+  grid-column: 1 / -1;
+  justify-content: space-evenly;
+  padding: .95rem .75rem;
+}
+
 .vault-mobile-details {
   display: grid;
   gap: .4rem;
@@ -104,7 +118,7 @@
   }
 
   body.theme-classic .vault-mobile-account-row {
-    grid-template-columns: 42% 58%;
+    grid-template-columns: 40% minmax(0, 60%);
     min-height: 3.5rem;
     border-bottom: 2px solid #dee2e6;
     background: #f5f5f5;
@@ -129,9 +143,19 @@
   }
 
   body.theme-classic .vault-mobile-account-value {
-    justify-content: center;
+    justify-content: flex-start;
+    min-width: 0;
     overflow: hidden;
-    text-align: center;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  body.theme-classic .vault-mobile-truncate {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -146,6 +170,18 @@
 
   body.theme-classic .vault-mobile-account-actions .vault-history-action {
     display: none;
+  }
+
+  body.theme-classic .vault-mobile-actions-row {
+    grid-template-columns: 40% minmax(0, 60%);
+  }
+
+  body.theme-classic .vault-mobile-actions-row .vault-mobile-account-label {
+    display: flex;
+  }
+
+  body.theme-classic .vault-mobile-actions-row .vault-mobile-account-actions {
+    grid-column: auto;
   }
 
   body.theme-classic .vault-mobile-account-actions .p-button {

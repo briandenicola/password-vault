@@ -25,7 +25,6 @@ export default {
       id:                 '',
       alertModalTitle:    '',
       alertModalContent:  '',
-      isSuccessfully:     false,
       showAlertModal:     false,
     };
   },
@@ -40,34 +39,31 @@ export default {
     onGenerated(password) {
       this.formData.currentPassword = password;
     },
+    showSuccessToast(summary, detail) {
+      if (this.$toast && typeof this.$toast.add === 'function') {
+        this.$toast.add({
+          severity: 'success',
+          summary,
+          detail,
+          life: 3500,
+        });
+      }
+    },
     updatePassword() {
       this.formData.lastModifiedBy = Authentication.getUserProfile();
       this.accountsStore.updateAccount(this.id, this.formData)
       .then(() => {
-        this.isSuccessfully = true;
-        this.alertModalTitle = 'Successfully';
-        this.alertModalContent = 'Successfully updated Account';
-        this.showAlertModal = true;
+        this.showSuccessToast('Account updated', 'The account changes were saved.');
+        this.$router.push({ name: 'Home' });
       })
       .catch((error) => {
-        this.isSuccessfully = false;
-        this.alertModalTitle = 'Error';
-        this.alertModalContent = error.response.data;
-        this.showAlertModal = true;
+          this.alertModalTitle = 'Error';
+          this.alertModalContent = error.response.data;
+          this.showAlertModal = true;
       });
     },
     onAlertOk() {
-
       this.showAlertModal = false;
-
-      this.onAlertModalOkClick();
-
-    },
-
-    onAlertModalOkClick() {
-      if (this.isSuccessfully) {
-        this.$router.push({ name: 'Home' });
-      }
     },
   },
 };

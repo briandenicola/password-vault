@@ -31,6 +31,7 @@
       <PasskeyVaultGate v-if="e2eeEnabled" />
       <router-view v-if="vaultUnlocked" />
     </main>
+    <Toast position="bottom-right" />
     <UpdatePrompt />
   </div> 
 </template>

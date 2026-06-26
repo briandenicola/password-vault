@@ -201,6 +201,21 @@ export default {
       this.alertModalContent = content;
       this.showAlertModal = true;
     },
+    showCopyToast() {
+      const message = this.copySuccessMessage();
+      this.showSuccessToast('Copied', message);
+    },
+    showSuccessToast(summary, detail) {
+      if (this.$toast && typeof this.$toast.add === 'function') {
+        this.$toast.add({
+          severity: 'success',
+          summary,
+          detail,
+          life: 3500,
+        });
+        return;
+      }
+    },
     displayPassword(passwordId) {
       PasswordService.get(passwordId)
       .then((response) => {
@@ -223,7 +238,7 @@ export default {
     writeSecretToClipboard(text) {
       return copyWithAutoClear(text, this.clipboardClearSeconds)
         .then(() => {
-          this.showAlert('Success. . .', this.copySuccessMessage());
+          this.showCopyToast();
         })
         .catch(err => {
           this.requestClipboardRetry(text, err);
@@ -251,7 +266,7 @@ export default {
         .then(() => {
           this.showClipboardRetryModal = false;
           this.clipboardRetryText = '';
-          this.showAlert('Success. . .', this.copySuccessMessage());
+          this.showCopyToast();
         })
         .catch(err => {
           this.clipboardRetryError = String(err);
@@ -273,7 +288,7 @@ export default {
       this.showDeleteModal = false;
       this.accountsStore.deleteAccount(this.selectedPasswordId)
       .then(() => {
-        this.showAlert('Successfully', 'Successfully deleted Account');
+        this.showSuccessToast('Account deleted', 'The account was moved to the recycle bin.');
       })
       .catch((error) => {
         this.showAlert('Error', error.response.data);

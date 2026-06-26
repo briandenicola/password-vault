@@ -106,7 +106,7 @@
         <div class="vault-mobile-account-row">
           <div class="vault-mobile-account-label">Account</div>
           <div class="vault-mobile-account-value">
-            <span class="text-lowercase">{{ password.accountName }}</span>
+            <span class="text-lowercase vault-mobile-truncate" :title="password.accountName">{{ password.accountName }}</span>
             <div v-if="tagsOf(password).length" class="mt-1">
               <Tag v-for="tag in tagsOf(password)" :key="tag" :value="tag" severity="secondary" class="me-1 mb-1" @click.stop="selectedTag = tag" style="cursor: pointer;" />
             </div>
@@ -114,20 +114,20 @@
         </div>
         <div class="vault-mobile-account-row">
           <div class="vault-mobile-account-label">Site</div>
-          <div class="vault-mobile-account-value text-lowercase">{{ password.siteName }}</div>
+          <div class="vault-mobile-account-value text-lowercase vault-mobile-truncate" :title="password.siteName">{{ password.siteName }}</div>
         </div>
         <div class="vault-mobile-account-row">
           <div class="vault-mobile-account-label">Last Modified</div>
-          <div class="vault-mobile-account-value">
-            <div>{{ formatDate(password.lastModifiedDate) }}</div>
+          <div class="vault-mobile-account-value vault-mobile-truncate" :title="`${formatDate(password.lastModifiedDate) || ''} ${isStaleRow(password) ? staleAgeOf(password) : ageOf(password)}`.trim()">
+            <div class="vault-mobile-truncate">{{ formatDate(password.lastModifiedDate) }}</div>
             <small
-              class="text-muted"
+              class="text-muted vault-mobile-truncate"
               :class="{ 'fst-italic': isStaleRow(password) }">
               {{ isStaleRow(password) ? staleAgeOf(password) : ageOf(password) }}
             </small>
           </div>
         </div>
-        <div class="vault-mobile-account-row">
+        <div class="vault-mobile-account-row vault-mobile-actions-row">
           <div class="vault-mobile-account-label">Edit/Remove</div>
           <div class="vault-mobile-account-actions vault-action-row">
             <Button class="vault-icon-button" size="small" severity="success" aria-label="Copy password" @click.stop="copyPassword(password.id)" v-tooltip.top="'Copy'"><font-awesome-icon icon="copy" /></Button>
