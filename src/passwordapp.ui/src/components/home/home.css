@@ -83,6 +83,58 @@
   color: var(--vault-muted);
 }
 
+.vault-mobile-loading {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  margin: 1rem 0;
+  color: var(--vault-muted);
+}
+
+.vault-loading-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid color-mix(in srgb, var(--vault-muted) 25%, transparent);
+  border-top-color: var(--vault-accent);
+  border-radius: 50%;
+  animation: vault-spin .8s linear infinite;
+}
+
+@keyframes vault-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+body.theme-vault .vault-password-dialog.p-dialog,
+body.dark-mode .vault-password-dialog.p-dialog {
+  overflow: hidden;
+  border: 2px solid var(--vault-accent);
+  border-radius: .85rem;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, .45);
+}
+
+body.theme-vault .vault-password-dialog .p-dialog-header,
+body.dark-mode .vault-password-dialog .p-dialog-header {
+  padding-bottom: .75rem;
+}
+
+body.theme-vault .vault-password-dialog .p-dialog-content,
+body.dark-mode .vault-password-dialog .p-dialog-content {
+  padding: 1.25rem 1.5rem;
+}
+
+body.theme-vault .vault-password-dialog .vault-password-value,
+body.dark-mode .vault-password-dialog .vault-password-value {
+  margin: .5rem 0 !important;
+  color: var(--vault-text);
+  font-size: clamp(1.35rem, 5vw, 2rem);
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
 @media (max-width: 820px) {
   .account-name,
   .site-name {

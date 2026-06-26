@@ -33,6 +33,7 @@
         <DataTable
           :value="filteredPasswords"
           dataKey="id"
+          :loading="initialAccountsLoading"
           v-model:expandedRows="expandedRows"
           paginator
           :rows="perPage"
@@ -97,6 +98,9 @@
             </div>
 
           </template>
+          <template #empty>
+            <span v-if="!initialAccountsLoading">No accounts found.</span>
+          </template>
         </DataTable>
       </div>
     </div>
@@ -152,7 +156,11 @@
           </div>
         </div>
       </article>
-      <p v-if="filteredPasswords.length === 0" class="vault-mobile-empty">No accounts found.</p>
+      <div v-if="initialAccountsLoading" class="vault-mobile-loading" role="status" aria-live="polite">
+        <span class="vault-loading-spinner" aria-hidden="true"></span>
+        <span>Loading accounts...</span>
+      </div>
+      <p v-else-if="filteredPasswords.length === 0" class="vault-mobile-empty">No accounts found.</p>
       <Paginator
         v-if="filteredPasswords.length > perPage"
         :first="mobileFirst"
@@ -170,8 +178,14 @@
       </template>
     </Dialog>
 
-    <Dialog v-model:visible="showAlertModal" modal :header="alertModalTitle" :style="{ width: '30rem' }">
-      <p class="my-4 font-monospace">{{ alertModalContent }}</p>
+    <Dialog
+      v-model:visible="showAlertModal"
+      modal
+      :closable="alertModalVariant !== 'password'"
+      :class="{ 'vault-password-dialog': alertModalVariant === 'password' }"
+      :header="alertModalTitle"
+      :style="{ width: '30rem' }">
+      <p class="my-4 font-monospace" :class="{ 'vault-password-value': alertModalVariant === 'password' }">{{ alertModalContent }}</p>
       <template #footer>
         <Button label="OK" @click="showAlertModal = false" />
       </template>

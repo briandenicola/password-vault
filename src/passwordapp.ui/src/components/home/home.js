@@ -21,6 +21,9 @@ export default {
     passwords() {
       return this.accountsStore.accounts;
     },
+    initialAccountsLoading() {
+      return this.accountsStore.loading && !this.accountsStore.isLoaded;
+    },
     tagChoices() {
       return [{ label: 'All tags', value: null }]
         .concat(this.allTags.map(t => ({ label: t, value: t })));
@@ -66,6 +69,7 @@ export default {
       selectedPasswordId: null,
       alertModalTitle:    '',
       alertModalContent:  '',
+      alertModalVariant:  '',
       history:            [],
       showDeleteModal:    false,
       showAlertModal:     false,
@@ -193,9 +197,10 @@ export default {
         return Moment(String(date)).format('MM/DD/YYYY hh:mm:ss A')
       }
     },
-    showAlert(title, content) {
+    showAlert(title, content, variant = '') {
       this.alertModalTitle = title;
       this.alertModalContent = content;
+      this.alertModalVariant = variant;
       this.showAlertModal = true;
     },
     showCopyToast() {
@@ -216,7 +221,7 @@ export default {
     displayPassword(passwordId) {
       PasswordService.get(passwordId)
       .then((response) => {
-        this.showAlert('Success. . .', response.data.currentPassword);
+        this.showAlert('Success. . .', response.data.currentPassword, 'password');
       });
     },
     showHistory(passwordId) {
