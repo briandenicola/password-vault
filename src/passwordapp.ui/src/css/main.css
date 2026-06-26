@@ -212,7 +212,7 @@ body.theme-classic .vault-brand {
   white-space: nowrap;
 }
 
-body.theme-classic .vault-nav {
+body.theme-classic .vault-nav-classic {
   justify-content: flex-start;
   gap: 0;
   margin: 1.25rem 0 2rem;
@@ -221,8 +221,8 @@ body.theme-classic .vault-nav {
   overflow-x: visible;
 }
 
-body.theme-classic .vault-nav a,
-body.theme-classic .vault-nav-button {
+body.theme-classic .vault-nav-classic a,
+body.theme-classic .vault-nav-classic .vault-nav-button {
   min-height: auto;
   padding: 0 .45rem;
   border: 0;
@@ -235,22 +235,22 @@ body.theme-classic .vault-nav-button {
   text-transform: none;
 }
 
-body.theme-classic .vault-nav a::before,
-body.theme-classic .vault-nav-button::before {
+body.theme-classic .vault-nav-classic a::before,
+body.theme-classic .vault-nav-classic .vault-nav-button::before {
   content: '|';
   margin-right: .45rem;
   color: #000;
 }
 
-body.theme-classic .vault-nav-button::after {
+body.theme-classic .vault-nav-classic .vault-nav-button::after {
   content: '|';
   margin-left: .45rem;
   color: #000;
 }
 
-body.theme-classic .vault-nav a.router-link-exact-active,
-body.theme-classic .vault-nav a:hover,
-body.theme-classic .vault-nav-button:hover {
+body.theme-classic .vault-nav-classic a.router-link-exact-active,
+body.theme-classic .vault-nav-classic a:hover,
+body.theme-classic .vault-nav-classic .vault-nav-button:hover {
   color: #06f;
   text-decoration: underline;
 }
@@ -260,7 +260,7 @@ body.theme-classic .classic-only {
 }
 
 body.theme-classic .non-classic-only,
-body.theme-classic .vault-nav i {
+body.theme-classic .vault-nav-classic i {
   display: none !important;
 }
 
