@@ -17,11 +17,11 @@
       <nav id="vault-navigation" class="vault-nav" :class="{ 'is-open': navOpen }" aria-label="Vault navigation" @click="closeNav">
         <template v-if="vaultUnlocked">
           <router-link class="classic-only" :to="{ name: 'Create' }">New Account</router-link>
-          <router-link :to="{ name: 'Home' }"><i class="pi pi-id-card"></i> Accounts</router-link>
+          <router-link class="non-classic-only" :to="{ name: 'Home' }"><i class="pi pi-id-card"></i> Accounts</router-link>
           <router-link :to="{ name: 'Settings' }"><i class="pi pi-cog"></i> Settings</router-link>
-          <router-link :to="{ name: 'Trash' }"><i class="pi pi-trash"></i> Recycle bin</router-link>
-          <router-link :to="{ name: 'Audit' }"><i class="pi pi-shield"></i> Audit</router-link>
-          <router-link :to="{ name: 'Transfer' }"><i class="pi pi-sort-alt"></i> Import / Export</router-link>
+          <router-link class="non-classic-only" :to="{ name: 'Trash' }"><i class="pi pi-trash"></i> Recycle bin</router-link>
+          <router-link class="non-classic-only" :to="{ name: 'Audit' }"><i class="pi pi-shield"></i> Audit</router-link>
+          <router-link class="non-classic-only" :to="{ name: 'Transfer' }"><i class="pi pi-sort-alt"></i> Import / Export</router-link>
         </template>
         <router-link v-if="vaultUnlocked" class="vault-nav-button non-classic-only" :to="{ name: 'Create' }"><i class="pi pi-plus"></i> New</router-link>
         <button class="vault-nav-button" type="button" @click="logOut">Sign out</button>
