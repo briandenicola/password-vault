@@ -14,10 +14,16 @@
         <font-awesome-icon icon="bars" />
         Menu
       </button>
-      <nav id="vault-navigation" class="vault-nav" :class="{ 'is-open': navOpen }" aria-label="Vault navigation" @click="closeNav">
+      <nav v-if="currentTheme === 'classic'" id="vault-navigation" class="vault-nav vault-nav-classic" aria-label="Vault navigation">
         <template v-if="vaultUnlocked">
-          <router-link class="classic-only" :to="{ name: 'Create' }">New Account</router-link>
-          <router-link class="non-classic-only" :to="{ name: 'Home' }"><i class="pi pi-id-card"></i> Accounts</router-link>
+          <router-link :to="{ name: 'Create' }">New Account</router-link>
+          <router-link :to="{ name: 'Settings' }"><i class="pi pi-cog"></i> Settings</router-link>
+        </template>
+        <button class="vault-nav-button" type="button" @click="logOut">Sign out</button>
+      </nav>
+      <nav v-else id="vault-navigation" class="vault-nav" :class="{ 'is-open': navOpen }" aria-label="Vault navigation" @click="closeNav">
+        <template v-if="vaultUnlocked">
+          <router-link :to="{ name: 'Home' }"><i class="pi pi-id-card"></i> Accounts</router-link>
           <router-link :to="{ name: 'Settings' }"><i class="pi pi-cog"></i> Settings</router-link>
           <router-link class="non-classic-only" :to="{ name: 'Trash' }"><i class="pi pi-trash"></i> Recycle bin</router-link>
           <router-link class="non-classic-only" :to="{ name: 'Audit' }"><i class="pi pi-shield"></i> Audit</router-link>
