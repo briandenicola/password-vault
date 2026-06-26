@@ -2,7 +2,7 @@ import PasswordService from '@/components/api/Password.Service.js';
 import Moment from 'moment';
 import Authentication from '@/components/azuread/AzureAD.Authentication.js';
 import { loadSettings } from '@/components/settings/settings.store.js';
-import { copyWithAutoClear } from '@/components/utils/clipboard.js';
+import { copyDeferredTextWithAutoClear, copyWithAutoClear } from '@/components/utils/clipboard.js';
 import { parseTags, collectTags, hasTag } from '@/components/utils/tags.js';
 import { isStale, ageLabel } from '@/components/utils/age.js';
 import { useAccountsStore } from '@/stores/accounts.store.js';
@@ -70,9 +70,6 @@ export default {
       showDeleteModal:    false,
       showAlertModal:     false,
       showHistoryModal:   false,
-      showClipboardRetryModal: false,
-      clipboardRetryText: '',
-      clipboardRetryError: '',
       apiError:           '',
       accountRefreshTimer: null,
     };
@@ -245,37 +242,15 @@ export default {
         });
     },
     copyPassword(passwordId) {
-      PasswordService.get(passwordId)
-        .then(response => this.writeSecretToClipboard(response.data.currentPassword))
-        .catch(err => {
-          this.requestClipboardRetry('', err);
-        });
-    },
-    requestClipboardRetry(text, error) {
-      this.clipboardRetryText = text || '';
-      this.clipboardRetryError = error ? String(error) : '';
-      this.showClipboardRetryModal = Boolean(text);
-      if (!text) {
-        this.showAlert('Error. . .', "Copy failed with error: " + error);
-      }
-    },
-    retryClipboardCopy() {
-      const text = this.clipboardRetryText;
-      this.clipboardRetryError = '';
-      copyWithAutoClear(text, this.clipboardClearSeconds)
+      const password = PasswordService.get(passwordId)
+        .then(response => response.data.currentPassword);
+      copyDeferredTextWithAutoClear(password, this.clipboardClearSeconds)
         .then(() => {
-          this.showClipboardRetryModal = false;
-          this.clipboardRetryText = '';
           this.showCopyToast();
         })
         .catch(err => {
-          this.clipboardRetryError = String(err);
+          this.showAlert('Error. . .', "Copy failed with error: " + err);
         });
-    },
-    cancelClipboardRetry() {
-      this.showClipboardRetryModal = false;
-      this.clipboardRetryText = '';
-      this.clipboardRetryError = '';
     },
     copySuccessMessage() {
       const secs = Number(this.clipboardClearSeconds);

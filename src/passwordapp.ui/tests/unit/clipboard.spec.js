@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { copyWithAutoClear, writeClipboardText, _resetPendingClear } from '@/components/utils/clipboard.js';
+import {
+  copyDeferredTextWithAutoClear,
+  copyWithAutoClear,
+  writeClipboardText,
+  _resetPendingClear,
+} from '@/components/utils/clipboard.js';
 
 function fakeClipboard() {
   return {
@@ -57,6 +62,53 @@ describe('writeClipboardText', () => {
 describe('copyWithAutoClear', () => {
   beforeEach(() => {
     _resetPendingClear();
+  });
+
+  describe('copyDeferredTextWithAutoClear', () => {
+    beforeEach(() => {
+      _resetPendingClear();
+    });
+
+    it('starts clipboard.write synchronously with a deferred ClipboardItem payload', async () => {
+      const writes = [];
+      const clipboard = {
+        write: vi.fn(items => {
+          writes.push(items);
+          return Promise.resolve();
+        }),
+      };
+      const ClipboardItemCtor = vi.fn(function ClipboardItem(items) {
+        this.items = items;
+      });
+      const BlobCtor = vi.fn(function Blob(parts, options) {
+        this.parts = parts;
+        this.options = options;
+      });
+      const textPromise = Promise.resolve('ios-secret');
+
+      const copyPromise = copyDeferredTextWithAutoClear(textPromise, 0, {
+        clipboard,
+        ClipboardItemCtor,
+        BlobCtor,
+      });
+
+      expect(clipboard.write).toHaveBeenCalledTimes(1);
+      expect(ClipboardItemCtor).toHaveBeenCalledTimes(1);
+      await copyPromise;
+      const blob = await writes[0][0].items['text/plain'];
+      expect(blob.parts).toEqual(['ios-secret']);
+      expect(blob.options).toEqual({ type: 'text/plain' });
+    });
+
+    it('falls back to writeText after the text resolves when deferred ClipboardItem is unavailable', async () => {
+      const clipboard = fakeClipboard();
+      await copyDeferredTextWithAutoClear(Promise.resolve('fallback-secret'), 0, {
+        clipboard,
+        ClipboardItemCtor: undefined,
+        BlobCtor: undefined,
+      });
+      expect(clipboard.writes).toEqual(['fallback-secret']);
+    });
   });
 
   it('writes the text to the clipboard', async () => {
