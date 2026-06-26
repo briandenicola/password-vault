@@ -51,6 +51,22 @@ export function writeClipboardText(text, deps = {}) {
   return legacyCopyText(text, documentRef);
 }
 
+function scheduleAutoClear(clipboard, documentRef, seconds, setTimer, clearTimer) {
+  if (pendingClear !== null) {
+    clearTimer(pendingClear);
+    pendingClear = null;
+  }
+
+  const secs = Number(seconds);
+  if (Number.isFinite(secs) && secs > 0) {
+    pendingClear = setTimer(() => {
+      pendingClear = null;
+      // Best-effort: ignore failures (e.g. document lost focus).
+      writeClipboardText('', { clipboard, documentRef }).catch(() => {});
+    }, secs * 1000);
+  }
+}
+
 export function copyWithAutoClear(text, seconds, deps = {}) {
   const {
     clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : undefined,
@@ -60,22 +76,44 @@ export function copyWithAutoClear(text, seconds, deps = {}) {
   } = deps;
 
   return writeClipboardText(text, { clipboard, documentRef }).then(() => {
-    if (pendingClear !== null) {
-      clearTimer(pendingClear);
-      pendingClear = null;
-    }
-
-    const secs = Number(seconds);
-    if (Number.isFinite(secs) && secs > 0) {
-      pendingClear = setTimer(() => {
-        pendingClear = null;
-        // Best-effort: ignore failures (e.g. document lost focus).
-        writeClipboardText('', { clipboard, documentRef }).catch(() => {});
-      }, secs * 1000);
-    }
-
+    scheduleAutoClear(clipboard, documentRef, seconds, setTimer, clearTimer);
     return true;
   });
+}
+
+export function copyDeferredTextWithAutoClear(textPromise, seconds, deps = {}) {
+  const {
+    clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : undefined,
+    documentRef = typeof document !== 'undefined' ? document : undefined,
+    ClipboardItemCtor = typeof ClipboardItem !== 'undefined' ? ClipboardItem : undefined,
+    BlobCtor = typeof Blob !== 'undefined' ? Blob : undefined,
+    setTimer = (fn, ms) => setTimeout(fn, ms),
+    clearTimer = (id) => clearTimeout(id),
+  } = deps;
+
+  if (
+    clipboard &&
+    typeof clipboard.write === 'function' &&
+    typeof ClipboardItemCtor === 'function' &&
+    typeof BlobCtor === 'function'
+  ) {
+    const item = new ClipboardItemCtor({
+      'text/plain': Promise.resolve(textPromise)
+        .then(text => new BlobCtor([text], { type: 'text/plain' })),
+    });
+    return Promise.resolve(clipboard.write([item])).then(() => {
+      scheduleAutoClear(clipboard, documentRef, seconds, setTimer, clearTimer);
+      return true;
+    });
+  }
+
+  return Promise.resolve(textPromise)
+    .then(text => copyWithAutoClear(text, seconds, {
+      clipboard,
+      documentRef,
+      setTimer,
+      clearTimer,
+    }));
 }
 
 // Exposed for tests to reset module state between cases.
