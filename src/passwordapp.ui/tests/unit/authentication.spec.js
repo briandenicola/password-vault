@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { InteractionRequiredAuthError } from '@azure/msal-browser';
-import Authentication from '@/components/azuread/AzureAD.Authentication.js';
+import Authentication, { resolveRedirectUri } from '@/components/azuread/AzureAD.Authentication.js';
 
 // A fake PublicClientApplication that records call ordering so we can prove that
 // initialize() and handleRedirectPromise() are awaited before the app inspects accounts
@@ -73,6 +73,31 @@ describe('AzureAD.Authentication (MSAL v5)', () => {
     expect(Authentication.isAuthenticated()).toBe(false);
     expect(Authentication.getUserProfile()).toBe('');
     await expect(Authentication.getBearerToken()).resolves.toBeNull();
+  });
+
+  it('uses the runtime browser origin for redirect URLs', () => {
+    const originalWindow = global.window;
+    global.window = { location: { origin: 'https://vault.example.com' } };
+
+    try {
+      expect(resolveRedirectUri()).toBe('https://vault.example.com');
+    } finally {
+      global.window = originalWindow;
+    }
+  });
+
+  it('falls back to the configured redirect URL outside a browser', () => {
+    const originalWindow = global.window;
+    const originalRedirectUrl = process.env.VUE_APP_AAD_REDIRECT_URL;
+    delete global.window;
+    process.env.VUE_APP_AAD_REDIRECT_URL = 'https://gray-hill-03b055310.7.azurestaticapps.net';
+
+    try {
+      expect(resolveRedirectUri()).toBe('https://gray-hill-03b055310.7.azurestaticapps.net');
+    } finally {
+      global.window = originalWindow;
+      process.env.VUE_APP_AAD_REDIRECT_URL = originalRedirectUrl;
+    }
   });
 
   it('returns a silently-acquired bearer token for the active account', async () => {
