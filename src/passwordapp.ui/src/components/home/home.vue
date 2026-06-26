@@ -191,9 +191,15 @@
       </template>
     </Dialog>
 
-    <Dialog v-model:visible="showHistoryModal" modal header="Password History" :style="{ width: '50rem' }">
+    <Dialog
+      v-model:visible="showHistoryModal"
+      modal
+      :closable="false"
+      class="vault-history-dialog"
+      header="Password History"
+      :style="{ width: '50rem' }">
       <p v-if="history.length === 0" class="my-4">No password history is available for this account.</p>
-      <DataTable v-else :value="history" stripedRows size="small" responsiveLayout="stack">
+      <DataTable v-else :value="history" stripedRows size="small" responsiveLayout="stack" class="vault-history-table">
         <Column header="When">
           <template #body="{ data, index }">
             {{ formatDate(data.timeStamp) }}
@@ -201,7 +207,7 @@
           </template>
         </Column>
         <Column header="Password">
-          <template #body="{ data }"><span class="font-monospace">{{ data.password }}</span></template>
+          <template #body="{ data }"><span class="font-monospace vault-history-password">{{ data.password }}</span></template>
         </Column>
         <Column header="">
           <template #body="{ data }">

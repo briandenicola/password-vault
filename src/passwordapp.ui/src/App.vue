@@ -16,10 +16,14 @@
       </button>
       <nav v-if="currentTheme === 'classic'" id="vault-navigation" class="vault-nav vault-nav-classic" aria-label="Vault navigation">
         <template v-if="vaultUnlocked">
+          <router-link class="classic-only" :to="{ name: 'Home' }">Accounts</router-link>
           <router-link class="classic-only" :to="{ name: 'Create' }">New Account</router-link>
           <router-link class="classic-only" :to="{ name: 'Settings' }">Settings</router-link>
         </template>
-        <button class="vault-nav-button" type="button" @click="logOut">Sign out</button>
+        <button class="vault-nav-button classic-sign-out" type="button" aria-label="Log out" title="Log out" @click="logOut">
+          <font-awesome-icon icon="right-from-bracket" />
+          <span class="classic-sign-out-text">Sign out</span>
+        </button>
       </nav>
       <nav v-else id="vault-navigation" class="vault-nav" :class="{ 'is-open': navOpen }" aria-label="Vault navigation" @click="closeNav">
         <template v-if="vaultUnlocked">

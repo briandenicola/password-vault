@@ -34,6 +34,7 @@ import { faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { faMoon } from '@fortawesome/free-solid-svg-icons'
 import { faBars } from '@fortawesome/free-solid-svg-icons'
 import { faClockRotateLeft } from '@fortawesome/free-solid-svg-icons'
+import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import Authentication from './components/azuread/AzureAD.Authentication.js'
 import { ClickAnalyticsPlugin } from '@microsoft/applicationinsights-clickanalytics-js';
@@ -55,6 +56,7 @@ let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? 
   library.add(faBars)
   library.add(faClockRotateLeft)
   library.add(faMoon)
+  library.add(faRightFromBracket)
 
   Axios.defaults.baseURL = process.env.VUE_APP_API_ENDPOINT;
 

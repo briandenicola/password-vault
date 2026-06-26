@@ -135,6 +135,40 @@ body.dark-mode .vault-password-dialog .vault-password-value {
   text-align: center;
 }
 
+body.theme-vault .vault-history-dialog.p-dialog,
+body.dark-mode .vault-history-dialog.p-dialog {
+  overflow: hidden;
+  border: 2px solid var(--vault-accent);
+  border-radius: .85rem;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, .45);
+}
+
+body.theme-vault .vault-history-dialog .p-dialog-header,
+body.dark-mode .vault-history-dialog .p-dialog-header {
+  padding-bottom: 1rem;
+}
+
+body.theme-vault .vault-history-dialog .p-dialog-content,
+body.dark-mode .vault-history-dialog .p-dialog-content {
+  padding: 1rem 1.5rem 1.25rem;
+}
+
+body.theme-vault .vault-history-table .p-datatable-thead > tr > th,
+body.dark-mode .vault-history-table .p-datatable-thead > tr > th {
+  text-align: center;
+}
+
+body.theme-vault .vault-history-password,
+body.dark-mode .vault-history-password {
+  display: block;
+  color: var(--vault-text);
+  font-size: clamp(1.1rem, 3vw, 1.45rem);
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
 @media (max-width: 820px) {
   .account-name,
   .site-name {
