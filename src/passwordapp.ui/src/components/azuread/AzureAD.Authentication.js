@@ -12,13 +12,20 @@ const msalConfig = {
   auth: {
     clientId: process.env.VUE_APP_AAD_CLIENT_ID,
     authority: `https://login.microsoftonline.com/${process.env.VUE_APP_AAD_TENANT_ID}`,
-    redirectUri: process.env.VUE_APP_AAD_REDIRECT_URL,
+    redirectUri: resolveRedirectUri(),
   },
   cache: {
     cacheLocation: "localStorage",
     storeAuthStateInCookie: false,
   },
 };
+
+export function resolveRedirectUri() {
+  if (typeof window !== "undefined" && window.location && window.location.origin) {
+    return window.location.origin;
+  }
+  return process.env.VUE_APP_AAD_REDIRECT_URL;
+}
 
 // Injectable for tests; defaults to a real PublicClientApplication.
 let authService = new msal.PublicClientApplication(msalConfig);
