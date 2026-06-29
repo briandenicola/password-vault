@@ -12,7 +12,7 @@
   "dependencies": {
     "@azure/msal-browser": "^5.15.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
-    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^7.3.0",
     "@fortawesome/vue-fontawesome": "^3.0.8",
     "@microsoft/applicationinsights-clickanalytics-js": "^3.3.4",
     "@microsoft/applicationinsights-web": "^3.3.4",
