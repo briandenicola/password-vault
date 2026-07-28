@@ -29,6 +29,11 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # PrimeVue 5 moved to the licensed PrimeUI distribution. Keep the
+      # application on the last MIT-licensed PrimeVue 4 release.
+      - dependency-name: primevue
+        update-types: ["version-update:semver-major"]
     groups:
       # Keep noisy patch/minor bumps batched into one PR.
       ui-minor:
