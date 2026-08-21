@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { InteractionRequiredAuthError } from '@azure/msal-browser';
-import Authentication, { resolveRedirectUri } from '@/components/azuread/AzureAD.Authentication.js';
+import { InteractionRequiredAuthError, BrowserAuthError, BrowserAuthErrorCodes } from '@azure/msal-browser';
+import Authentication, { resolveRedirectUri, RedirectInProgressError } from '@/components/azuread/AzureAD.Authentication.js';
 
 // A fake PublicClientApplication that records call ordering so we can prove that
 // initialize() and handleRedirectPromise() are awaited before the app inspects accounts
@@ -20,7 +20,7 @@ function makeFakeMsal(overrides = {}) {
     getAllAccounts() { return accounts; },
     getActiveAccount() { return activeAccount; },
     setActiveAccount(a) { activeAccount = a; calls.push('setActiveAccount'); },
-    async loginRedirect() { calls.push('loginRedirect'); },
+    loginRedirect: overrides.loginRedirect || (async () => { calls.push('loginRedirect'); }),
     async logoutRedirect(req) { calls.push('logoutRedirect'); this.lastLogout = req; },
     acquireTokenSilent: overrides.acquireTokenSilent
       || (async () => ({ accessToken: 'silent-token' })),
@@ -47,7 +47,7 @@ describe('AzureAD.Authentication (MSAL v5)', () => {
     Authentication._setAuthService(fake);
     await Authentication.initialize();
     await Authentication.initialize();
-    await Authentication.getBearerToken();
+    await Authentication.getBearerToken().catch(() => {}); // may throw RedirectInProgressError — ignore
     expect(fake.calls.filter(c => c === 'initialize')).toHaveLength(1);
   });
 
@@ -67,12 +67,14 @@ describe('AzureAD.Authentication (MSAL v5)', () => {
     expect(Authentication.getUserProfile()).toBe('cached@example.com');
   });
 
-  it('reports unauthenticated and a null token when there is no account', async () => {
-    Authentication._setAuthService(makeFakeMsal());
+  it('triggers login redirect and throws RedirectInProgressError when there is no account', async () => {
+    const fake = makeFakeMsal();
+    Authentication._setAuthService(fake);
     await Authentication.initialize();
     expect(Authentication.isAuthenticated()).toBe(false);
     expect(Authentication.getUserProfile()).toBe('');
-    await expect(Authentication.getBearerToken()).resolves.toBeNull();
+    await expect(Authentication.getBearerToken()).rejects.toThrow(RedirectInProgressError);
+    expect(fake.calls).toContain('loginRedirect');
   });
 
   it('uses the runtime browser origin for redirect URLs', () => {
@@ -107,7 +109,7 @@ describe('AzureAD.Authentication (MSAL v5)', () => {
     await expect(Authentication.getBearerToken()).resolves.toBe('silent-token');
   });
 
-  it('falls back to an interactive redirect when silent acquisition needs interaction', async () => {
+  it('falls back to interactive redirect and signals redirect-in-progress when silent acquisition requires interaction', async () => {
     const account = { username: 'parent@example.com' };
     const fake = makeFakeMsal({
       redirectResponse: { account },
@@ -115,9 +117,67 @@ describe('AzureAD.Authentication (MSAL v5)', () => {
     });
     Authentication._setAuthService(fake);
     await Authentication.initialize();
-    const token = await Authentication.getBearerToken();
-    expect(token).toBeNull();
+    await expect(Authentication.getBearerToken()).rejects.toThrow(RedirectInProgressError);
     expect(fake.calls).toContain('acquireTokenRedirect');
+  });
+
+  it('propagates non-recoverable silent acquisition failures without attempting interactive auth', async () => {
+    const account = { username: 'parent@example.com' };
+    const networkError = new Error('network failure');
+    const fake = makeFakeMsal({
+      redirectResponse: { account },
+      acquireTokenSilent: async () => { throw networkError; },
+    });
+    Authentication._setAuthService(fake);
+    await Authentication.initialize();
+    await expect(Authentication.getBearerToken()).rejects.toThrow('network failure');
+    expect(fake.calls).not.toContain('acquireTokenRedirect');
+  });
+
+  it('throws RedirectInProgressError when acquireTokenRedirect reports an interaction already in progress', async () => {
+    const account = { username: 'parent@example.com' };
+    const inProgressError = new BrowserAuthError(BrowserAuthErrorCodes.interactionInProgress, 'test');
+    const fake = makeFakeMsal({
+      redirectResponse: { account },
+      acquireTokenSilent: async () => { throw new InteractionRequiredAuthError(); },
+      acquireTokenRedirect: async () => { throw inProgressError; },
+    });
+    Authentication._setAuthService(fake);
+    await Authentication.initialize();
+    await expect(Authentication.getBearerToken()).rejects.toThrow(RedirectInProgressError);
+  });
+
+  it('surfaces genuine redirect initiation failures so they remain visible', async () => {
+    const account = { username: 'parent@example.com' };
+    const configError = new Error('MSAL config error');
+    const fake = makeFakeMsal({
+      redirectResponse: { account },
+      acquireTokenSilent: async () => { throw new InteractionRequiredAuthError(); },
+      acquireTokenRedirect: async () => { throw configError; },
+    });
+    Authentication._setAuthService(fake);
+    await Authentication.initialize();
+    await expect(Authentication.getBearerToken()).rejects.toThrow('MSAL config error');
+  });
+
+  it('throws RedirectInProgressError when loginRedirect reports an interaction already in progress', async () => {
+    const inProgressError = new BrowserAuthError(BrowserAuthErrorCodes.interactionInProgress, 'test');
+    const fake = makeFakeMsal({
+      loginRedirect: async () => { throw inProgressError; },
+    });
+    Authentication._setAuthService(fake);
+    await Authentication.initialize();
+    await expect(Authentication.getBearerToken()).rejects.toThrow(RedirectInProgressError);
+  });
+
+  it('surfaces genuine loginRedirect failures when no account is cached', async () => {
+    const configError = new Error('MSAL config error');
+    const fake = makeFakeMsal({
+      loginRedirect: async () => { throw configError; },
+    });
+    Authentication._setAuthService(fake);
+    await Authentication.initialize();
+    await expect(Authentication.getBearerToken()).rejects.toThrow('MSAL config error');
   });
 
   it('signs out using the active account', async () => {

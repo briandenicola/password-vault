@@ -27,6 +27,17 @@ export function resolveRedirectUri() {
   return process.env.VUE_APP_AAD_REDIRECT_URL;
 }
 
+// Sentinel thrown by getTokenRedirect (and propagated through getBearerToken) when
+// interactive authentication has been initiated via a browser redirect. Callers --
+// notably the Axios interceptor -- must suppress request errors while this is in
+// flight; the page will reload once authentication completes.
+export class RedirectInProgressError extends Error {
+  constructor() {
+    super('redirect_in_progress');
+    this.name = 'RedirectInProgressError';
+  }
+}
+
 // Injectable for tests; defaults to a real PublicClientApplication.
 let authService = new msal.PublicClientApplication(msalConfig);
 let initialization = null;
@@ -69,6 +80,18 @@ function ensureInitialized() {
   return initialization;
 }
 
+// Returns true when MSAL signals that an interactive flow is already running.
+// This occurs when acquireTokenRedirect or loginRedirect is called while the
+// browser is already navigating to the identity provider, or when MSAL holds
+// a stale in-progress marker. Treating this as "redirect in progress" prevents
+// a spurious error from surfacing while authentication is underway.
+function isInteractionInProgressError(error) {
+  return (
+    error instanceof msal.BrowserAuthError &&
+    error.errorCode === msal.BrowserAuthErrorCodes.interactionInProgress
+  );
+}
+
 const api = {
   tokenRequest: {
     scopes: scopes(process.env.VUE_APP_AAD_SCOPE),
@@ -105,17 +128,51 @@ const api = {
   async getTokenRedirect(request) {
     await ensureInitialized();
     const account = authService.getActiveAccount();
+
     if (!account) {
-      return null;
+      // No cached account -- initiate login and signal that a redirect is in-flight.
+      // Callers must not surface an error while browser navigation is pending.
+      try {
+        await authService.loginRedirect(this.loginRequest);
+      } catch (err) {
+        if (isInteractionInProgressError(err)) {
+          // A redirect is already underway -- suppress.
+          throw new RedirectInProgressError();
+        }
+        console.error('MSAL loginRedirect failed:', err);
+        throw err;
+      }
+      throw new RedirectInProgressError();
     }
 
     try {
       return await authService.acquireTokenSilent({ ...request, account });
     } catch (error) {
       if (error instanceof msal.InteractionRequiredAuthError) {
-        await authService.acquireTokenRedirect({ ...request, account });
+        // Token requires user interaction (expired RT, consent, etc.).
+        // Initiate redirect and signal the caller to suppress errors.
+        try {
+          await authService.acquireTokenRedirect({ ...request, account });
+          // acquireTokenRedirect resolves before browser navigation completes;
+          // throw the sentinel so the Axios interceptor suppresses the request.
+          throw new RedirectInProgressError();
+        } catch (redirectError) {
+          if (redirectError instanceof RedirectInProgressError) {
+            throw redirectError;
+          }
+          if (isInteractionInProgressError(redirectError)) {
+            // MSAL already has a redirect in progress -- suppress.
+            throw new RedirectInProgressError();
+          }
+          // Genuine failure to initiate the redirect -- log and surface it.
+          console.error('MSAL acquireTokenRedirect failed:', redirectError);
+          throw redirectError;
+        }
       }
-      return null;
+      // Non-recoverable silent acquisition failure -- propagate as-is.
+      // This covers network errors, configuration problems, and programming
+      // errors; do not attempt interactive auth for these conditions.
+      throw error;
     }
   },
 

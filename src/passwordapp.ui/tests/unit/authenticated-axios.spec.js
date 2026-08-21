@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import { RedirectInProgressError } from '@/components/azuread/AzureAD.Authentication.js';
 import { configureAuthenticatedAxios } from '@/components/api/authenticated-axios.js';
 
 function makeHttp() {
@@ -62,5 +63,32 @@ describe('configureAuthenticatedAxios', () => {
 
     expect(authentication.getBearerToken).not.toHaveBeenCalled();
     expect(config.headers).toBeUndefined();
+  });
+
+  it('silently suppresses the request without error when a redirect is in progress', async () => {
+    const http = makeHttp();
+    const authentication = { getBearerToken: vi.fn().mockRejectedValue(new RedirectInProgressError()) };
+
+    configureAuthenticatedAxios(http, authentication);
+
+    // A redirect-in-progress means the browser is navigating to the identity provider.
+    // The interceptor must return a never-settling promise so no false error banner is
+    // shown. We verify the promise neither resolves nor rejects within the next tick.
+    const result = await Promise.race([
+      http.apply({ url: '/api/passwords' }).then(() => 'resolved', () => 'rejected'),
+      Promise.resolve().then(() => 'pending'),
+    ]);
+    expect(result).toBe('pending');
+    expect(authentication.getBearerToken).toHaveBeenCalledTimes(1);
+  });
+
+  it('propagates non-redirect errors from getBearerToken', async () => {
+    const http = makeHttp();
+    const authError = new Error('MSAL config error');
+    const authentication = { getBearerToken: vi.fn().mockRejectedValue(authError) };
+
+    configureAuthenticatedAxios(http, authentication);
+
+    await expect(http.apply({ url: '/api/passwords' })).rejects.toThrow('MSAL config error');
   });
 });
