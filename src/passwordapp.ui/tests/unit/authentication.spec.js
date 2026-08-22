@@ -121,6 +121,22 @@ describe('AzureAD.Authentication (MSAL v5)', () => {
     expect(fake.calls).toContain('acquireTokenRedirect');
   });
 
+  it('falls back to interactive redirect when silent acquisition times out (expired refresh token)', async () => {
+    // Reproduces briandenicola/password-vault#68: once the refresh token's 24h
+    // lifetime lapses, MSAL can report a hidden-iframe "timed_out" BrowserAuthError
+    // rather than InteractionRequiredAuthError. This must also fall back to redirect.
+    const account = { username: 'parent@example.com' };
+    const timedOutError = new BrowserAuthError(BrowserAuthErrorCodes.timedOut, 'test');
+    const fake = makeFakeMsal({
+      redirectResponse: { account },
+      acquireTokenSilent: async () => { throw timedOutError; },
+    });
+    Authentication._setAuthService(fake);
+    await Authentication.initialize();
+    await expect(Authentication.getBearerToken()).rejects.toThrow(RedirectInProgressError);
+    expect(fake.calls).toContain('acquireTokenRedirect');
+  });
+
   it('propagates non-recoverable silent acquisition failures without attempting interactive auth', async () => {
     const account = { username: 'parent@example.com' };
     const networkError = new Error('network failure');

@@ -92,6 +92,20 @@ function isInteractionInProgressError(error) {
   );
 }
 
+// MSAL sometimes reports an expired session as a hidden-iframe timeout
+// (BrowserAuthError "timed_out", aka monitor_window_timeout) rather than an
+// InteractionRequiredAuthError -- notably once the refresh token's lifetime
+// (e.g. 24 hours) has lapsed and there is no AAD session left to silently
+// renew against. Treat it the same as InteractionRequiredAuthError so the
+// user is redirected to sign in again instead of seeing a raw error.
+function requiresInteraction(error) {
+  return (
+    error instanceof msal.InteractionRequiredAuthError ||
+    (error instanceof msal.BrowserAuthError &&
+      error.errorCode === msal.BrowserAuthErrorCodes.timedOut)
+  );
+}
+
 const api = {
   tokenRequest: {
     scopes: scopes(process.env.VUE_APP_AAD_SCOPE),
@@ -148,8 +162,9 @@ const api = {
     try {
       return await authService.acquireTokenSilent({ ...request, account });
     } catch (error) {
-      if (error instanceof msal.InteractionRequiredAuthError) {
-        // Token requires user interaction (expired RT, consent, etc.).
+      if (requiresInteraction(error)) {
+        // Token requires user interaction (expired RT, consent, timed-out
+        // silent renewal, etc.).
         // Initiate redirect and signal the caller to suppress errors.
         try {
           await authService.acquireTokenRedirect({ ...request, account });
