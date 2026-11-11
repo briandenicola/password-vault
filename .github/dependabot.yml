@@ -34,6 +34,10 @@ updates:
       # application on the last MIT-licensed PrimeVue 4 release.
       - dependency-name: primevue
         update-types: ["version-update:semver-major"]
+      # @primeuix/themes 3.x is built for PrimeVue 5 (it needs @primeuix/styled
+      # 1.x; PrimeVue 4 ships 0.7.x). Stay on 2.x while PrimeVue stays on 4.
+      - dependency-name: "@primeuix/themes"
+        update-types: ["version-update:semver-major"]
     groups:
       # Keep noisy patch/minor bumps batched into one PR.
       ui-minor:
