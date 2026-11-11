@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { InteractionRequiredAuthError, BrowserAuthError, BrowserAuthErrorCodes } from '@azure/msal-browser';
 import Authentication, { resolveRedirectUri, RedirectInProgressError } from '@/components/azuread/AzureAD.Authentication.js';
 
@@ -90,15 +90,14 @@ describe('AzureAD.Authentication (MSAL v5)', () => {
 
   it('falls back to the configured redirect URL outside a browser', () => {
     const originalWindow = global.window;
-    const originalRedirectUrl = process.env.VUE_APP_AAD_REDIRECT_URL;
     delete global.window;
-    process.env.VUE_APP_AAD_REDIRECT_URL = 'https://gray-hill-03b055310.7.azurestaticapps.net';
+    vi.stubEnv('VUE_APP_AAD_REDIRECT_URL', 'https://gray-hill-03b055310.7.azurestaticapps.net');
 
     try {
       expect(resolveRedirectUri()).toBe('https://gray-hill-03b055310.7.azurestaticapps.net');
     } finally {
       global.window = originalWindow;
-      process.env.VUE_APP_AAD_REDIRECT_URL = originalRedirectUrl;
+      vi.unstubAllEnvs();
     }
   });
 

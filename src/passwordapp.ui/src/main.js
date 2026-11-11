@@ -44,7 +44,7 @@ import './registerServiceWorker'
 import './css/main.css';
 import { configureAuthenticatedAxios } from './components/api/authenticated-axios.js';
 
-let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? true : false;
+let requiresAppInsights = import.meta.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? true : false;
 
 (async () =>
 {
@@ -58,11 +58,11 @@ let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? 
   library.add(faMoon)
   library.add(faRightFromBracket)
 
-  Axios.defaults.baseURL = process.env.VUE_APP_API_ENDPOINT;
+  Axios.defaults.baseURL = import.meta.env.VUE_APP_API_ENDPOINT;
 
   await Authentication.initialize();
   configureAuthenticatedAxios(Axios, Authentication, {
-    enabled: process.env.VUE_APP_REQUIRES_AUTHENTICATION == 'true',
+    enabled: import.meta.env.VUE_APP_REQUIRES_AUTHENTICATION == 'true',
   });
 
   if(requiresAppInsights ) {
@@ -72,7 +72,7 @@ let requiresAppInsights = process.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? 
     };
 
     const appInsights = new ApplicationInsights({ config: {
-      connectionString: process.env.VUE_APP_INSIGHTS_CONNECTION_STRING,
+      connectionString: import.meta.env.VUE_APP_INSIGHTS_CONNECTION_STRING,
       extensions: [ clickPluginInstance ],
       extensionConfig: {
         [clickPluginInstance.identifier] : clickPluginConfig

@@ -9,10 +9,10 @@ import Trash from '@/components/trash/trash.vue'
 import Transfer from '@/components/transfer/transfer.vue'
 import Authentication from './components/azuread/AzureAD.Authentication.js'
 
-let requiresAuthentication = process.env.VUE_APP_REQUIRES_AUTHENTICATION  == 'true' ? true : false;
+let requiresAuthentication = import.meta.env.VUE_APP_REQUIRES_AUTHENTICATION  == 'true' ? true : false;
 
 var router = createRouter({
-  history: createMemoryHistory(process.env.BASE_URL),
+  history: createMemoryHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',

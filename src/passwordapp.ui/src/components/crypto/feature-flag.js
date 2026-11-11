@@ -2,5 +2,5 @@
 // is enabled per-device first, then the family (design §9.4). Phase 1 only gates
 // the new crypto surface; the existing CRUD/decrypt path is untouched.
 export function isE2eeEnabled() {
-  return process.env.VUE_APP_E2EE === 'true';
+  return import.meta.env.VUE_APP_E2EE === 'true';
 }
