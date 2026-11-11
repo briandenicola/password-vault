@@ -10,8 +10,8 @@ import * as msal from "@azure/msal-browser";
 
 const msalConfig = {
   auth: {
-    clientId: process.env.VUE_APP_AAD_CLIENT_ID,
-    authority: `https://login.microsoftonline.com/${process.env.VUE_APP_AAD_TENANT_ID}`,
+    clientId: import.meta.env.VUE_APP_AAD_CLIENT_ID,
+    authority: `https://login.microsoftonline.com/${import.meta.env.VUE_APP_AAD_TENANT_ID}`,
     redirectUri: resolveRedirectUri(),
   },
   cache: {
@@ -24,7 +24,7 @@ export function resolveRedirectUri() {
   if (typeof window !== "undefined" && window.location && window.location.origin) {
     return window.location.origin;
   }
-  return process.env.VUE_APP_AAD_REDIRECT_URL;
+  return import.meta.env.VUE_APP_AAD_REDIRECT_URL;
 }
 
 // Sentinel thrown by getTokenRedirect (and propagated through getBearerToken) when
@@ -108,11 +108,11 @@ function requiresInteraction(error) {
 
 const api = {
   tokenRequest: {
-    scopes: scopes(process.env.VUE_APP_AAD_SCOPE),
+    scopes: scopes(import.meta.env.VUE_APP_AAD_SCOPE),
   },
 
   loginRequest: {
-    scopes: scopes("User.Read", process.env.VUE_APP_AAD_SCOPE),
+    scopes: scopes("User.Read", import.meta.env.VUE_APP_AAD_SCOPE),
   },
 
   // Awaitable bootstrap. Safe to call multiple times; work happens once.
