@@ -18,8 +18,6 @@ export default [
       globals: {
         ...globals.browser,
         ...globals.node,
-        // Build-time constant injected by Vue CLI / webpack DefinePlugin.
-        __WB_MANIFEST: 'readonly',
       },
     },
     rules: {
