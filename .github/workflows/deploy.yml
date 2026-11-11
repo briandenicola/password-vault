@@ -116,7 +116,7 @@ jobs:
             echo 'VUE_APP_AAD_TENANT_ID="${{ secrets.AZURE_TENANT_ID }}"'
             echo 'VUE_APP_AAD_SCOPE="${{ env.AZURE_FUNCTIONAPP_URL }}/Password.All"'
           } > .env
-          npm install
+          npm ci --no-audit --no-fund
           npm run build
       - name: Deploy UI
         working-directory: src/passwordapp.ui

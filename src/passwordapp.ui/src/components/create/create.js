@@ -51,7 +51,6 @@ export default {
         this.formData = PasswordService.newPassword();
         this.$router.push({ name: 'Home' });
       }).catch((error) => {
-      }).catch((error) => {
         this.alertModalTitle = 'Error';
         this.alertModalContent = "Got an error " + error.response.data;
         this.showAlertModal = true;
