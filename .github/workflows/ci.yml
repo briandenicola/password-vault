@@ -52,6 +52,13 @@ jobs:
         with:
           node-version: '22'
 
+      # npm 10 (bundled with Node 22) crashes while resolving this project's peer
+      # dependencies: "Cannot read properties of null (reading 'edgesOut')".
+      # npm 11 resolves the same tree. Drop this step once the job moves to a
+      # Node release that ships npm 11.
+      - name: Use npm 11
+        run: npm install -g npm@11
+
       # package-lock.json is gitignored in this repo, so `npm ci` is not usable yet.
       # If the lockfile is committed later, switch this to `npm ci`.
       - name: Install dependencies
