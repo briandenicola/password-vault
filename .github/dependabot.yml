@@ -44,6 +44,9 @@ updates:
     directory: /src/passwordapp.maintenance
     schedule:
       interval: weekly
+    groups:
+      pip-minor-patch:
+        update-types: [minor, patch]
 
   # Terraform infrastructure
   - package-ecosystem: terraform
