@@ -1,3 +1,9 @@
+// Third-party stylesheets load first so component styles (imported through
+// App.vue and the router) come after them in the bundle and win cascade
+// ties, e.g. home.css hiding the `.row` desktop table on phones.
+import 'bootstrap/dist/css/bootstrap.css'
+import 'primeicons/primeicons.css'
+
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
@@ -5,7 +11,6 @@ import router from './router'
 
 import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
-import 'primeicons/primeicons.css'
 
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -22,8 +27,6 @@ import Message from 'primevue/message'
 import Tooltip from 'primevue/tooltip'
 import Toast from 'primevue/toast'
 import ToastService from 'primevue/toastservice'
-
-import 'bootstrap/dist/css/bootstrap.css'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faKey } from '@fortawesome/free-solid-svg-icons'
