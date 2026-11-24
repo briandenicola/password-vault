@@ -16,7 +16,7 @@ namespace PasswordService.API
             {
                 var activeAccounts = (from p in passwordCollection
                     where p.isDeleted == false
-                    select p).ToList();
+                    select AccountSummary.From(p)).ToList();
                 return new OkObjectResult(activeAccounts);
             }
             return new NotFoundObjectResult("No passwords found");

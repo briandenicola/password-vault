@@ -40,12 +40,11 @@ import { faClockRotateLeft } from '@fortawesome/free-solid-svg-icons'
 import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import Authentication from './components/azuread/AzureAD.Authentication.js'
-import { ClickAnalyticsPlugin } from '@microsoft/applicationinsights-clickanalytics-js';
-import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import Axios from 'axios'
 import './registerServiceWorker'
 import './css/main.css';
 import { configureAuthenticatedAxios } from './components/api/authenticated-axios.js';
+import { useAccountsStore } from './stores/accounts.store.js';
 
 let requiresAppInsights = import.meta.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true' ? true : false;
 
@@ -68,25 +67,21 @@ let requiresAppInsights = import.meta.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true
     enabled: import.meta.env.VUE_APP_REQUIRES_AUTHENTICATION == 'true',
   });
 
-  if(requiresAppInsights ) {
-    const clickPluginInstance = new ClickAnalyticsPlugin();
-    const clickPluginConfig = {
-      autoCapture: true
-    };
+  const requiresAuthentication = import.meta.env.VUE_APP_REQUIRES_AUTHENTICATION == 'true';
+  const pinia = createPinia();
 
-    const appInsights = new ApplicationInsights({ config: {
-      connectionString: import.meta.env.VUE_APP_INSIGHTS_CONNECTION_STRING,
-      extensions: [ clickPluginInstance ],
-      extensionConfig: {
-        [clickPluginInstance.identifier] : clickPluginConfig
-      },
-    }});
-    appInsights.loadAppInsights();
-    appInsights.trackPageView();
+  // Start loading the account list now, in parallel with mounting the app, instead
+  // of waiting for the Home page to be created. The store dedupes, so Home's own
+  // fetchAccounts() picks up this in-flight request. Only when already signed in:
+  // otherwise the router guard owns the sign-in redirect.
+  if (!requiresAuthentication || Authentication.isAuthenticated()) {
+    useAccountsStore(pinia).fetchAccounts().catch(() => {
+      // The store records the error; Home shows it when it mounts.
+    });
   }
 
   const app = createApp(App);
-  app.use(createPinia());
+  app.use(pinia);
   app.use(router);
   app.use(PrimeVue, {
     theme: {
@@ -116,4 +111,26 @@ let requiresAppInsights = import.meta.env.VUE_APP_REQUIRES_APP_INSIGHTS == 'true
   app.directive('tooltip', Tooltip);
 
   app.mount('#app');
+
+  // Telemetry is not needed for the first screen: load it in its own chunk after mount.
+  if (requiresAppInsights) {
+    loadAppInsights().catch(err => console.error('App Insights failed to load:', err));
+  }
 })();
+
+async function loadAppInsights() {
+  const [{ ClickAnalyticsPlugin }, { ApplicationInsights }] = await Promise.all([
+    import('@microsoft/applicationinsights-clickanalytics-js'),
+    import('@microsoft/applicationinsights-web'),
+  ]);
+  const clickPluginInstance = new ClickAnalyticsPlugin();
+  const appInsights = new ApplicationInsights({ config: {
+    connectionString: import.meta.env.VUE_APP_INSIGHTS_CONNECTION_STRING,
+    extensions: [ clickPluginInstance ],
+    extensionConfig: {
+      [clickPluginInstance.identifier]: { autoCapture: true },
+    },
+  }});
+  appInsights.loadAppInsights();
+  appInsights.trackPageView();
+}

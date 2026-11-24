@@ -60,3 +60,9 @@ variable "aad_allowed_oids" {
   description = "Optional comma-separated allowlist of caller object-ids. Empty relies on Enterprise App group assignment."
   default     = ""
 }
+
+variable "functions_http_always_ready_instances" {
+  description = "Pre-warmed Flex Consumption instances for the API's HTTP trigger group. 1 removes cold starts on the first vault load; it bills a small baseline even when idle. 0 scales to zero."
+  type        = number
+  default     = 1
+}
