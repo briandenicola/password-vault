@@ -42,6 +42,49 @@ export class RedirectInProgressError extends Error {
 let authService = new msal.PublicClientApplication(msalConfig);
 let initialization = null;
 
+// The last signed-in username, kept across an idle lock (which clears MSAL's token cache)
+// so the next interactive sign-in can send login_hint. With a hint and a live Entra session,
+// Entra completes sign-in without showing the account picker. An explicit sign-out forgets it
+// so another family member can sign in on a shared device.
+const LAST_USER_KEY = 'vault.auth.lastUser';
+
+function storage() {
+  try {
+    return typeof window !== 'undefined' && window.localStorage ? window.localStorage : null;
+  } catch {
+    return null;
+  }
+}
+
+function rememberUser(username) {
+  try {
+    if (username) storage()?.setItem(LAST_USER_KEY, username);
+  } catch { /* storage unavailable -- hint is best-effort */ }
+}
+
+function forgetUser() {
+  try {
+    storage()?.removeItem(LAST_USER_KEY);
+  } catch { /* storage unavailable */ }
+}
+
+function loginHint() {
+  const account = authService.getActiveAccount();
+  if (account && account.username) {
+    return account.username;
+  }
+  try {
+    return storage()?.getItem(LAST_USER_KEY) || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function withLoginHint(request) {
+  const hint = loginHint();
+  return hint ? { ...request, loginHint: hint } : { ...request };
+}
+
 function scopes(...values) {
   return values.filter(value => typeof value === 'string' && value.trim().length > 0);
 }
@@ -49,13 +92,15 @@ function scopes(...values) {
 function applyActiveAccount(redirectResponse) {
   if (redirectResponse && redirectResponse.account) {
     authService.setActiveAccount(redirectResponse.account);
-    return;
-  }
-  if (!authService.getActiveAccount()) {
+  } else if (!authService.getActiveAccount()) {
     const accounts = authService.getAllAccounts();
     if (accounts && accounts.length > 0) {
       authService.setActiveAccount(accounts[0]);
     }
+  }
+  const active = authService.getActiveAccount();
+  if (active) {
+    rememberUser(active.username);
   }
 }
 
@@ -131,12 +176,24 @@ const api = {
 
   async signIn() {
     await ensureInitialized();
-    await authService.loginRedirect(this.loginRequest);
+    await authService.loginRedirect(withLoginHint(this.loginRequest));
   },
 
+  // Explicit sign-out: ends the Entra session and forgets the remembered username.
   async signOut() {
     await ensureInitialized();
+    forgetUser();
     await authService.logoutRedirect({ account: authService.getActiveAccount() });
+  },
+
+  // Idle lock: drop this app's cached tokens and account WITHOUT ending the Entra session.
+  // Unlocking requires a fresh sign-in redirect, but with the remembered login_hint and a
+  // live Entra session that completes without an account picker or password prompt.
+  async lockSession() {
+    await ensureInitialized();
+    const account = authService.getActiveAccount();
+    await authService.clearCache(account ? { account } : undefined);
+    authService.setActiveAccount(null);
   },
 
   async getTokenRedirect(request) {
@@ -147,7 +204,7 @@ const api = {
       // No cached account -- initiate login and signal that a redirect is in-flight.
       // Callers must not surface an error while browser navigation is pending.
       try {
-        await authService.loginRedirect(this.loginRequest);
+        await authService.loginRedirect(withLoginHint(this.loginRequest));
       } catch (err) {
         if (isInteractionInProgressError(err)) {
           // A redirect is already underway -- suppress.
@@ -160,14 +217,24 @@ const api = {
     }
 
     try {
-      return await authService.acquireTokenSilent({ ...request, account });
+      // Use cached access/refresh tokens only. SPA refresh tokens expire after a fixed 24h;
+      // MSAL's default policy then tries a hidden-iframe renewal, which browsers that block
+      // third-party cookies (Safari, Firefox, installed PWAs) make fail only after a ~10s
+      // timeout. Failing fast and going straight to a top-level redirect (where Entra's
+      // cookies are first-party) is both quicker and more reliable.
+      return await authService.acquireTokenSilent({
+        ...request,
+        account,
+        cacheLookupPolicy: msal.CacheLookupPolicy.AccessTokenAndRefreshToken,
+      });
     } catch (error) {
       if (requiresInteraction(error)) {
         // Token requires user interaction (expired RT, consent, timed-out
         // silent renewal, etc.).
-        // Initiate redirect and signal the caller to suppress errors.
+        // Initiate redirect and signal the caller to suppress errors. login_hint lets
+        // Entra complete it without UI while its session is still alive.
         try {
-          await authService.acquireTokenRedirect({ ...request, account });
+          await authService.acquireTokenRedirect(withLoginHint({ ...request, account }));
           // acquireTokenRedirect resolves before browser navigation completes;
           // throw the sentinel so the Axios interceptor suppresses the request.
           throw new RedirectInProgressError();

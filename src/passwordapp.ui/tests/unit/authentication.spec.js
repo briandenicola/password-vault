@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { InteractionRequiredAuthError, BrowserAuthError, BrowserAuthErrorCodes } from '@azure/msal-browser';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { InteractionRequiredAuthError, BrowserAuthError, BrowserAuthErrorCodes, CacheLookupPolicy } from '@azure/msal-browser';
 import Authentication, { resolveRedirectUri, RedirectInProgressError } from '@/components/azuread/AzureAD.Authentication.js';
 
 // A fake PublicClientApplication that records call ordering so we can prove that
@@ -20,12 +20,26 @@ function makeFakeMsal(overrides = {}) {
     getAllAccounts() { return accounts; },
     getActiveAccount() { return activeAccount; },
     setActiveAccount(a) { activeAccount = a; calls.push('setActiveAccount'); },
-    loginRedirect: overrides.loginRedirect || (async () => { calls.push('loginRedirect'); }),
+    loginRedirect: overrides.loginRedirect
+      || (async function (req) { calls.push('loginRedirect'); this.lastLogin = req; }),
     async logoutRedirect(req) { calls.push('logoutRedirect'); this.lastLogout = req; },
+    async clearCache(req) { calls.push('clearCache'); this.lastClearCache = req; },
     acquireTokenSilent: overrides.acquireTokenSilent
       || (async () => ({ accessToken: 'silent-token' })),
     acquireTokenRedirect: overrides.acquireTokenRedirect
-      || (async () => { calls.push('acquireTokenRedirect'); }),
+      || (async function (req) { calls.push('acquireTokenRedirect'); this.lastTokenRedirect = req; }),
+  };
+}
+
+function makeFakeWindow() {
+  const items = new Map();
+  return {
+    location: { origin: 'https://vault.example.com' },
+    localStorage: {
+      getItem: key => (items.has(key) ? items.get(key) : null),
+      setItem: (key, value) => items.set(key, String(value)),
+      removeItem: key => items.delete(key),
+    },
   };
 }
 
@@ -202,6 +216,85 @@ describe('AzureAD.Authentication (MSAL v5)', () => {
     await Authentication.initialize();
     await Authentication.signOut();
     expect(fake.lastLogout).toEqual({ account });
+  });
+
+  it('acquires tokens from cache/refresh token only, skipping the slow hidden-iframe renewal', async () => {
+    const account = { username: 'parent@example.com' };
+    let silentRequest;
+    Authentication._setAuthService(makeFakeMsal({
+      redirectResponse: { account },
+      acquireTokenSilent: async (req) => { silentRequest = req; return { accessToken: 't' }; },
+    }));
+    await Authentication.initialize();
+    await Authentication.getBearerToken();
+    expect(silentRequest.cacheLookupPolicy).toBe(CacheLookupPolicy.AccessTokenAndRefreshToken);
+    expect(silentRequest.account).toBe(account);
+  });
+
+  it('sends the account username as login_hint on the interactive token redirect', async () => {
+    const account = { username: 'parent@example.com' };
+    const fake = makeFakeMsal({
+      redirectResponse: { account },
+      acquireTokenSilent: async () => { throw new InteractionRequiredAuthError(); },
+    });
+    Authentication._setAuthService(fake);
+    await Authentication.initialize();
+    await expect(Authentication.getBearerToken()).rejects.toThrow(RedirectInProgressError);
+    expect(fake.lastTokenRedirect.loginHint).toBe('parent@example.com');
+    expect(fake.lastTokenRedirect.prompt).toBeUndefined();
+  });
+
+  describe('with browser storage', () => {
+    let originalWindow;
+    beforeEach(() => {
+      originalWindow = global.window;
+      global.window = makeFakeWindow();
+    });
+    afterEach(() => {
+      global.window = originalWindow;
+    });
+
+    it('idle lock clears cached tokens without ending the Entra session', async () => {
+      const account = { username: 'parent@example.com' };
+      const fake = makeFakeMsal({ redirectResponse: { account } });
+      Authentication._setAuthService(fake);
+      await Authentication.initialize();
+
+      await Authentication.lockSession();
+
+      expect(fake.calls).toContain('clearCache');
+      expect(fake.lastClearCache).toEqual({ account });
+      expect(fake.calls).not.toContain('logoutRedirect');
+      expect(Authentication.isAuthenticated()).toBe(false);
+    });
+
+    it('signs back in after an idle lock with the remembered login_hint (no account picker)', async () => {
+      const account = { username: 'parent@example.com' };
+      const fake = makeFakeMsal({ redirectResponse: { account } });
+      Authentication._setAuthService(fake);
+      await Authentication.initialize();
+      await Authentication.lockSession();
+
+      await expect(Authentication.getBearerToken()).rejects.toThrow(RedirectInProgressError);
+      expect(fake.lastLogin.loginHint).toBe('parent@example.com');
+
+      await Authentication.signIn();
+      expect(fake.lastLogin.loginHint).toBe('parent@example.com');
+    });
+
+    it('explicit sign-out forgets the remembered user', async () => {
+      const account = { username: 'parent@example.com' };
+      const fake = makeFakeMsal({ redirectResponse: { account } });
+      Authentication._setAuthService(fake);
+      await Authentication.initialize();
+      await Authentication.signOut();
+
+      // Simulate the post-logout page load: no cached account.
+      const next = makeFakeMsal();
+      Authentication._setAuthService(next);
+      await Authentication.signIn();
+      expect(next.lastLogin.loginHint).toBeUndefined();
+    });
   });
 
   it('still resolves init (so the app can mount) when handleRedirectPromise rejects', async () => {

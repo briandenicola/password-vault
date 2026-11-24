@@ -39,6 +39,13 @@
     </header>
     <main id="app" class="vault-page">
       <PasskeyVaultGate v-if="e2eeEnabled" />
+      <div v-if="idleLocked" class="card my-3 vault-idle-lock">
+        <div class="card-header">Vault locked</div>
+        <div class="card-body">
+          <p>The vault locked after a period of inactivity.</p>
+          <Button label="Unlock" icon="pi pi-lock-open" @click="unlockIdle" />
+        </div>
+      </div>
       <router-view v-if="vaultUnlocked" />
     </main>
     <Toast position="bottom-right" />
@@ -55,6 +62,7 @@ import { loadSettings } from '@/components/settings/settings.store.js';
 import Authentication from '@/components/azuread/AzureAD.Authentication.js';
 import UpdatePrompt from '@/components/pwa/update-prompt.vue';
 import PasskeyVaultGate from '@/components/crypto/PasskeyVaultGate.vue';
+import { useAccountsStore } from '@/stores/accounts.store.js';
 
 const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
 
@@ -65,7 +73,9 @@ export default {
     const navOpen = ref(false);
     const e2eeEnabled = isE2eeEnabled();
     const sessionState = ref({ isUnlocked: vaultSession.isUnlocked, unlockedAt: vaultSession.unlockedAt });
-    const vaultUnlocked = computed(() => !e2eeEnabled || sessionState.value.isUnlocked);
+    const idleLocked = ref(false);
+    const accountsStore = useAccountsStore();
+    const vaultUnlocked = computed(() => !idleLocked.value && (!e2eeEnabled || sessionState.value.isUnlocked));
     const themeClass = computed(() => `theme-${currentTheme.value}`);
     const appTitle = computed(() => currentTheme.value === 'classic' ? 'Password Vault' : 'The Vault');
 
@@ -93,27 +103,34 @@ export default {
     applyTheme(currentTheme.value);
 
     // Auto-lock (UI-2): after the configured idle period, drop in-memory plaintext.
-    // With E2EE on this is a soft lock; otherwise keep the existing sign-out behavior.
     let idleTimer = null;
     let lastActivity = 0;
     let unsubscribeSession = null;
 
-    const lock = () => {
+    const lock = async () => {
       // With E2EE enabled, idle lock is a soft lock: drop the in-memory DEK and
       // show the passkey unlock screen instead of signing out of Entra.
       vaultSession.lock();
       if (e2eeEnabled) {
         return;
       }
+      // Without E2EE: hide the vault, drop loaded accounts from memory, and clear this
+      // app's cached tokens -- but keep the Entra session. A full Entra sign-out here
+      // forced every family member through the account picker and a password prompt
+      // after each idle period. Unlocking is a sign-in redirect that Entra completes
+      // silently (login_hint + live session).
+      idleLocked.value = true;
+      accountsStore.$reset();
       try {
-        if (Authentication.isAuthenticated && Authentication.isAuthenticated()) {
-          Authentication.signOut();
-          return;
-        }
+        await Authentication.lockSession();
       } catch (e) {
-        // fall through to reload
+        console.error('Idle lock could not clear cached tokens; signing out instead:', e);
+        Authentication.signOut();
       }
-      window.location.reload();
+    };
+
+    const unlockIdle = () => {
+      Authentication.signIn();
     };
 
     const onActivity = () => {
@@ -158,6 +175,8 @@ export default {
       e2eeEnabled,
       sessionState,
       vaultUnlocked,
+      idleLocked,
+      unlockIdle,
       toggleNav,
       closeNav,
       logOut,
