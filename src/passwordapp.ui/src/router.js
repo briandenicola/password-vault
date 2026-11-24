@@ -1,13 +1,15 @@
 import {createRouter, createMemoryHistory} from 'vue-router'
-import NotFound from '@/components/notfound/pagenotfound.vue'
 import Home from '@/components/home/home.vue'
-import Create from '@/components/create/create.vue'
-import Update from '@/components/update/update.vue'
-import Settings from '@/components/settings/settings.vue'
-import Audit from '@/components/audit/audit.vue'
-import Trash from '@/components/trash/trash.vue'
-import Transfer from '@/components/transfer/transfer.vue'
 import Authentication from './components/azuread/AzureAD.Authentication.js'
+
+const NotFound = () => import('@/components/notfound/pagenotfound.vue')
+// Home is the first screen, so it stays in the main bundle; every other page loads on demand.
+const Create = () => import('@/components/create/create.vue')
+const Update = () => import('@/components/update/update.vue')
+const Settings = () => import('@/components/settings/settings.vue')
+const Audit = () => import('@/components/audit/audit.vue')
+const Trash = () => import('@/components/trash/trash.vue')
+const Transfer = () => import('@/components/transfer/transfer.vue')
 
 let requiresAuthentication = import.meta.env.VUE_APP_REQUIRES_AUTHENTICATION  == 'true' ? true : false;
 

@@ -43,6 +43,16 @@ resource "azurerm_function_app_flex_consumption" "this" {
     ]
   }
 
+  # Keep an HTTP instance warm so the first account-list request after idle does not
+  # wait on a cold start (runtime start, Key Vault reference resolution, Cosmos client).
+  dynamic "always_ready" {
+    for_each = var.functions_http_always_ready_instances > 0 ? [1] : []
+    content {
+      name           = "http"
+      instance_count = var.functions_http_always_ready_instances
+    }
+  }
+
   site_config {
     use_32_bit_worker = false
   }
